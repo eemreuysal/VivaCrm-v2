@@ -810,3 +810,13 @@ INFO 2025-05-15 01:46:38,922 basehttp 56770 6341865472 "GET /static/js/lib/htmx.
 INFO 2025-05-15 01:46:38,985 basehttp 56770 6341865472 "GET /static/debug_toolbar/css/print.css HTTP/1.1" 200 43
 INFO 2025-05-15 01:46:39,013 basehttp 56770 6341865472 "GET /static/debug_toolbar/js/utils.js HTTP/1.1" 200 4527
 INFO 2025-05-15 01:46:39,046 basehttp 56770 6341865472 "GET /static/img/favicon.ico HTTP/1.1" 200 4534
+INFO 2025-05-15 01:50:55,185 basehttp 56770 6341865472 "GET /customers/ HTTP/1.1" 200 39539
+INFO 2025-05-15 01:50:55,224 basehttp 56770 6358691840 "GET /static/js/dist/main.js HTTP/1.1" 200 5073
+INFO 2025-05-15 01:50:55,226 basehttp 56770 6375518208 "GET /static/debug_toolbar/js/toolbar.js HTTP/1.1" 200 13578
+INFO 2025-05-15 01:50:55,226 basehttp 56770 6341865472 "GET /static/css/viva-design-system.css HTTP/1.1" 200 7742
+INFO 2025-05-15 01:50:55,227 basehttp 56770 6392344576 "GET /static/debug_toolbar/css/toolbar.css HTTP/1.1" 200 12621
+INFO 2025-05-15 01:50:55,228 basehttp 56770 6409170944 "GET /static/img/vivacrm-logo.png HTTP/1.1" 200 12963
+INFO 2025-05-15 01:50:55,231 basehttp 56770 6375518208 "GET /static/js/lib/htmx.min.js HTTP/1.1" 200 47755
+INFO 2025-05-15 01:50:55,232 basehttp 56770 6325039104 "GET /static/css/dist/main.css HTTP/1.1" 200 164838
+INFO 2025-05-15 01:50:55,233 basehttp 56770 6392344576 "GET /static/js/lib/alpine.min.js HTTP/1.1" 200 43838
+INFO 2025-05-15 01:50:56,783 basehttp 56770 6392344576 "GET /products/ HTTP/1.1" 200 41699
