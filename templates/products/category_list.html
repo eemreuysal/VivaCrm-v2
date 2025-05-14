@@ -1,0 +1,150 @@
+{% extends "base/base_dashboard.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Ürün Kategorileri{% endblock %}
+
+{% block content %}
+<div class="container mx-auto">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">Ürün Kategorileri</h1>
+    <div class="text-sm breadcrumbs">
+      <ul>
+        <li><a href="{% url 'dashboard:dashboard' %}">VivaCRM</a></li>
+        <li><a href="{% url 'products:product-list' %}">Ürünler</a></li>
+        <li>Kategoriler</li>
+      </ul>
+    </div>
+  </div>
+  
+  <div class="card bg-base-100 shadow-xl mb-6">
+    <div class="card-body">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="card-title">Kategoriler</h2>
+        <a href="{% url 'products:category-create' %}" class="btn btn-primary">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Yeni Kategori
+        </a>
+      </div>
+      
+      {% if categories %}
+      <div class="overflow-x-auto">
+        <table class="table table-zebra w-full">
+          <thead>
+            <tr>
+              <th>Kategori</th>
+              <th>Üst Kategori</th>
+              <th>Açıklama</th>
+              <th>Durum</th>
+              <th>İşlemler</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for category in categories %}
+            <tr>
+              <td>{{ category.name }}</td>
+              <td>{{ category.parent|default:"-" }}</td>
+              <td>{{ category.description|truncatechars:50|default:"-" }}</td>
+              <td>
+                {% if category.is_active %}
+                <div class="badge badge-success gap-2">Aktif</div>
+                {% else %}
+                <div class="badge badge-error gap-2">Pasif</div>
+                {% endif %}
+              </td>
+              <td>
+                <div class="flex space-x-2">
+                  <a href="{% url 'products:category-detail' slug=category.slug %}" class="btn btn-square btn-sm btn-ghost">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  </a>
+                  
+                  <a href="{% url 'products:category-update' slug=category.slug %}" class="btn btn-square btn-sm btn-ghost">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </a>
+                  
+                  <a href="{% url 'products:category-delete' slug=category.slug %}" class="btn btn-square btn-sm btn-ghost">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </a>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="alert alert-info">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <span>Henüz kategori bulunmamaktadır.</span>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  
+  <!-- Category Hierarchy -->
+  <div class="card bg-base-100 shadow-xl">
+    <div class="card-body">
+      <h2 class="card-title mb-4">Kategori Hiyerarşisi</h2>
+      
+      <div class="overflow-x-auto">
+        {% if categories %}
+        <ul class="menu bg-base-200 rounded-box w-full">
+          {% for category in categories %}
+          {% if not category.parent %}
+          <li>
+            <a href="{% url 'products:category-detail' slug=category.slug %}">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+              </svg>
+              {{ category.name }}
+              {% if not category.is_active %}<span class="badge badge-error ml-2">Pasif</span>{% endif %}
+            </a>
+            
+            {% if category.children.exists %}
+            <ul>
+              {% for child in category.children.all %}
+              <li>
+                <a href="{% url 'products:category-detail' slug=child.slug %}">
+                  {{ child.name }}
+                  {% if not child.is_active %}<span class="badge badge-error ml-2">Pasif</span>{% endif %}
+                </a>
+                
+                {% if child.children.exists %}
+                <ul>
+                  {% for grandchild in child.children.all %}
+                  <li>
+                    <a href="{% url 'products:category-detail' slug=grandchild.slug %}">
+                      {{ grandchild.name }}
+                      {% if not grandchild.is_active %}<span class="badge badge-error ml-2">Pasif</span>{% endif %}
+                    </a>
+                  </li>
+                  {% endfor %}
+                </ul>
+                {% endif %}
+              </li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+          </li>
+          {% endif %}
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="alert alert-info">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          <span>Henüz kategori bulunmamaktadır.</span>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

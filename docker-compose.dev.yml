@@ -1,0 +1,95 @@
+version: '3.9'
+
+services:
+  web:
+    build: .
+    restart: always
+    volumes:
+      - .:/app
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    environment:
+      - DEBUG=True
+      - SECRET_KEY=insecure-dev-key-replace-in-production
+      - ALLOWED_HOSTS=localhost,127.0.0.1
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/vivacrm
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - REDIS_URL=redis://redis:6379/1
+    depends_on:
+      - db
+      - redis
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    ports:
+      - "8000:8000"
+
+  db:
+    image: postgres:16
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=vivacrm
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+
+  celery:
+    build: .
+    restart: always
+    volumes:
+      - .:/app
+    environment:
+      - DEBUG=True
+      - SECRET_KEY=insecure-dev-key-replace-in-production
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/vivacrm
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - REDIS_URL=redis://redis:6379/1
+    depends_on:
+      - web
+      - db
+      - redis
+    command: celery -A core worker -l INFO
+
+  celery-beat:
+    build: .
+    restart: always
+    volumes:
+      - .:/app
+    environment:
+      - DEBUG=True
+      - SECRET_KEY=insecure-dev-key-replace-in-production
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/vivacrm
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - REDIS_URL=redis://redis:6379/1
+    depends_on:
+      - web
+      - db
+      - redis
+      - celery
+    command: celery -A core beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
+
+  # Frontend development service
+  frontend:
+    build: .
+    volumes:
+      - .:/app
+    depends_on:
+      - web
+    command: npm run dev
+
+volumes:
+  postgres_data:
+  redis_data:
+  static_volume:
+  media_volume:

@@ -1,0 +1,371 @@
+{% extends "base/base_dashboard.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ customer.name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">Müşteri Detayı</h1>
+    <div class="text-sm breadcrumbs">
+      <ul>
+        <li><a href="{% url 'dashboard:dashboard' %}">VivaCRM</a></li>
+        <li><a href="{% url 'customers:customer-list' %}">Müşteriler</a></li>
+        <li>{{ customer.name }}</li>
+      </ul>
+    </div>
+  </div>
+  
+  <div class="card bg-base-100 shadow-xl mb-6">
+    <div class="card-body">
+      <div class="flex justify-between items-start">
+        <div>
+          <h2 class="card-title text-2xl">
+            {{ customer.name }}
+            <span class="badge badge-primary ml-2">{{ customer.get_type_display }}</span>
+            {% if not customer.is_active %}
+            <span class="badge badge-error ml-2">Pasif</span>
+            {% endif %}
+          </h2>
+          {% if customer.company_name %}
+          <p class="text-lg opacity-70">{{ customer.company_name }}</p>
+          {% endif %}
+        </div>
+        
+        <div class="flex space-x-2">
+          <a href="{% url 'customers:customer-update' pk=customer.pk %}" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+            Düzenle
+          </a>
+          <a href="{% url 'customers:customer-delete' pk=customer.pk %}" class="btn btn-error btn-outline">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            Sil
+          </a>
+        </div>
+      </div>
+      
+      <div class="divider"></div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <h3 class="text-lg font-semibold mb-3">İletişim Bilgileri</h3>
+          <div class="overflow-x-auto">
+            <table class="table">
+              <tbody>
+                <tr>
+                  <td class="font-bold">E-posta</td>
+                  <td>{{ customer.email|default:"-" }}</td>
+                </tr>
+                <tr>
+                  <td class="font-bold">Telefon</td>
+                  <td>{{ customer.phone|default:"-" }}</td>
+                </tr>
+                <tr>
+                  <td class="font-bold">Web Sitesi</td>
+                  <td>
+                    {% if customer.website %}
+                    <a href="{{ customer.website }}" target="_blank" class="link link-primary">{{ customer.website }}</a>
+                    {% else %}
+                    -
+                    {% endif %}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <div>
+          <h3 class="text-lg font-semibold mb-3">Şirket Bilgileri</h3>
+          <div class="overflow-x-auto">
+            <table class="table">
+              <tbody>
+                <tr>
+                  <td class="font-bold">Şirket Adı</td>
+                  <td>{{ customer.company_name|default:"-" }}</td>
+                </tr>
+                <tr>
+                  <td class="font-bold">Vergi Dairesi</td>
+                  <td>{{ customer.tax_office|default:"-" }}</td>
+                </tr>
+                <tr>
+                  <td class="font-bold">Vergi / TC No</td>
+                  <td>{{ customer.tax_number|default:"-" }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      
+      {% if customer.notes %}
+      <div class="mt-6">
+        <h3 class="text-lg font-semibold mb-3">Notlar</h3>
+        <div class="p-4 bg-base-200 rounded-lg">
+          {{ customer.notes|linebreaks }}
+        </div>
+      </div>
+      {% endif %}
+      
+      <div class="mt-6">
+        <h3 class="text-lg font-semibold mb-3">Sistem Bilgileri</h3>
+        <div class="overflow-x-auto">
+          <table class="table">
+            <tbody>
+              <tr>
+                <td class="font-bold">Sorumlu Kişi</td>
+                <td>{{ customer.owner|default:"-" }}</td>
+              </tr>
+              <tr>
+                <td class="font-bold">Kayıt Tarihi</td>
+                <td>{{ customer.created_at|date:"d.m.Y H:i" }}</td>
+              </tr>
+              <tr>
+                <td class="font-bold">Son Güncelleme</td>
+                <td>{{ customer.updated_at|date:"d.m.Y H:i" }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Addresses -->
+  <div class="card bg-base-100 shadow-xl mb-6">
+    <div class="card-body">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="card-title">Adresler</h3>
+        <button class="btn btn-primary btn-sm" onclick="document.getElementById('address-modal').showModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Adres Ekle
+        </button>
+      </div>
+      
+      {% if customer.addresses.exists %}
+      <div class="overflow-x-auto">
+        <table class="table table-zebra w-full">
+          <thead>
+            <tr>
+              <th>Başlık</th>
+              <th>Adres Tipi</th>
+              <th>Adres</th>
+              <th>Şehir/İlçe</th>
+              <th>İşlemler</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for address in customer.addresses.all %}
+            <tr>
+              <td>
+                {{ address.title }}
+                {% if address.is_default %}<span class="badge badge-primary ml-2">Varsayılan</span>{% endif %}
+              </td>
+              <td>{{ address.get_type_display }}</td>
+              <td>{{ address.address_line1 }}{% if address.address_line2 %}, {{ address.address_line2 }}{% endif %}</td>
+              <td>{{ address.city }}{% if address.state %}/{{ address.state }}{% endif %}</td>
+              <td>
+                <div class="flex space-x-1">
+                  <button class="btn btn-square btn-sm btn-ghost" onclick="editAddress({{ address.id }})">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </button>
+                  <button class="btn btn-square btn-sm btn-ghost" onclick="deleteAddress({{ address.id }})">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="alert alert-info">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <span>Henüz kayıtlı adres bulunmamaktadır.</span>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  
+  <!-- Contacts -->
+  {% if customer.type == 'corporate' %}
+  <div class="card bg-base-100 shadow-xl mb-6">
+    <div class="card-body">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="card-title">İlgili Kişiler</h3>
+        <button class="btn btn-primary btn-sm" onclick="document.getElementById('contact-modal').showModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Kişi Ekle
+        </button>
+      </div>
+      
+      {% if customer.contacts.exists %}
+      <div class="overflow-x-auto">
+        <table class="table table-zebra w-full">
+          <thead>
+            <tr>
+              <th>Ad Soyad</th>
+              <th>Unvan</th>
+              <th>Departman</th>
+              <th>İletişim</th>
+              <th>İşlemler</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for contact in customer.contacts.all %}
+            <tr>
+              <td>
+                {{ contact.name }}
+                {% if contact.is_primary %}<span class="badge badge-primary ml-2">Birincil</span>{% endif %}
+              </td>
+              <td>{{ contact.title|default:"-" }}</td>
+              <td>{{ contact.department|default:"-" }}</td>
+              <td>
+                <div>{{ contact.email|default:"-" }}</div>
+                <div>{{ contact.phone|default:"-" }}</div>
+              </td>
+              <td>
+                <div class="flex space-x-1">
+                  <button class="btn btn-square btn-sm btn-ghost" onclick="editContact({{ contact.id }})">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </button>
+                  <button class="btn btn-square btn-sm btn-ghost" onclick="deleteContact({{ contact.id }})">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="alert alert-info">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <span>Henüz kayıtlı ilgili kişi bulunmamaktadır.</span>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+  
+  <!-- Orders -->
+  <div class="card bg-base-100 shadow-xl mb-6">
+    <div class="card-body">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="card-title">Son Siparişler</h3>
+        <a href="#" class="btn btn-primary btn-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Sipariş Oluştur
+        </a>
+      </div>
+      
+      <div class="alert alert-info">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <span>Henüz sipariş kaydı bulunmamaktadır.</span>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Address Modal -->
+  <dialog id="address-modal" class="modal">
+    <div class="modal-box">
+      <h3 class="font-bold text-lg mb-4">Adres Ekle</h3>
+      <form method="post" action="{% url 'customers:address-create' customer_pk=customer.pk %}" class="space-y-4">
+        {% csrf_token %}
+        {{ address_form|crispy }}
+        <div class="modal-action">
+          <button type="button" class="btn btn-ghost" onclick="document.getElementById('address-modal').close()">İptal</button>
+          <button type="submit" class="btn btn-primary">Kaydet</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+  
+  <!-- Contact Modal -->
+  <dialog id="contact-modal" class="modal">
+    <div class="modal-box">
+      <h3 class="font-bold text-lg mb-4">İlgili Kişi Ekle</h3>
+      <form method="post" action="{% url 'customers:contact-create' customer_pk=customer.pk %}" class="space-y-4">
+        {% csrf_token %}
+        {{ contact_form|crispy }}
+        <div class="modal-action">
+          <button type="button" class="btn btn-ghost" onclick="document.getElementById('contact-modal').close()">İptal</button>
+          <button type="submit" class="btn btn-primary">Kaydet</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+</div>
+
+<script>
+  // Address functions
+  function editAddress(addressId) {
+    window.location.href = `/customers/addresses/${addressId}/edit/`;
+  }
+  
+  function deleteAddress(addressId) {
+    if (confirm('Bu adresi silmek istediğinizden emin misiniz?')) {
+      fetch(`/customers/addresses/${addressId}/delete/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          window.location.reload();
+        } else {
+          alert('Adres silinirken bir hata oluştu.');
+        }
+      });
+    }
+  }
+  
+  // Contact functions
+  function editContact(contactId) {
+    window.location.href = `/customers/contacts/${contactId}/edit/`;
+  }
+  
+  function deleteContact(contactId) {
+    if (confirm('Bu kişiyi silmek istediğinizden emin misiniz?')) {
+      fetch(`/customers/contacts/${contactId}/delete/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          window.location.reload();
+        } else {
+          alert('Kişi silinirken bir hata oluştu.');
+        }
+      });
+    }
+  }
+</script>
+{% endblock %}

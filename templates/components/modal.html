@@ -1,0 +1,122 @@
+<!-- 
+Alpine.js ile gelişmiş bir modal komponenti.
+Kullanımı:
+{% include "components/modal.html" with 
+  id="example-modal"
+  title="Modal Başlığı"
+  content="Modal içeriği buraya gelecek."
+  cancel_text="İptal"
+  confirm_text="Tamam"
+  confirm_class="btn-primary"
+%}
+
+JavaScript ile açmak için:
+document.getElementById('example-modal').dispatchEvent(new CustomEvent('open-modal'))
+
+HTMX ile açmak için:
+<button hx-get="/api/some-endpoint" hx-target="#modal-content" hx-trigger="click" hx-on::after-request="document.getElementById('example-modal').dispatchEvent(new CustomEvent('open-modal'))">
+  Modal Aç
+</button>
+
+Dinamik içerik için:
+<div id="example-modal" 
+     x-data="{ open: false }" 
+     @open-modal.window="open = true" 
+     @close-modal.window="open = false">
+  <div x-show="open" class="modal modal-open" x-transition>
+    <div class="modal-box">
+      <h3 class="font-bold text-lg">Modal Başlığı</h3>
+      <div id="modal-content">
+        <!-- HTMX ile bu div içine içerik yüklenecek -->
+      </div>
+      <div class="modal-action">
+        <button @click="open = false" class="btn">İptal</button>
+        <button @click="open = false" class="btn btn-primary">Tamam</button>
+      </div>
+    </div>
+  </div>
+</div>
+-->
+
+<div 
+  id="{{ id }}" 
+  x-data="{ 
+    open: false,
+    onConfirm() {
+      const confirmFunction = window['{{ id }}_confirm'];
+      if (typeof confirmFunction === 'function') {
+        confirmFunction();
+      }
+      this.open = false;
+    }
+  }" 
+  @open-modal.window="open = true" 
+  @close-modal.window="open = false"
+  @keydown.escape.window="open = false"
+>
+  <div 
+    x-show="open" 
+    class="modal modal-open" 
+    x-transition:enter="transition ease-out duration-300"
+    x-transition:enter-start="opacity-0"
+    x-transition:enter-end="opacity-100"
+    x-transition:leave="transition ease-in duration-200"
+    x-transition:leave-start="opacity-100"
+    x-transition:leave-end="opacity-0"
+  >
+    <div 
+      class="modal-box"
+      x-transition:enter="transition ease-out duration-300"
+      x-transition:enter-start="opacity-0 translate-y-4"
+      x-transition:enter-end="opacity-100 translate-y-0"
+      x-transition:leave="transition ease-in duration-200"
+      x-transition:leave-start="opacity-100 translate-y-0"
+      x-transition:leave-end="opacity-0 translate-y-4"
+    >
+      {% if title %}
+      <h3 class="font-bold text-lg">{{ title }}</h3>
+      {% endif %}
+      
+      {% if close_button %}
+      <button class="btn btn-sm btn-circle absolute right-2 top-2" @click="open = false">✕</button>
+      {% endif %}
+      
+      <div id="{{ id }}-content" class="py-4">
+        {% if content %}
+          {{ content }}
+        {% else %}
+          {% block content %}
+            <!-- Modal içeriği burada olacak -->
+          {% endblock %}
+        {% endif %}
+      </div>
+      
+      <div class="modal-action">
+        {% if cancel_text %}
+        <button @click="open = false" class="btn {{ cancel_class|default:'btn-ghost' }}">{{ cancel_text }}</button>
+        {% endif %}
+        
+        {% if confirm_text %}
+        <button @click="onConfirm()" class="btn {{ confirm_class|default:'btn-primary' }}">{{ confirm_text }}</button>
+        {% endif %}
+        
+        {% block actions %}{% endblock %}
+      </div>
+    </div>
+    
+    {% if backdrop_close|default:True %}
+    <div class="modal-backdrop" @click="open = false"></div>
+    {% else %}
+    <div class="modal-backdrop"></div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Eğer varsa, onConfirm işlevini tanımla -->
+{% if confirm_js %}
+<script>
+  window['{{ id }}_confirm'] = function() {
+    {{ confirm_js|safe }}
+  };
+</script>
+{% endif %}

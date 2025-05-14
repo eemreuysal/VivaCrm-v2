@@ -1,0 +1,222 @@
+{% extends "base/base_dashboard.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Siparişler{% endblock %}
+
+{% block content %}
+<div>
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">Sipariş Listesi</h1>
+    <div class="text-sm breadcrumbs">
+      <ul>
+        <li><a href="{% url 'dashboard:dashboard' %}">VivaCRM</a></li>
+        <li>Siparişler</li>
+      </ul>
+    </div>
+  </div>
+  
+  <!-- Order Stats Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title text-sm">Toplam Sipariş</h2>
+        <p class="text-3xl font-bold text-primary">{{ total_orders|default:0 }}</p>
+        <p class="text-sm text-base-content opacity-60">
+          <span class="text-success">+{{ new_orders|default:0 }}</span> bu ay
+        </p>
+      </div>
+    </div>
+    
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title text-sm">Toplam Gelir</h2>
+        <p class="text-3xl font-bold text-primary">{{ total_revenue|default:"0.00" }} ₺</p>
+        <p class="text-sm text-base-content opacity-60">
+          <span class="{% if revenue_change|default:0 > 0 %}text-success{% else %}text-error{% endif %}">
+            {% if revenue_change|default:0 > 0 %}+{% endif %}{{ revenue_change|default:0 }}%
+          </span> geçen aya göre
+        </p>
+      </div>
+    </div>
+    
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title text-sm">Bekleyen Siparişler</h2>
+        <p class="text-3xl font-bold text-warning">{{ pending_orders|default:0 }}</p>
+        <p class="text-sm text-base-content opacity-60">
+          Toplam siparişlerin {% widthratio pending_orders|default:1 total_orders|default:1 100 %}%'si
+        </p>
+      </div>
+    </div>
+    
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title text-sm">Ortalama Sipariş Değeri</h2>
+        <p class="text-3xl font-bold text-primary">{{ avg_order_value|default:"0.00" }} ₺</p>
+        <p class="text-sm text-base-content opacity-60">
+          Sipariş başına
+        </p>
+      </div>
+    </div>
+  </div>
+  
+  <div class="card bg-base-100 shadow-xl mb-6">
+    <div class="card-body">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="card-title">Sipariş Arama</h2>
+        <a href="{% url 'orders:order-create' %}" class="btn btn-primary">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Yeni Sipariş
+        </a>
+      </div>
+      
+      <form method="get" hx-get="{% url 'orders:order-list' %}" hx-target="#orders-table" hx-swap="outerHTML" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Arama</span>
+          </label>
+          <input type="text" name="query" value="{{ form.query.value|default:'' }}" placeholder="Sipariş no, müşteri..." class="input input-bordered w-full" />
+        </div>
+        
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Sipariş Durumu</span>
+          </label>
+          <select name="status" class="select select-bordered w-full">
+            <option value="">Tüm Durumlar</option>
+            {% for key, value in form.fields.status.choices %}
+            {% if key %}
+            <option value="{{ key }}" {% if form.status.value == key %}selected{% endif %}>{{ value }}</option>
+            {% endif %}
+            {% endfor %}
+          </select>
+        </div>
+        
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Ödeme Durumu</span>
+          </label>
+          <select name="payment_status" class="select select-bordered w-full">
+            <option value="">Tüm Durumlar</option>
+            {% for key, value in form.fields.payment_status.choices %}
+            {% if key %}
+            <option value="{{ key }}" {% if form.payment_status.value == key %}selected{% endif %}>{{ value }}</option>
+            {% endif %}
+            {% endfor %}
+          </select>
+        </div>
+        
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Tarih Aralığı</span>
+          </label>
+          <div class="flex gap-2">
+            <input type="date" name="date_from" value="{{ form.date_from.value|default:'' }}" class="input input-bordered w-full" placeholder="Başlangıç" />
+            <input type="date" name="date_to" value="{{ form.date_to.value|default:'' }}" class="input input-bordered w-full" placeholder="Bitiş" />
+          </div>
+          
+          <button type="submit" class="btn btn-primary mt-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            Ara
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <div id="orders-table" class="card bg-base-100 shadow-xl overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full">
+        <thead>
+          <tr>
+            <th>Sipariş No</th>
+            <th>Müşteri</th>
+            <th>Tarih</th>
+            <th>Tutar</th>
+            <th>Durum</th>
+            <th>Ödeme</th>
+            <th>İşlemler</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in orders %}
+          <tr>
+            <td class="font-medium">{{ order.order_number }}</td>
+            <td>
+              <div class="font-bold">{{ order.customer.name }}</div>
+              {% if order.customer.company_name %}
+              <div class="text-sm opacity-70">{{ order.customer.company_name }}</div>
+              {% endif %}
+            </td>
+            <td>{{ order.order_date|date:"d.m.Y" }}</td>
+            <td>{{ order.total_amount }} ₺</td>
+            <td>
+              <div class="badge {{ order.get_status_badge }} gap-2">{{ order.get_status_display }}</div>
+            </td>
+            <td>
+              <div class="badge {{ order.get_payment_status_badge }} gap-2">{{ order.get_payment_status_display }}</div>
+            </td>
+            <td>
+              <div class="flex space-x-2">
+                <a href="{% url 'orders:order-detail' pk=order.pk %}" class="btn btn-square btn-sm btn-ghost text-primary">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </a>
+                
+                <a href="{% url 'orders:order-update' pk=order.pk %}" class="btn btn-square btn-sm btn-ghost text-secondary">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                </a>
+                
+                <a href="{% url 'orders:order-delete' pk=order.pk %}" class="btn btn-square btn-sm btn-ghost text-error">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="7" class="text-center py-8">
+              <div class="flex flex-col items-center justify-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-base-content opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+                <p class="text-base-content opacity-60">Henüz sipariş kaydı bulunmamaktadır veya arama kriterleriyle eşleşen sipariş yok.</p>
+                <a href="{% url 'orders:order-create' %}" class="btn btn-primary btn-sm mt-2">Yeni Sipariş Oluştur</a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    
+    {% if is_paginated %}
+    <div class="flex justify-center py-4 border-t border-base-300">
+      <div class="btn-group">
+        {% if page_obj.has_previous %}
+        <a href="?page=1{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.payment_status %}&payment_status={{ request.GET.payment_status }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}" class="btn btn-sm">«</a>
+        <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.payment_status %}&payment_status={{ request.GET.payment_status }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}" class="btn btn-sm">‹</a>
+        {% endif %}
+        
+        <button class="btn btn-sm">Sayfa {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</button>
+        
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.payment_status %}&payment_status={{ request.GET.payment_status }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}" class="btn btn-sm">›</a>
+        <a href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.payment_status %}&payment_status={{ request.GET.payment_status }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}" class="btn btn-sm">»</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

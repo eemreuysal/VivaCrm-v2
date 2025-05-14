@@ -1,0 +1,315 @@
+<!-- 
+HTMX ve Alpine.js ile gelişmiş bir veri tablosu komponenti. 
+Kullanımı:
+{% include "components/data_table.html" with 
+  objects=object_list 
+  columns="ad,soyad,email,telefon" 
+  headers="Ad,Soyad,E-posta,Telefon" 
+  actions=True 
+  empty_message="Veri bulunamadı." 
+  title="Müşteriler" 
+  add_url="customers:customer-create" 
+  detail_url_name="customers:customer-detail" 
+  edit_url_name="customers:customer-update" 
+  delete_url_name="customers:customer-delete" 
+%}
+-->
+
+<div class="card bg-base-100 shadow-xl" 
+     x-data="{ 
+       searchQuery: '', 
+       selectedItems: [], 
+       allSelected: false,
+       sortField: '{{ sort_field|default:"" }}',
+       sortDirection: '{{ sort_direction|default:"asc" }}',
+       
+       toggleSelectAll() {
+         if (this.allSelected) {
+           this.selectedItems = [];
+         } else {
+           this.selectedItems = Array.from(document.querySelectorAll('table tbody tr')).map(row => row.dataset.id);
+         }
+         this.allSelected = !this.allSelected;
+       },
+       
+       toggleSort(field) {
+         if (this.sortField === field) {
+           this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+         } else {
+           this.sortField = field;
+           this.sortDirection = 'asc';
+         }
+         // HTMX ile sıralama isteği gönder
+         document.getElementById('sort-form').dispatchEvent(new Event('submit'));
+       },
+       
+       isSelected(id) {
+         return this.selectedItems.includes(id);
+       },
+       
+       toggleSelect(id) {
+         if (this.isSelected(id)) {
+           this.selectedItems = this.selectedItems.filter(item => item !== id);
+         } else {
+           this.selectedItems.push(id);
+         }
+         this.allSelected = this.selectedItems.length === document.querySelectorAll('table tbody tr').length;
+       }
+     }">
+  
+  <!-- Başlık ve Arama -->
+  <div class="flex justify-between items-center p-4 bg-base-200 rounded-t-lg">
+    <h2 class="card-title">{{ title }}</h2>
+    
+    <div class="flex items-center gap-2">
+      <!-- Arama kutusu -->
+      <div class="form-control">
+        <form 
+          id="search-form" 
+          class="input-group"
+          hx-get="{{ request.path }}"
+          hx-trigger="submit, search-input changed delay:500ms"
+          hx-target="{{ target|default:'#data-table-content' }}"
+          hx-push-url="true"
+        >
+          <input 
+            type="text" 
+            name="q" 
+            id="search-input"
+            placeholder="Ara..." 
+            class="input input-bordered" 
+            value="{{ request.GET.q|default:'' }}"
+            x-model="searchQuery"
+          />
+          <button type="submit" class="btn btn-square">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </button>
+        </form>
+      </div>
+      
+      <!-- Sıralama için gizli form -->
+      <form 
+        id="sort-form" 
+        hx-get="{{ request.path }}"
+        hx-trigger="submit"
+        hx-target="{{ target|default:'#data-table-content' }}"
+        hx-push-url="true"
+        class="hidden"
+      >
+        <input type="hidden" name="sort" :value="sortField" />
+        <input type="hidden" name="direction" :value="sortDirection" />
+        <input type="hidden" name="q" :value="searchQuery" />
+      </form>
+      
+      <!-- Ekleme butonu -->
+      {% if add_url %}
+      <a href="{% url add_url %}" class="btn btn-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        Yeni Ekle
+      </a>
+      {% endif %}
+    </div>
+  </div>
+  
+  <!-- Tablo içeriği -->
+  <div class="card-body p-0">
+    <div id="data-table-content" class="overflow-x-auto">
+      <table class="table table-zebra w-full">
+        <thead>
+          <tr>
+            {% if select %}
+            <th class="w-10">
+              <input type="checkbox" class="checkbox" :checked="allSelected" @click="toggleSelectAll()">
+            </th>
+            {% endif %}
+            
+            {% if column_order %}
+              {% for col_name in column_order %}
+                <th 
+                  {% if col_name in sortable_columns %}
+                  class="cursor-pointer select-none"
+                  @click="toggleSort('{{ col_name }}')"
+                  {% endif %}
+                >
+                  {{ headers|get_item:forloop.counter0|default:col_name }}
+                  
+                  {% if col_name in sortable_columns %}
+                  <span 
+                    x-show="sortField === '{{ col_name }}'"
+                    :class="{'transform rotate-180': sortDirection === 'desc'}"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12" />
+                    </svg>
+                  </span>
+                  {% endif %}
+                </th>
+              {% endfor %}
+            {% else %}
+              {% for column in columns|split:"," %}
+                <th>{{ headers|split:","|get_item:forloop.counter0|default:column }}</th>
+              {% endfor %}
+            {% endif %}
+            
+            {% if actions %}
+            <th class="w-24">İşlemler</th>
+            {% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for object in objects %}
+          <tr 
+            data-id="{{ object.id }}"
+            :class="{ 'bg-base-200': isSelected('{{ object.id }}') }"
+          >
+            {% if select %}
+            <td>
+              <input 
+                type="checkbox" 
+                class="checkbox" 
+                :checked="isSelected('{{ object.id }}')" 
+                @click="toggleSelect('{{ object.id }}')"
+              >
+            </td>
+            {% endif %}
+            
+            {% if column_order %}
+              {% for col_name in column_order %}
+                <td>{{ object|get_attr:col_name }}</td>
+              {% endfor %}
+            {% else %}
+              {% for column in columns|split:"," %}
+                <td>{{ object|get_attr:column }}</td>
+              {% endfor %}
+            {% endif %}
+            
+            {% if actions %}
+            <td class="flex gap-1">
+              {% if detail_url_name %}
+              <a href="{% url detail_url_name pk=object.id %}" class="btn btn-xs btn-info">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              </a>
+              {% endif %}
+              
+              {% if edit_url_name %}
+              <a href="{% url edit_url_name pk=object.id %}" class="btn btn-xs btn-warning">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+              </a>
+              {% endif %}
+              
+              {% if delete_url_name %}
+              <button 
+                class="btn btn-xs btn-error"
+                hx-delete="{% url delete_url_name pk=object.id %}"
+                hx-confirm="Bu kaydı silmek istediğinize emin misiniz?"
+                hx-target="{{ target|default:'#data-table-content' }}"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+              {% endif %}
+              
+              {% block extra_actions %}{% endblock %}
+            </td>
+            {% endif %}
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="{{ columns|split:','|length|add:1 }}" class="text-center py-8">
+              {{ empty_message|default:"Kayıt bulunamadı." }}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- Pagination -->
+    {% if objects.has_other_pages %}
+    <div class="flex justify-center my-4">
+      <div class="btn-group">
+        {% if objects.has_previous %}
+          <a 
+            href="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}&direction={{ request.GET.direction }}{% endif %}"
+            class="btn btn-sm"
+            hx-get="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}&direction={{ request.GET.direction }}{% endif %}"
+            hx-target="{{ target|default:'#data-table-content' }}"
+            hx-push-url="true"
+          >«</a>
+          <a 
+            href="?page={{ objects.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}&direction={{ request.GET.direction }}{% endif %}"
+            class="btn btn-sm"
+            hx-get="?page={{ objects.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}&direction={{ request.GET.direction }}{% endif %}"
+            hx-target="{{ target|default:'#data-table-content' }}"
+            hx-push-url="true"
+          >‹</a>
+        {% else %}
+          <button class="btn btn-sm btn-disabled">«</button>
+          <button class="btn btn-sm btn-disabled">‹</button>
+        {% endif %}
+        
+        <button class="btn btn-sm btn-active">{{ objects.number }} / {{ objects.paginator.num_pages }}</button>
+        
+        {% if objects.has_next %}
+          <a 
+            href="?page={{ objects.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}&direction={{ request.GET.direction }}{% endif %}"
+            class="btn btn-sm"
+            hx-get="?page={{ objects.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}&direction={{ request.GET.direction }}{% endif %}"
+            hx-target="{{ target|default:'#data-table-content' }}"
+            hx-push-url="true"
+          >›</a>
+          <a 
+            href="?page={{ objects.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}&direction={{ request.GET.direction }}{% endif %}"
+            class="btn btn-sm"
+            hx-get="?page={{ objects.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}&direction={{ request.GET.direction }}{% endif %}"
+            hx-target="{{ target|default:'#data-table-content' }}"
+            hx-push-url="true"
+          >»</a>
+        {% else %}
+          <button class="btn btn-sm btn-disabled">›</button>
+          <button class="btn btn-sm btn-disabled">»</button>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+    
+    <!-- Çoklu işlem seçenekleri -->
+    <div x-show="selectedItems.length > 0" x-transition class="p-4 bg-base-200 border-t flex justify-between items-center">
+      <span><span x-text="selectedItems.length"></span> öğe seçildi</span>
+      
+      <div class="flex gap-2">
+        {% if bulk_actions %}
+        <div class="dropdown dropdown-top dropdown-end">
+          <label tabindex="0" class="btn btn-primary">Toplu İşlemler</label>
+          <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52 z-50">
+            {% for action_name, action_url in bulk_actions.items %}
+            <li>
+              <button 
+                hx-post="{{ action_url }}" 
+                hx-vals='{"ids": JSON.stringify(selectedItems)}'
+                hx-confirm="Seçili öğeler için {{ action_name }} işlemini gerçekleştirmek istediğinize emin misiniz?"
+                hx-target="{{ target|default:'#data-table-content' }}"
+              >
+                {{ action_name }}
+              </button>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+        
+        <button class="btn btn-outline" @click="selectedItems = []; allSelected = false">Seçimi Temizle</button>
+      </div>
+    </div>
+  </div>
+</div>

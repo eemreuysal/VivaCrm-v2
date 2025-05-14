@@ -1,0 +1,36 @@
+{% load component_tags %}
+<!-- 
+Ekmek kırıntısı (breadcrumb) navigasyon komponenti.
+Kullanımı:
+{% include "components/breadcrumb.html" with 
+  items="Anasayfa:dashboard:dashboard,Müşteriler:customers:customer-list,Müşteri Detayı:"
+  divider="/"
+%}
+
+Format: "Etiket:url_name:url_param,Etiket2:url_name2:,..."
+
+Örnek: "Anasayfa:dashboard:dashboard,Müşteriler:customers:customer-list,Müşteri Detayı:"
+Bu örnekte, url_param sağlanırsa, {% url url_name url_param %} olarak kullanılır.
+url_param sağlanmazsa, {% url url_name %} olarak kullanılır.
+Boş url_name sağlanırsa (İkinci bölüm ":"), o öğe için bağlantı oluşturulmaz.
+-->
+
+<div class="text-sm breadcrumbs {{ class }}" aria-label="breadcrumb">
+  <ul>
+    {% for item in items|split:"," %}
+      {% with parts=item|split:":" %}
+        <li {% if forloop.last %}class="font-semibold"{% endif %}>
+          {% if parts.1 %}
+            {% if parts.2 %}
+              <a href="{% url parts.1 parts.2 %}">{{ parts.0 }}</a>
+            {% else %}
+              <a href="{% url parts.1 %}">{{ parts.0 }}</a>
+            {% endif %}
+          {% else %}
+            <span>{{ parts.0 }}</span>
+          {% endif %}
+        </li>
+      {% endwith %}
+    {% endfor %}
+  </ul>
+</div>

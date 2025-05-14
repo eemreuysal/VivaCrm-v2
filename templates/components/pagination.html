@@ -1,0 +1,86 @@
+<!-- 
+Sayfalama (pagination) komponenti.
+Kullanımı:
+{% include "components/pagination.html" with 
+  objects=page_obj
+  size="md"
+  query_params=request.GET
+  target="#content-area"
+%}
+
+Boyutlar:
+- sm (küçük)
+- md (orta) - varsayılan
+- lg (büyük)
+-->
+
+{% if objects.has_other_pages %}
+<div class="flex justify-center my-4 {{ class }}">
+  <div class="btn-group">
+    <!-- İlk Sayfa -->
+    {% if objects.has_previous %}
+      <a 
+        href="?page=1{% for key, value in query_params.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+        class="btn {% if size == 'sm' %}btn-sm{% elif size == 'lg' %}btn-lg{% endif %}"
+        {% if target %}
+        hx-get="?page=1{% for key, value in query_params.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+        hx-target="{{ target }}"
+        hx-push-url="true"
+        {% endif %}
+      >«</a>
+    {% else %}
+      <button class="btn {% if size == 'sm' %}btn-sm{% elif size == 'lg' %}btn-lg{% endif %} btn-disabled">«</button>
+    {% endif %}
+    
+    <!-- Önceki Sayfa -->
+    {% if objects.has_previous %}
+      <a 
+        href="?page={{ objects.previous_page_number }}{% for key, value in query_params.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+        class="btn {% if size == 'sm' %}btn-sm{% elif size == 'lg' %}btn-lg{% endif %}"
+        {% if target %}
+        hx-get="?page={{ objects.previous_page_number }}{% for key, value in query_params.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+        hx-target="{{ target }}"
+        hx-push-url="true"
+        {% endif %}
+      >‹</a>
+    {% else %}
+      <button class="btn {% if size == 'sm' %}btn-sm{% elif size == 'lg' %}btn-lg{% endif %} btn-disabled">‹</button>
+    {% endif %}
+    
+    <!-- Mevcut Sayfa Göstergesi -->
+    <button class="btn {% if size == 'sm' %}btn-sm{% elif size == 'lg' %}btn-lg{% endif %} btn-active">
+      {{ objects.number }} / {{ objects.paginator.num_pages }}
+    </button>
+    
+    <!-- Sonraki Sayfa -->
+    {% if objects.has_next %}
+      <a 
+        href="?page={{ objects.next_page_number }}{% for key, value in query_params.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+        class="btn {% if size == 'sm' %}btn-sm{% elif size == 'lg' %}btn-lg{% endif %}"
+        {% if target %}
+        hx-get="?page={{ objects.next_page_number }}{% for key, value in query_params.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+        hx-target="{{ target }}"
+        hx-push-url="true"
+        {% endif %}
+      >›</a>
+    {% else %}
+      <button class="btn {% if size == 'sm' %}btn-sm{% elif size == 'lg' %}btn-lg{% endif %} btn-disabled">›</button>
+    {% endif %}
+    
+    <!-- Son Sayfa -->
+    {% if objects.has_next %}
+      <a 
+        href="?page={{ objects.paginator.num_pages }}{% for key, value in query_params.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+        class="btn {% if size == 'sm' %}btn-sm{% elif size == 'lg' %}btn-lg{% endif %}"
+        {% if target %}
+        hx-get="?page={{ objects.paginator.num_pages }}{% for key, value in query_params.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+        hx-target="{{ target }}"
+        hx-push-url="true"
+        {% endif %}
+      >»</a>
+    {% else %}
+      <button class="btn {% if size == 'sm' %}btn-sm{% elif size == 'lg' %}btn-lg{% endif %} btn-disabled">»</button>
+    {% endif %}
+  </div>
+</div>
+{% endif %}

@@ -1,0 +1,52 @@
+{% load component_tags %}
+<!-- 
+Sekmeler (tabs) komponenti.
+Kullanımı:
+{% include "components/tabs.html" with 
+  id="example-tabs"
+  tabs="Genel Bilgiler,İletişim,Adresler,Siparişler"
+  initial_tab=0
+%}
+  {% block tab_0 %}
+    Genel Bilgiler içeriği buraya gelecek
+  {% endblock %}
+  
+  {% block tab_1 %}
+    İletişim içeriği buraya gelecek
+  {% endblock %}
+  
+  {% block tab_2 %}
+    Adresler içeriği buraya gelecek
+  {% endblock %}
+  
+  {% block tab_3 %}
+    Siparişler içeriği buraya gelecek
+  {% endblock %}
+{% include "components/tabs.html" %}
+-->
+
+<div 
+  id="{{ id|default:'tabs' }}"
+  x-data="{ activeTab: {{ initial_tab|default:0 }} }"
+  class="w-full {{ class }}"
+>
+  <!-- Sekme Başlıkları -->
+  <div class="tabs tabs-boxed bg-base-200 p-1 mb-4 rounded-lg">
+    {% for tab in tabs|split:"," %}
+      <a 
+        class="tab" 
+        :class="activeTab === {{ forloop.counter0 }} ? 'tab-active bg-primary text-white' : ''"
+        @click.prevent="activeTab = {{ forloop.counter0 }}"
+      >{{ tab }}</a>
+    {% endfor %}
+  </div>
+  
+  <!-- Sekme İçerikleri -->
+  {% for tab in tabs|split:"," %}
+    <div x-show="activeTab === {{ forloop.counter0 }}" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+      {% with tab_index=forloop.counter0 %}
+        {% block_tag 'tab_'|add:tab_index|stringformat:"s" %}
+      {% endwith %}
+    </div>
+  {% endfor %}
+</div>

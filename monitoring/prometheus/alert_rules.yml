@@ -1,0 +1,72 @@
+groups:
+  - name: vivacrm_alerts
+    rules:
+      # High Error Rate
+      - alert: HighErrorRate
+        expr: rate(django_http_responses_total_by_status_total{status=~"5.."}[1m]) / rate(django_http_responses_total_by_status_total[1m]) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High HTTP error rate (> 5%)"
+          description: "Django application is experiencing a high HTTP error rate: {{ $value | humanizePercentage }} for the past 2 minutes."
+
+      # Slow Responses
+      - alert: SlowResponses
+        expr: django_http_requests_latency_seconds_bucket{le="1.0"} / ignoring(le) django_http_requests_latency_seconds_count < 0.95
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Slow HTTP responses (> 1s)"
+          description: "More than 5% of responses are taking longer than 1 second: {{ $value | humanizePercentage }}"
+
+      # Database Connection Issues
+      - alert: DatabaseConnectionIssues
+        expr: django_db_connections_status == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Database connection issues detected"
+          description: "Database connection is lost or experiencing issues."
+
+      # Low Disk Space
+      - alert: LowDiskSpace
+        expr: node_filesystem_avail_bytes / node_filesystem_size_bytes < 0.10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low disk space (< 10%)"
+          description: "Disk space is running low on {{ $labels.device }} mount at {{ $labels.instance }}: {{ $value | humanizePercentage }} left"
+
+      # High CPU Usage
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100) > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage (> 85%)"
+          description: "CPU usage is above 85% for the past 5 minutes: {{ $value | humanizePercentage }}"
+
+      # High Memory Usage
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage (> 90%)"
+          description: "Memory usage is above 90% for the past 5 minutes: {{ $value | humanizePercentage }}"
+
+      # High Redis Memory Usage
+      - alert: HighRedisMemoryUsage
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Redis memory usage (> 80%)"
+          description: "Redis memory usage is above 80% for the past 5 minutes: {{ $value | humanizePercentage }}"

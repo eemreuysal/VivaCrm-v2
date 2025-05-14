@@ -1,0 +1,410 @@
+{% extends "base/base_dashboard.html" %}
+{% load static %}
+
+{% block title %}Gösterge Paneli - VivaCRM{% endblock %}
+
+{% block content %}
+<div>
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold">Gösterge Paneli</h1>
+    <div class="flex gap-2">
+      <input type="date" 
+             id="start-date" 
+             class="input input-bordered input-sm"
+             value="{{ start_date|default:'' }}">
+      <span class="self-center">-</span>
+      <input type="date" 
+             id="end-date" 
+             class="input input-bordered input-sm"
+             value="{{ end_date|default:'' }}">
+      <button class="btn btn-primary btn-sm" 
+              hx-get="{% url 'dashboard:dashboard' %}"
+              hx-include="#start-date,#end-date"
+              hx-target="#dashboard-content">
+          Filtrele
+      </button>
+    </div>
+  </div>
+  
+  <div id="dashboard-content">
+    <!-- KPI Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+          <h2 class="card-title text-sm">Toplam Müşteri</h2>
+          <p class="text-3xl font-bold text-primary">{{ total_customers }}</p>
+          <p class="text-sm text-base-content opacity-60">
+            <span class="text-success">+{{ monthly_new_customers|default:0 }}</span> bu ay
+          </p>
+        </div>
+      </div>
+      
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+          <h2 class="card-title text-sm">Toplam Ürün</h2>
+          <p class="text-3xl font-bold text-secondary">{{ total_products }}</p>
+          <p class="text-sm text-base-content opacity-60">
+            <span class="{% if low_stock_products %}text-warning{% else %}text-success{% endif %}">{{ low_stock_products|length }}</span> kritik stokta
+          </p>
+        </div>
+      </div>
+      
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+          <h2 class="card-title text-sm">Toplam Sipariş</h2>
+          <p class="text-3xl font-bold text-accent">{{ total_orders }}</p>
+          <p class="text-sm text-base-content opacity-60">
+            <span class="text-info">{{ monthly_orders|default:0 }}</span> bu ay
+          </p>
+        </div>
+      </div>
+      
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+          <h2 class="card-title text-sm">Toplam Gelir</h2>
+          <p class="text-3xl font-bold text-primary">{{ total_revenue }} ₺</p>
+          <p class="text-sm text-base-content opacity-60">
+            <span class="{% if revenue_change > 0 %}text-success{% else %}text-error{% endif %}">
+              {% if revenue_change > 0 %}+{% endif %}{{ revenue_change|default:0 }}%
+            </span> geçen aya göre
+          </p>
+        </div>
+      </div>
+    </div>
+  
+  <!-- Charts -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <!-- Sales Trend -->
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title">Satış Trendi</h2>
+        <div class="h-64">
+          {% if total_orders > 0 %}
+          <canvas id="salesChart"></canvas>
+          {% else %}
+          <div class="flex items-center justify-center h-full">
+            <div class="text-center p-4">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-base-content opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              <p class="mt-4 text-base-content opacity-60">Grafik gösterilecek veri henüz bulunmamaktadır.</p>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    
+    <!-- Category Distribution -->
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title">Kategori Dağılımı</h2>
+        <div class="h-64">
+          {% if total_products > 0 %}
+          <canvas id="categoryChart"></canvas>
+          {% else %}
+          <div class="flex items-center justify-center h-full">
+            <div class="text-center p-4">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-base-content opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+              </svg>
+              <p class="mt-4 text-base-content opacity-60">Kategori verisi henüz bulunmamaktadır.</p>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Stock Alerts -->
+  <div class="card bg-base-100 shadow-xl mb-6">
+    <div class="card-body">
+      <h2 class="card-title">Stok Uyarıları</h2>
+      
+      {% if low_stock_products %}
+      <div class="overflow-x-auto">
+        <table class="table table-zebra w-full">
+          <thead>
+            <tr>
+              <th>Ürün Adı</th>
+              <th>Mevcut Stok</th>
+              <th>Kritik Seviye</th>
+              <th>Durum</th>
+              <th>İşlem</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for product in low_stock_products %}
+            <tr>
+              <td>{{ product.name }}</td>
+              <td>{{ product.stock }}</td>
+              <td>{{ product.threshold_stock }}</td>
+              <td>
+                {% if product.stock == 0 %}
+                <span class="badge badge-error">Ürün Tükendi</span>
+                {% else %}
+                <span class="badge badge-warning">Kritik Seviye</span>
+                {% endif %}
+              </td>
+              <td>
+                <a href="{% url 'products:product-detail' slug=product.slug %}" class="btn btn-xs btn-primary">Ürüne Git</a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="alert alert-success">
+        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span>Tüm ürünlerin stok seviyeleri normal. Kritik seviyede ürün bulunmamaktadır.</span>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  
+  <!-- Tables Grid -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Map and Recent Orders -->
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title">Müşteri Dağılımı</h2>
+        <div id="customer-map" class="h-72 bg-base-200 rounded-box">
+          <!-- Map placeholder - gerçek projede JavaScript ile harita yüklenecek -->
+          <div class="flex items-center justify-center h-full">
+            <div class="text-center p-4">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-base-content opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+              </svg>
+              <p class="mt-4 text-base-content opacity-60">Müşteri harita görünümü henüz hazır değil.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Recent Orders -->
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title">Son Siparişler</h2>
+        
+        {% if recent_orders %}
+        <div class="overflow-x-auto">
+          <table class="table table-compact w-full">
+            <thead>
+              <tr>
+                <th>Sipariş No</th>
+                <th>Müşteri</th>
+                <th>Tutar</th>
+                <th>Durum</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for order in recent_orders %}
+              <tr>
+                <td>{{ order.id }}</td>
+                <td>{{ order.customer.name }}</td>
+                <td>{{ order.total }} ₺</td>
+                <td>
+                  <div class="badge {{ order.status_badge }}">{{ order.status_display }}</div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="card-actions justify-end mt-4">
+          <a href="{% url 'orders:order-list' %}" class="btn btn-primary btn-sm">Tüm Siparişler</a>
+        </div>
+        {% else %}
+        <div class="flex items-center justify-center h-48">
+          <div class="text-center p-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-base-content opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+            <p class="mt-4 text-base-content opacity-60">Henüz sipariş kaydı bulunmamaktadır.</p>
+            <a href="{% url 'orders:order-create' %}" class="btn btn-primary btn-sm mt-4">İlk Siparişi Oluştur</a>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    
+    <!-- Top Customers -->
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title">En İyi Müşteriler</h2>
+        
+        {% if top_customers %}
+        <div class="overflow-x-auto">
+          <table class="table table-compact w-full">
+            <thead>
+              <tr>
+                <th>Müşteri</th>
+                <th>Sipariş Sayısı</th>
+                <th>Toplam Harcama</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for customer in top_customers %}
+              <tr>
+                <td>{{ customer.name }}</td>
+                <td>{{ customer.order_count }}</td>
+                <td>{{ customer.total_spent }} ₺</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="card-actions justify-end mt-4">
+          <a href="{% url 'customers:customer-list' %}" class="btn btn-primary btn-sm">Tüm Müşteriler</a>
+        </div>
+        {% else %}
+        <div class="flex items-center justify-center h-48">
+          <div class="text-center p-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-base-content opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            <p class="mt-4 text-base-content opacity-60">Henüz müşteri kaydı bulunmamaktadır.</p>
+            <a href="{% url 'customers:customer-create' %}" class="btn btn-primary btn-sm mt-4">İlk Müşteriyi Ekle</a>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Top Products -->
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title">En Çok Satan Ürünler</h2>
+        
+        {% if top_products %}
+        <div class="overflow-x-auto">
+          <table class="table table-compact w-full">
+            <thead>
+              <tr>
+                <th>Ürün</th>
+                <th>Satış Adedi</th>
+                <th>Toplam Gelir</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for product in top_products %}
+              <tr>
+                <td>{{ product.name }}</td>
+                <td>{{ product.quantity_sold }}</td>
+                <td>{{ product.total_revenue }} ₺</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="card-actions justify-end mt-4">
+          <a href="{% url 'products:product-list' %}" class="btn btn-primary btn-sm">Tüm Ürünler</a>
+        </div>
+        {% else %}
+        <div class="flex items-center justify-center h-48">
+          <div class="text-center p-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-base-content opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+            </svg>
+            <p class="mt-4 text-base-content opacity-60">Henüz ürün kaydı bulunmamaktadır.</p>
+            <a href="{% url 'products:product-create' %}" class="btn btn-primary btn-sm mt-4">İlk Ürünü Ekle</a>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Charts Script -->
+{% if total_orders > 0 %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Sales Chart
+    const salesCtx = document.getElementById('salesChart').getContext('2d');
+    const salesData = {
+      labels: ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran'],
+      datasets: [{
+        label: 'Satışlar (₺)',
+        data: [{{ total_revenue|floatformat:0 }}/6, {{ total_revenue|floatformat:0 }}/3, {{ total_revenue|floatformat:0 }}/2, {{ total_revenue|floatformat:0 }}/1.5, {{ total_revenue|floatformat:0 }}/1.2, {{ total_revenue|floatformat:0 }}],
+        backgroundColor: 'rgba(34, 197, 94, 0.2)',
+        borderColor: 'rgba(34, 197, 94, 1)',
+        borderWidth: 2,
+        tension: 0.3
+      }]
+    };
+    
+    const salesConfig = {
+      type: 'line',
+      data: salesData,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top',
+          },
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: 'rgba(200, 200, 200, 0.1)'
+            }
+          },
+          x: {
+            grid: {
+              display: false
+            }
+          }
+        }
+      }
+    };
+    
+    new Chart(salesCtx, salesConfig);
+    
+    // Category Chart
+    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+    const categoryData = {
+      labels: ['Elektronik', 'Giyim', 'Gıda', 'Kozmetik', 'Diğer'],
+      datasets: [{
+        label: 'Ürün Kategorileri',
+        data: [{{ total_products }}/5, {{ total_products }}/4, {{ total_products }}/3, {{ total_products }}/6, {{ total_products }}/10],
+        backgroundColor: [
+          'rgba(59, 130, 246, 0.6)',  // Mavi
+          'rgba(245, 158, 11, 0.6)',  // Amber
+          'rgba(34, 197, 94, 0.6)',   // Yeşil
+          'rgba(239, 68, 68, 0.6)',   // Kırmızı
+          'rgba(107, 114, 128, 0.6)'  // Gri
+        ],
+        borderWidth: 1
+      }]
+    };
+    
+    const categoryConfig = {
+      type: 'doughnut',
+      data: categoryData,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'right',
+          },
+        }
+      }
+    };
+    
+    new Chart(categoryCtx, categoryConfig);
+  });
+</script>
+{% endif %}
+{% endblock %}

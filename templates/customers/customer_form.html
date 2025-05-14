@@ -1,0 +1,49 @@
+{% extends "base/base_dashboard.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if object %}{{ object.name }} Düzenle{% else %}Yeni Müşteri{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">{% if object %}Müşteri Düzenle{% else %}Yeni Müşteri{% endif %}</h1>
+    <div class="text-sm breadcrumbs">
+      <ul>
+        <li><a href="{% url 'dashboard:dashboard' %}">VivaCRM</a></li>
+        <li><a href="{% url 'customers:customer-list' %}">Müşteriler</a></li>
+        <li>{% if object %}{{ object.name }} Düzenle{% else %}Yeni Müşteri{% endif %}</li>
+      </ul>
+    </div>
+  </div>
+  
+  <div class="card bg-base-100 shadow-xl">
+    <div class="card-body">
+      <form method="post" hx-boost="true">
+        {% csrf_token %}
+        {% crispy form %}
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const typeField = document.querySelector('#id_type');
+    const companyFieldsDiv = document.querySelector('.company-fields');
+    
+    function toggleCompanyFields() {
+      if (typeField.value === 'corporate') {
+        companyFieldsDiv.style.display = 'block';
+      } else {
+        companyFieldsDiv.style.display = 'none';
+      }
+    }
+    
+    // Initial state
+    toggleCompanyFields();
+    
+    // Listen for changes
+    typeField.addEventListener('change', toggleCompanyFields);
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="tr" data-theme="vivacrm"><!-- varsayılan açık tema -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="VivaCRM - Müşteri İlişkileri Yönetim Sistemi">
+    <meta name="author" content="VivaCRM Team">
+    
+    <title>{% block title %}VivaCRM{% endblock %}</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{% static 'img/favicon.ico' %}">
+    
+    <!-- Tasarım Sistemi CSS -->
+    <link rel="stylesheet" href="{% static 'css/viva-design-system.css' %}">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="{% static 'css/dist/main.css' %}">
+    
+    <!-- Third-party CSS Libraries -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Optional CSS Libraries based on page needs -->
+    {% block optional_css %}{% endblock %}
+    
+    <!-- Extra CSS -->
+    {% block extra_css %}{% endblock %}
+    
+    <!-- HTMX -->
+    <script src="{% static 'js/lib/htmx.min.js' %}" defer></script>
+    
+    <!-- Alpine.js -->
+    <script src="{% static 'js/lib/alpine.min.js' %}" defer></script>
+    
+    <!-- Preload critical JavaScript -->
+    <link rel="preload" href="{% static 'js/dist/main.js' %}" as="script">
+    
+    <!-- Django CSRF Token for JavaScript use -->
+    {% csrf_token %}
+</head>
+<body class="bg-base-200 min-h-screen flex flex-col" 
+      hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' 
+      x-data="{ darkMode: localStorage.getItem('vivacrm-theme') === 'vivacrmDark' || false }">
+    
+    <!-- Navbar -->
+    {% block navbar %}
+    <div class="navbar bg-base-100 shadow-lg sticky top-0 z-50">
+        <div class="navbar-start">
+            <div class="dropdown">
+                <label tabindex="0" class="btn btn-ghost lg:hidden">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16" />
+                    </svg>
+                </label>
+                <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
+                    <li><a href="{% url 'dashboard:dashboard' %}">Gösterge Paneli</a></li>
+                    <li><a href="{% url 'customers:customer-list' %}">Müşteriler</a></li>
+                    <li><a href="{% url 'products:product-list' %}">Ürünler</a></li>
+                    <li><a href="{% url 'orders:order-list' %}">Siparişler</a></li>
+                    <li><a href="{% url 'reports:dashboard' %}">Raporlar</a></li>
+                    {% if request.user.is_staff %}
+                    <li><a href="{% url 'admin_panel:dashboard' %}">Yönetim Paneli</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+            <a class="btn btn-ghost normal-case" href="{% url 'dashboard:dashboard' %}">
+                <img src="{% static 'img/vivacrm-logo.png' %}" alt="VivaCRM" class="h-8" x-bind:src="darkMode ? '{% static 'img/logo-dark.svg' %}' : '{% static 'img/logo-light.svg' %}'" />
+            </a>
+        </div>
+        
+        <div class="navbar-center hidden lg:flex">
+            <ul class="menu menu-horizontal px-1">
+                <li><a href="{% url 'dashboard:dashboard' %}">Gösterge Paneli</a></li>
+                <li><a href="{% url 'customers:customer-list' %}">Müşteriler</a></li>
+                <li><a href="{% url 'products:product-list' %}">Ürünler</a></li>
+                <li><a href="{% url 'orders:order-list' %}">Siparişler</a></li>
+                <li><a href="{% url 'reports:dashboard' %}">Raporlar</a></li>
+            </ul>
+        </div>
+        
+        <div class="navbar-end">
+            <!-- Theme Toggle Button -->
+            <button class="btn btn-ghost btn-circle" id="theme-toggle" x-on:click="darkMode = !darkMode; localStorage.setItem('vivacrm-theme', darkMode ? 'vivacrmDark' : 'vivacrm'); document.documentElement.setAttribute('data-theme', darkMode ? 'vivacrmDark' : 'vivacrm')">
+                <template x-if="!darkMode">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                </template>
+                <template x-if="darkMode">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                </template>
+            </button>
+            
+            <!-- Notifications -->
+            <div class="dropdown dropdown-end" x-data="notification">
+                <button class="btn btn-ghost btn-circle" x-on:click="toggle()">
+                    <div class="indicator">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                        <template x-if="unreadCount > 0">
+                            <span class="badge badge-xs badge-primary indicator-item" x-text="unreadCount"></span>
+                        </template>
+                    </div>
+                </button>
+                <div class="dropdown-content card card-compact w-80 max-h-96 overflow-y-auto shadow bg-base-100 mt-4" x-show="visible" x-on:click.outside="visible = false" x-cloak>
+                    <div class="card-body">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="card-title">Bildirimler</h3>
+                            <button class="btn btn-ghost btn-xs" x-on:click="markAllAsRead()" x-show="unreadCount > 0">Tümünü Okundu Yap</button>
+                        </div>
+                        <div class="divider my-0"></div>
+                        <template x-if="notifications.length === 0">
+                            <div class="py-4 text-center text-sm text-gray-500">
+                                Bildirim bulunmuyor
+                            </div>
+                        </template>
+                        <template x-for="notification in notifications" :key="notification.id">
+                            <div class="notification-item py-2 px-1 hover:bg-base-200 rounded-md cursor-pointer" :class="{ 'font-semibold bg-base-200': !notification.read }" x-on:click="markAsRead(notification.id)">
+                                <div class="flex justify-between">
+                                    <h4 class="text-sm" x-text="notification.title"></h4>
+                                    <span class="text-xs opacity-70" x-text="notification.time"></span>
+                                </div>
+                                <p class="text-xs mt-1" x-text="notification.message"></p>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- User Menu -->
+            <div class="dropdown dropdown-end">
+                <label tabindex="0" class="btn btn-ghost btn-circle avatar">
+                    <div class="w-10 rounded-full">
+                        {% if request.user.avatar %}
+                        <img src="{{ request.user.avatar.url }}" alt="{{ request.user.get_full_name }}" />
+                        {% else %}
+                        <img src="{{ STATIC_URL }}images/default-avatar.png" alt="{{ request.user.get_full_name }}" />
+                        {% endif %}
+                    </div>
+                </label>
+                <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
+                    <li class="p-2 text-sm opacity-70">
+                        <span>{{ request.user.get_full_name }}</span>
+                        <span class="text-xs opacity-50">{{ request.user.email }}</span>
+                    </li>
+                    <div class="divider my-0"></div>
+                    <li><a href="{% url 'accounts:user-detail' username=request.user.username %}">Profilim</a></li>
+                    <li><a href="{% url 'accounts:user-update' %}">Ayarlar</a></li>
+                    <div class="divider my-0"></div>
+                    <li>
+                        <form method="post" action="{% url 'accounts:logout' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="w-full text-left px-4 py-2 hover:bg-base-200">Çıkış</button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    {% endblock %}
+    
+    <!-- Toast Messages -->
+    <div id="toast-container" class="toast toast-top toast-end z-50">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} shadow-lg">
+                    <span>{{ message }}</span>
+                    <button class="btn btn-ghost btn-xs">✕</button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+    
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8 flex-grow">
+        {% block body %}
+            {% block content %}{% endblock %}
+        {% endblock %}
+    </main>
+    
+    <!-- Footer -->
+    {% block footer %}
+    <footer class="footer p-10 bg-base-200 text-base-content border-t border-base-300">
+        <div>
+            <div class="avatar">
+                <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white font-bold text-xl">
+                    V
+                </div>
+            </div>
+            <p class="font-bold">VivaCRM<br/>Müşteri İlişkileri Yönetim Sistemi</p>
+            <p>© {% now "Y" %} - Tüm hakları saklıdır.</p>
+        </div> 
+        <div>
+            <span class="footer-title">Şirket</span> 
+            <a class="link link-hover">Hakkımızda</a> 
+            <a class="link link-hover">İletişim</a> 
+            <a class="link link-hover">İş Ortakları</a> 
+            <a class="link link-hover">Kariyer</a>
+        </div> 
+        <div>
+            <span class="footer-title">Yasal</span> 
+            <a class="link link-hover">Kullanım Şartları</a> 
+            <a class="link link-hover">Gizlilik Politikası</a> 
+            <a class="link link-hover">Çerez Politikası</a>
+        </div> 
+    </footer>
+    {% endblock %}
+    
+    <!-- JavaScript -->
+    <script src="{% static 'js/dist/main.js' %}"></script>
+    
+    <!-- Third-party JavaScript Libraries -->
+    {% block optional_js %}{% endblock %}
+    
+    <!-- Extra JavaScript -->
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

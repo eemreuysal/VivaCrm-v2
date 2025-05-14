@@ -1,0 +1,221 @@
+{% extends "admin_panel/base_admin.html" %}
+{% load static %}
+
+{% block admin_title %}Yönetim Paneli - Yedekleme ve Geri Yükleme{% endblock %}
+
+{% block breadcrumb %}
+<li>Yedekleme ve Geri Yükleme</li>
+{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-6">
+  <h1 class="text-2xl font-bold">Yedekleme ve Geri Yükleme</h1>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <!-- Yedekleme -->
+  <div class="card bg-base-100 shadow-xl">
+    <div class="card-body">
+      <h2 class="card-title">Veritabanı Yedekle</h2>
+      <p class="py-4">Tüm veritabanı verilerinizi yedekleyin. Yedekleme işlemi, sisteminizin tüm verilerini içeren bir dosya oluşturur.</p>
+      
+      <form method="post" action="{% url 'admin_panel:backup' %}">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="backup">
+        
+        <div class="form-control mb-4">
+          <label class="label">
+            <span class="label-text">Yedekleme Adı</span>
+          </label>
+          <input type="text" name="backup_name" class="input input-bordered" placeholder="Opsiyonel bir isim girin...">
+          <label class="label">
+            <span class="label-text-alt">Belirtmezseniz, tarih ve saat otomatik olarak eklenecektir.</span>
+          </label>
+        </div>
+        
+        <div class="form-control">
+          <label class="label cursor-pointer justify-start gap-2">
+            <input type="checkbox" name="include_media" class="checkbox checkbox-primary" checked>
+            <span class="label-text">Medya Dosyalarını Dahil Et</span>
+          </label>
+        </div>
+        
+        <div class="form-control mt-4">
+          <button type="submit" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+            </svg>
+            Yedekle
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <!-- Geri Yükleme -->
+  <div class="card bg-base-100 shadow-xl">
+    <div class="card-body">
+      <h2 class="card-title">Veritabanı Geri Yükle</h2>
+      <p class="py-4 text-warning">Dikkat: Geri yükleme işlemi mevcut veritabanını tamamen değiştirecektir. Bu işlem geri alınamaz!</p>
+      
+      <form method="post" action="{% url 'admin_panel:backup' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="restore">
+        
+        <div class="form-control mb-4">
+          <label class="label">
+            <span class="label-text">Yedek Dosyası</span>
+          </label>
+          <input type="file" name="backup_file" class="file-input file-input-bordered w-full" accept=".json,.sql,.dump,.gz">
+        </div>
+        
+        <div class="form-control">
+          <label class="label cursor-pointer justify-start gap-2">
+            <input type="checkbox" name="confirm_restore" class="checkbox checkbox-error" required>
+            <span class="label-text">Geri yükleme işleminin mevcut verileri sileceğini anlıyorum ve onaylıyorum.</span>
+          </label>
+        </div>
+        
+        <div class="form-control mt-4">
+          <button type="submit" class="btn btn-warning">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" />
+            </svg>
+            Geri Yükle
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Mevcut Yedekler -->
+<div class="card bg-base-100 shadow-xl mt-6">
+  <div class="card-body">
+    <h2 class="card-title">Mevcut Yedekler</h2>
+    
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full">
+        <thead>
+          <tr>
+            <th>Yedek Adı</th>
+            <th>Tarih</th>
+            <th>Boyut</th>
+            <th>İçerik</th>
+            <th>İşlemler</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Otomatik Yedek</td>
+            <td>14.05.2025 14:30</td>
+            <td>4.2 MB</td>
+            <td>
+              <span class="badge badge-info">Veritabanı</span>
+              <span class="badge badge-info">Medya</span>
+            </td>
+            <td class="flex gap-2">
+              <button class="btn btn-xs btn-primary">İndir</button>
+              <button class="btn btn-xs btn-warning">Geri Yükle</button>
+              <button class="btn btn-xs btn-error">Sil</button>
+            </td>
+          </tr>
+          <tr>
+            <td>Haftalık Yedek</td>
+            <td>07.05.2025 12:00</td>
+            <td>3.8 MB</td>
+            <td>
+              <span class="badge badge-info">Veritabanı</span>
+              <span class="badge badge-info">Medya</span>
+            </td>
+            <td class="flex gap-2">
+              <button class="btn btn-xs btn-primary">İndir</button>
+              <button class="btn btn-xs btn-warning">Geri Yükle</button>
+              <button class="btn btn-xs btn-error">Sil</button>
+            </td>
+          </tr>
+          <tr>
+            <td>Versiyon Güncelleme Öncesi</td>
+            <td>01.05.2025 09:15</td>
+            <td>3.5 MB</td>
+            <td>
+              <span class="badge badge-info">Veritabanı</span>
+            </td>
+            <td class="flex gap-2">
+              <button class="btn btn-xs btn-primary">İndir</button>
+              <button class="btn btn-xs btn-warning">Geri Yükle</button>
+              <button class="btn btn-xs btn-error">Sil</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Planlı Yedekleme -->
+<div class="card bg-base-100 shadow-xl mt-6">
+  <div class="card-body">
+    <h2 class="card-title">Otomatik Yedekleme Ayarları</h2>
+    
+    <form method="post" action="{% url 'admin_panel:backup' %}" class="mt-4">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="schedule">
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Yedekleme Sıklığı</span>
+          </label>
+          <select name="backup_frequency" class="select select-bordered w-full">
+            <option value="daily">Günlük</option>
+            <option value="weekly" selected>Haftalık</option>
+            <option value="monthly">Aylık</option>
+          </select>
+        </div>
+        
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Yedekleme Saati</span>
+          </label>
+          <input type="time" name="backup_time" class="input input-bordered" value="03:00">
+        </div>
+        
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Saklanacak Maksimum Yedek Sayısı</span>
+          </label>
+          <input type="number" name="max_backups" class="input input-bordered" value="10" min="1" max="100">
+        </div>
+        
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Yedekleme Yolu</span>
+          </label>
+          <input type="text" name="backup_path" class="input input-bordered" value="/backups" readonly>
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+        <div class="form-control">
+          <label class="label cursor-pointer justify-start gap-2">
+            <input type="checkbox" name="include_media" class="checkbox checkbox-primary" checked>
+            <span class="label-text">Medya Dosyalarını Dahil Et</span>
+          </label>
+        </div>
+        
+        <div class="form-control">
+          <label class="label cursor-pointer justify-start gap-2">
+            <input type="checkbox" name="enable_auto_backup" class="checkbox checkbox-primary" checked>
+            <span class="label-text">Otomatik Yedeklemeyi Etkinleştir</span>
+          </label>
+        </div>
+      </div>
+      
+      <div class="form-control mt-4">
+        <button type="submit" class="btn btn-primary">Otomatik Yedekleme Ayarlarını Kaydet</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

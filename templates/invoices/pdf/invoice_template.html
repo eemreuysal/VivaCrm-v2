@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Fatura - {{ invoice.invoice_number }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1.5cm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.5;
+            color: #333;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        .company-info {
+            width: 50%;
+        }
+        .invoice-info {
+            width: 40%;
+            text-align: right;
+        }
+        h1 {
+            font-size: 24px;
+            color: #222;
+            margin-bottom: 15px;
+        }
+        h2 {
+            font-size: 18px;
+            color: #444;
+            margin-bottom: 10px;
+        }
+        .customer-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        .billing-info, .shipping-info {
+            width: 45%;
+        }
+        .info-box {
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table thead th {
+            background-color: #f2f2f2;
+            text-align: left;
+            padding: 10px;
+            border-bottom: 2px solid #ddd;
+        }
+        table tbody td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .text-right {
+            text-align: right;
+        }
+        .totals {
+            width: 50%;
+            margin-left: auto;
+        }
+        .notes {
+            margin-top: 30px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #888;
+            font-size: 10px;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+        .label {
+            font-weight: bold;
+            color: #555;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+        }
+        .status-draft {
+            background-color: #888;
+        }
+        .status-issued {
+            background-color: #3498db;
+        }
+        .status-paid {
+            background-color: #2ecc71;
+        }
+        .status-cancelled {
+            background-color: #e74c3c;
+        }
+        .status-refunded {
+            background-color: #e67e22;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="company-info">
+            <h1>{{ company.name }}</h1>
+            <p>{{ company.address }}</p>
+            <p>Tel: {{ company.phone }}</p>
+            <p>Email: {{ company.email }}</p>
+            <p>Web: {{ company.website }}</p>
+            <p>Vergi No: {{ company.tax_id }}</p>
+        </div>
+        <div class="invoice-info">
+            <h2>FATURA</h2>
+            <p><span class="label">Fatura No:</span> {{ invoice.invoice_number }}</p>
+            <p><span class="label">Fatura Tarihi:</span> {{ invoice.issue_date|date:"d.m.Y" }}</p>
+            {% if invoice.due_date %}
+            <p><span class="label">Son Ödeme Tarihi:</span> {{ invoice.due_date|date:"d.m.Y" }}</p>
+            {% endif %}
+            <p><span class="label">Sipariş No:</span> {{ order.order_number }}</p>
+            <p>
+                <span class="status status-{{ invoice.status }}">
+                    {{ invoice.get_status_display }}
+                </span>
+            </p>
+        </div>
+    </div>
+    
+    <div class="customer-info">
+        <div class="billing-info">
+            <h2>Fatura Bilgileri</h2>
+            <div class="info-box">
+                <p><span class="label">Müşteri:</span> {{ customer.name }}</p>
+                {% if customer.company_name %}
+                <p><span class="label">Şirket:</span> {{ customer.company_name }}</p>
+                {% endif %}
+                {% if customer.tax_office %}
+                <p><span class="label">Vergi Dairesi:</span> {{ customer.tax_office }}</p>
+                {% endif %}
+                {% if customer.tax_number %}
+                <p><span class="label">Vergi No / TC Kimlik:</span> {{ customer.tax_number }}</p>
+                {% endif %}
+                
+                {% if order.billing_address %}
+                <p><span class="label">Adres:</span><br>
+                {{ order.billing_address.street }}<br>
+                {{ order.billing_address.city }}, {{ order.billing_address.state }} {{ order.billing_address.postal_code }}<br>
+                {{ order.billing_address.country }}</p>
+                {% endif %}
+                
+                <p><span class="label">Tel:</span> {{ customer.phone }}</p>
+                <p><span class="label">Email:</span> {{ customer.email }}</p>
+            </div>
+        </div>
+        
+        <div class="shipping-info">
+            <h2>Teslimat Bilgileri</h2>
+            <div class="info-box">
+                {% if order.shipping_address %}
+                <p><span class="label">Teslimat Adresi:</span><br>
+                {{ order.shipping_address.name }}<br>
+                {{ order.shipping_address.street }}<br>
+                {{ order.shipping_address.city }}, {{ order.shipping_address.state }} {{ order.shipping_address.postal_code }}<br>
+                {{ order.shipping_address.country }}</p>
+                {% else %}
+                <p><span class="label">Teslimat Adresi:</span> Fatura adresi ile aynı</p>
+                {% endif %}
+                
+                {% if order.shipments.exists %}
+                <p><span class="label">Kargo Şirketi:</span> {{ order.shipments.first.carrier }}</p>
+                <p><span class="label">Takip No:</span> {{ order.shipments.first.tracking_number }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 5%;">#</th>
+                <th style="width: 40%;">Açıklama</th>
+                <th style="width: 10%;" class="text-right">Miktar</th>
+                <th style="width: 15%;" class="text-right">Birim Fiyat</th>
+                <th style="width: 10%;" class="text-right">KDV (%)</th>
+                <th style="width: 20%;" class="text-right">Toplam</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ item.description }}</td>
+                <td class="text-right">{{ item.quantity }}</td>
+                <td class="text-right">{{ item.unit_price|floatformat:2 }} ₺</td>
+                <td class="text-right">{{ item.tax_rate }}%</td>
+                <td class="text-right">{{ item.total_with_tax|floatformat:2 }} ₺</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <div class="totals">
+        <table>
+            <tbody>
+                <tr>
+                    <td><span class="label">Ara Toplam:</span></td>
+                    <td class="text-right">{{ invoice.subtotal|floatformat:2 }} ₺</td>
+                </tr>
+                <tr>
+                    <td><span class="label">KDV Tutarı:</span></td>
+                    <td class="text-right">{{ invoice.tax_amount|floatformat:2 }} ₺</td>
+                </tr>
+                {% if invoice.shipping_cost > 0 %}
+                <tr>
+                    <td><span class="label">Kargo Ücreti:</span></td>
+                    <td class="text-right">{{ invoice.shipping_cost|floatformat:2 }} ₺</td>
+                </tr>
+                {% endif %}
+                {% if invoice.discount_amount > 0 %}
+                <tr>
+                    <td><span class="label">İndirim:</span></td>
+                    <td class="text-right">-{{ invoice.discount_amount|floatformat:2 }} ₺</td>
+                </tr>
+                {% endif %}
+                <tr style="font-size: 14px; font-weight: bold;">
+                    <td><span class="label">Genel Toplam:</span></td>
+                    <td class="text-right">{{ invoice.total_amount|floatformat:2 }} ₺</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    {% if invoice.notes %}
+    <div class="notes">
+        <h2>Notlar</h2>
+        <p>{{ invoice.notes }}</p>
+    </div>
+    {% endif %}
+    
+    <div class="footer">
+        <p>{{ company.name }} - {{ company.address }} - Tel: {{ company.phone }} - Email: {{ company.email }}</p>
+        <p>Fatura tarihi: {{ invoice.issue_date|date:"d.m.Y" }} - Fatura no: {{ invoice.invoice_number }}</p>
+    </div>
+</body>
+</html>

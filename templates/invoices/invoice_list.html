@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load i18n %}
+
+{% block title %}{% trans "Faturalar" %}{% endblock %}
+
+{% block content %}
+<div class="p-4">
+    <div class="flex justify-between items-center mb-4">
+        <h1 class="text-2xl font-bold">{% trans "Faturalar" %}</h1>
+        <div>
+            <a href="{% url 'invoices:invoice-create' %}" class="btn btn-primary">
+                <i class="fas fa-plus mr-2"></i>{% trans "Yeni Fatura" %}
+            </a>
+        </div>
+    </div>
+    
+    <!-- Summary -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="stats bg-base-200 shadow">
+            <div class="stat">
+                <div class="stat-title">{% trans "Toplam Tutar" %}</div>
+                <div class="stat-value">{{ total_amount|floatformat:2 }} ₺</div>
+                <div class="stat-desc">{% trans "Tüm faturalar" %}</div>
+            </div>
+        </div>
+        
+        <div class="stats bg-base-200 shadow">
+            <div class="stat">
+                <div class="stat-title">{% trans "Ödenmemiş Tutar" %}</div>
+                <div class="stat-value text-warning">{{ unpaid_amount|floatformat:2 }} ₺</div>
+                <div class="stat-desc">{{ draft_count }} {% trans "Taslak" %}, {{ issued_count }} {% trans "Kesilmiş" %}</div>
+            </div>
+        </div>
+        
+        <div class="stats bg-base-200 shadow">
+            <div class="stat">
+                <div class="stat-title">{% trans "Ödenmiş Tutar" %}</div>
+                <div class="stat-value text-success">{{ paid_amount|floatformat:2 }} ₺</div>
+                <div class="stat-desc">{{ paid_count }} {% trans "Ödenmiş Fatura" %}</div>
+            </div>
+        </div>
+        
+        <div class="stats bg-base-200 shadow">
+            <div class="stat">
+                <div class="stat-title">{% trans "Toplam Fatura" %}</div>
+                <div class="stat-value">{{ paginator.count }}</div>
+                <div class="stat-desc">{% now "d.m.Y" %} {% trans "itibariyle" %}</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filters -->
+    <div class="card bg-base-100 shadow-xl mb-6">
+        <div class="card-body">
+            <h2 class="card-title mb-4">{% trans "Filtrele" %}</h2>
+            {% crispy form %}
+        </div>
+    </div>
+    
+    <!-- Invoice Table -->
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <div class="overflow-x-auto">
+                <table class="table w-full">
+                    <thead>
+                        <tr>
+                            <th>{% trans "Fatura No" %}</th>
+                            <th>{% trans "Sipariş" %}</th>
+                            <th>{% trans "Müşteri" %}</th>
+                            <th>{% trans "Tarih" %}</th>
+                            <th>{% trans "Tutar" %}</th>
+                            <th>{% trans "Durum" %}</th>
+                            <th>{% trans "İşlemler" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for invoice in invoices %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'invoices:invoice-detail' invoice.pk %}" class="font-medium">
+                                        {{ invoice.invoice_number }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="{% url 'orders:order-detail' invoice.order.pk %}" class="link link-hover">
+                                        {{ invoice.order.order_number }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="{% url 'customers:customer-detail' invoice.order.customer.pk %}" class="link link-hover">
+                                        {{ invoice.order.customer.name }}
+                                    </a>
+                                </td>
+                                <td>{{ invoice.issue_date|date:"d.m.Y" }}</td>
+                                <td>{{ invoice.total_amount|floatformat:2 }} ₺</td>
+                                <td>
+                                    <span class="badge {{ invoice.get_status_badge }}">
+                                        {{ invoice.get_status_display }}
+                                    </span>
+                                    {% if invoice.is_overdue %}
+                                        <span class="badge badge-error ml-1">{% trans "Gecikmiş" %}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="flex space-x-2">
+                                        <a href="{% url 'invoices:invoice-detail' invoice.pk %}" class="btn btn-sm btn-ghost">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'invoices:invoice-pdf' invoice.pk %}" class="btn btn-sm btn-ghost" target="_blank">
+                                            <i class="fas fa-file-pdf"></i>
+                                        </a>
+                                        {% if invoice.status == 'draft' %}
+                                            <a href="{% url 'invoices:invoice-update' invoice.pk %}" class="btn btn-sm btn-ghost">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-4">
+                                    <div class="alert alert-info mb-0">
+                                        {% trans "Hiç fatura bulunamadı." %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if is_paginated %}
+                <div class="flex justify-center mt-4">
+                    <div class="btn-group">
+                        {% if page_obj.has_previous %}
+                            <a href="?page=1{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}" class="btn btn-sm">
+                                <i class="fas fa-angle-double-left"></i>
+                            </a>
+                            <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}" class="btn btn-sm">
+                                <i class="fas fa-angle-left"></i>
+                            </a>
+                        {% endif %}
+                        
+                        <button class="btn btn-sm">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</button>
+                        
+                        {% if page_obj.has_next %}
+                            <a href="?page={{ page_obj.next_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}" class="btn btn-sm">
+                                <i class="fas fa-angle-right"></i>
+                            </a>
+                            <a href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}" class="btn btn-sm">
+                                <i class="fas fa-angle-double-right"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

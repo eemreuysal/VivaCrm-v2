@@ -1,0 +1,27 @@
+PAYMENT REMINDER
+
+Dear {{ customer.name }},
+
+We're writing to remind you that invoice #{{ invoice.invoice_number }} is now {{ days_overdue }} days overdue.
+
+INVOICE DETAILS:
+Invoice Number: #{{ invoice.invoice_number }}
+Invoice Date: {{ invoice.invoice_date }}
+Due Date: {{ invoice.due_date }}
+Amount Due: {{ total_amount }}
+
+Please arrange for this payment to be made as soon as possible. If you have already sent your payment, please disregard this reminder.
+
+You can view your invoice by visiting:
+{{ site_url }}{% url 'invoices:invoice_detail' invoice.id %}
+
+If you have any questions about this invoice or if you're experiencing any issues with payment, please don't hesitate to contact our accounts department.
+
+Thank you for your prompt attention to this matter.
+
+Best regards,
+The VivaCRM Team
+
+---
+© {% now "Y" %} VivaCRM. All rights reserved.
+This is an automated payment reminder. Please do not reply to this email.

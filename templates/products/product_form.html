@@ -1,0 +1,49 @@
+{% extends "base/base_dashboard.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if object %}{{ object.name }} Düzenle{% else %}Yeni Ürün{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">{% if object %}Ürün Düzenle{% else %}Yeni Ürün{% endif %}</h1>
+    <div class="text-sm breadcrumbs">
+      <ul>
+        <li><a href="{% url 'dashboard:dashboard' %}">VivaCRM</a></li>
+        <li><a href="{% url 'products:product-list' %}">Ürünler</a></li>
+        <li>{% if object %}{{ object.name }} Düzenle{% else %}Yeni Ürün{% endif %}</li>
+      </ul>
+    </div>
+  </div>
+  
+  <div class="card bg-base-100 shadow-xl">
+    <div class="card-body">
+      <form method="post" hx-boost="true">
+        {% csrf_token %}
+        {% crispy form %}
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const isPhysicalField = document.querySelector('#id_is_physical');
+    const physicalFieldsDiv = document.querySelector('.physical-fields');
+    
+    function togglePhysicalFields() {
+      if (isPhysicalField.checked) {
+        physicalFieldsDiv.style.display = 'block';
+      } else {
+        physicalFieldsDiv.style.display = 'none';
+      }
+    }
+    
+    // Initial state
+    togglePhysicalFields();
+    
+    // Listen for changes
+    isPhysicalField.addEventListener('change', togglePhysicalFields);
+  });
+</script>
+{% endblock %}

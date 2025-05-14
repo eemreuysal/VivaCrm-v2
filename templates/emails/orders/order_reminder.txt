@@ -1,0 +1,23 @@
+ORDER REMINDER
+
+Dear {{ customer_name }},
+
+We wanted to remind you about your order #{{ order_number }} placed on {{ order_date }}.
+
+ORDER STATUS: {{ status }}
+
+Your order is still in processing. If you have any questions or need to make changes, please contact us as soon as possible.
+
+You can view your order status and details by visiting:
+{{ site_url }}{% url 'orders:order_detail' order.id %}
+
+If you have any questions about your order, please don't hesitate to contact our customer support team.
+
+Thank you for your business!
+
+Best regards,
+The VivaCRM Team
+
+---
+© {% now "Y" %} VivaCRM. All rights reserved.
+This email was sent regarding an order you placed with VivaCRM.

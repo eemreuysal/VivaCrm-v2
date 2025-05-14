@@ -1,0 +1,225 @@
+{% extends "admin_panel/base_admin.html" %}
+{% load static %}
+
+{% block admin_title %}Yönetim Paneli - Sistem Ayarları{% endblock %}
+
+{% block breadcrumb %}
+<li>Sistem Ayarları</li>
+{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-6">
+  <h1 class="text-2xl font-bold">Sistem Ayarları</h1>
+</div>
+
+<!-- Genel Ayarlar -->
+<div class="card bg-base-100 shadow-xl mb-6">
+  <div class="card-body">
+    <h2 class="card-title">Genel Ayarlar</h2>
+    
+    <form method="post" action="{% url 'admin_panel:system-settings' %}" class="mt-4">
+      {% csrf_token %}
+      <input type="hidden" name="setting_group" value="general">
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Firma Adı</span>
+          </label>
+          <input type="text" name="company_name" class="input input-bordered" value="VivaCRM" required>
+        </div>
+        
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Firma Kısa Adı</span>
+          </label>
+          <input type="text" name="company_short_name" class="input input-bordered" value="Viva" required>
+        </div>
+        
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">E-posta Adresi</span>
+          </label>
+          <input type="email" name="company_email" class="input input-bordered" value="info@vivacrm.com" required>
+        </div>
+        
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Telefon</span>
+          </label>
+          <input type="text" name="company_phone" class="input input-bordered" value="+90 212 123 4567" required>
+        </div>
+        
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Web Sitesi</span>
+          </label>
+          <input type="url" name="company_website" class="input input-bordered" value="https://vivacrm.com" required>
+        </div>
+        
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Adres</span>
+          </label>
+          <textarea name="company_address" class="textarea textarea-bordered" rows="3" required>İstanbul, Türkiye</textarea>
+        </div>
+      </div>
+      
+      <div class="form-control mt-4">
+        <button type="submit" class="btn btn-primary">Genel Ayarları Kaydet</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- E-posta Ayarları -->
+<div class="card bg-base-100 shadow-xl mb-6">
+  <div class="card-body">
+    <h2 class="card-title">E-posta Ayarları</h2>
+    
+    <form method="post" action="{% url 'admin_panel:system-settings' %}" class="mt-4">
+      {% csrf_token %}
+      <input type="hidden" name="setting_group" value="email">
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">SMTP Sunucusu</span>
+          </label>
+          <input type="text" name="smtp_host" class="input input-bordered" value="smtp.example.com" required>
+        </div>
+        
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">SMTP Port</span>
+          </label>
+          <input type="number" name="smtp_port" class="input input-bordered" value="587" required>
+        </div>
+        
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">SMTP Kullanıcı Adı</span>
+          </label>
+          <input type="text" name="smtp_username" class="input input-bordered" value="user@example.com" required>
+        </div>
+        
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">SMTP Şifresi</span>
+          </label>
+          <input type="password" name="smtp_password" class="input input-bordered" value="password" required>
+        </div>
+        
+        <div class="form-control md:col-span-2">
+          <label class="label cursor-pointer justify-start gap-2">
+            <input type="checkbox" name="smtp_use_tls" class="checkbox checkbox-primary" checked>
+            <span class="label-text">TLS Kullan</span>
+          </label>
+        </div>
+        
+        <div class="form-control md:col-span-2">
+          <label class="label">
+            <span class="label-text">Varsayılan Gönderici E-posta</span>
+          </label>
+          <input type="email" name="default_from_email" class="input input-bordered" value="info@vivacrm.com" required>
+        </div>
+      </div>
+      
+      <div class="form-control mt-4">
+        <button type="submit" class="btn btn-primary">E-posta Ayarlarını Kaydet</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Gelişmiş Ayarlar -->
+<div class="card bg-base-100 shadow-xl">
+  <div class="card-body">
+    <h2 class="card-title">Gelişmiş Ayarlar</h2>
+    
+    <form method="post" action="{% url 'admin_panel:system-settings' %}" class="mt-4">
+      {% csrf_token %}
+      <input type="hidden" name="setting_group" value="advanced">
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Sayfa Başına Öğe Sayısı</span>
+          </label>
+          <input type="number" name="items_per_page" class="input input-bordered" value="25" required min="10" max="100">
+        </div>
+        
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Para Birimi</span>
+          </label>
+          <select name="default_currency" class="select select-bordered w-full">
+            <option value="TRY" selected>Türk Lirası (₺)</option>
+            <option value="USD">Amerikan Doları ($)</option>
+            <option value="EUR">Euro (€)</option>
+            <option value="GBP">İngiliz Sterlini (£)</option>
+          </select>
+        </div>
+        
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Tarih Formatı</span>
+          </label>
+          <select name="date_format" class="select select-bordered w-full">
+            <option value="d.m.Y" selected>31.12.2023</option>
+            <option value="Y-m-d">2023-12-31</option>
+            <option value="m/d/Y">12/31/2023</option>
+            <option value="d/m/Y">31/12/2023</option>
+          </select>
+        </div>
+        
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Zaman Formatı</span>
+          </label>
+          <select name="time_format" class="select select-bordered w-full">
+            <option value="H:i" selected>14:30</option>
+            <option value="h:i A">2:30 PM</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="divider"></div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="form-control">
+          <label class="label cursor-pointer justify-start gap-2">
+            <input type="checkbox" name="enable_debug" class="checkbox checkbox-primary" checked>
+            <span class="label-text">Debug Modunu Etkinleştir</span>
+          </label>
+        </div>
+        
+        <div class="form-control">
+          <label class="label cursor-pointer justify-start gap-2">
+            <input type="checkbox" name="enable_maintenance" class="checkbox checkbox-primary">
+            <span class="label-text">Bakım Modunu Etkinleştir</span>
+          </label>
+        </div>
+        
+        <div class="form-control">
+          <label class="label cursor-pointer justify-start gap-2">
+            <input type="checkbox" name="enable_registration" class="checkbox checkbox-primary" checked>
+            <span class="label-text">Kullanıcı Kaydını Etkinleştir</span>
+          </label>
+        </div>
+        
+        <div class="form-control">
+          <label class="label cursor-pointer justify-start gap-2">
+            <input type="checkbox" name="enable_api" class="checkbox checkbox-primary" checked>
+            <span class="label-text">API'yi Etkinleştir</span>
+          </label>
+        </div>
+      </div>
+      
+      <div class="form-control mt-4">
+        <button type="submit" class="btn btn-primary">Gelişmiş Ayarları Kaydet</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

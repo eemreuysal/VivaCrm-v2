@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="tr" data-theme="vivacrm" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="VivaCRM - Müşteri İlişkileri Yönetim Sistemi">
+    <title>{% block title %}VivaCRM{% endblock %}</title>
+    
+    <!-- Tasarım Sistemi CSS -->
+    <link rel="stylesheet" href="{% static 'css/viva-design-system.css' %}">
+    
+    <!-- TailwindCSS -->
+    <link href="{% static 'css/dist/main.css' %}" rel="stylesheet" type="text/css" />
+    
+    <!-- HTMX -->
+    <script src="{% static 'js/lib/htmx.min.js' %}"></script>
+    
+    <!-- Alpine.js -->
+    <script defer src="{% static 'js/lib/alpine.min.js' %}"></script>
+    
+    {% block extra_css %}{% endblock %}
+    
+    <!-- Force light theme -->
+    <script>
+        // Immediately set the theme to light, don't wait for DOMContentLoaded
+        document.documentElement.setAttribute('data-theme', 'vivacrm');
+        localStorage.removeItem('vivacrm-theme');  // Remove any saved theme preference
+        
+        // Also set it after DOM loads to ensure it sticks
+        document.addEventListener('DOMContentLoaded', function() {
+            document.documentElement.setAttribute('data-theme', 'vivacrm');
+            localStorage.setItem('vivacrm-theme', 'vivacrm');
+        });
+    </script>
+</head>
+<body class="bg-base-200 min-h-screen flex items-center justify-center">
+    {% if messages %}
+        <div class="toast toast-top toast-end">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} shadow-lg">
+                    <span>{{ message }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    
+    {% block content %}{% endblock %}
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

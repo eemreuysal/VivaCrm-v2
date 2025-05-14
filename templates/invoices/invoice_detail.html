@@ -1,0 +1,323 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load i18n %}
+
+{% block title %}{% trans "Fatura" %} {{ invoice.invoice_number }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-4">
+    <div class="flex justify-between items-center mb-4">
+        <h1 class="text-2xl font-bold">{% trans "Fatura Detayı" %}</h1>
+        <div class="flex space-x-2">
+            <a href="{% url 'invoices:invoice-list' %}" class="btn btn-ghost">
+                <i class="fas fa-arrow-left mr-2"></i>{% trans "Listeye Dön" %}
+            </a>
+            <a href="{% url 'invoices:invoice-pdf' invoice.pk %}" class="btn btn-primary" target="_blank">
+                <i class="fas fa-file-pdf mr-2"></i>{% trans "PDF Görüntüle" %}
+            </a>
+            {% if invoice.status == 'draft' %}
+                <a href="{% url 'invoices:invoice-update' invoice.pk %}" class="btn btn-secondary">
+                    <i class="fas fa-edit mr-2"></i>{% trans "Düzenle" %}
+                </a>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Invoice Info -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title">{% trans "Fatura Bilgileri" %}</h2>
+                
+                <div class="overflow-x-auto">
+                    <table class="table table-zebra w-full">
+                        <tbody>
+                            <tr>
+                                <td class="font-bold">{% trans "Fatura No" %}</td>
+                                <td>{{ invoice.invoice_number }}</td>
+                            </tr>
+                            <tr>
+                                <td class="font-bold">{% trans "Sipariş No" %}</td>
+                                <td>
+                                    <a href="{% url 'orders:order-detail' order.pk %}" class="link link-primary">
+                                        {{ order.order_number }}
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="font-bold">{% trans "Müşteri" %}</td>
+                                <td>
+                                    <a href="{% url 'customers:customer-detail' customer.pk %}" class="link link-primary">
+                                        {{ customer.name }}
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="font-bold">{% trans "Fatura Tarihi" %}</td>
+                                <td>{{ invoice.issue_date|date:"d.m.Y" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="font-bold">{% trans "Son Ödeme Tarihi" %}</td>
+                                <td>
+                                    {{ invoice.due_date|date:"d.m.Y"|default:"-" }}
+                                    {% if invoice.is_overdue %}
+                                        <span class="badge badge-error ml-2">{% trans "Gecikmiş" %}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="font-bold">{% trans "Fatura Tipi" %}</td>
+                                <td>{{ invoice.get_invoice_type_display }}</td>
+                            </tr>
+                            <tr>
+                                <td class="font-bold">{% trans "Durum" %}</td>
+                                <td>
+                                    <span class="badge {{ invoice.get_status_badge }}">
+                                        {{ invoice.get_status_display }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% if invoice.notes %}
+                            <tr>
+                                <td class="font-bold">{% trans "Notlar" %}</td>
+                                <td>{{ invoice.notes }}</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Customer and Address Info -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title">{% trans "Müşteri Bilgileri" %}</h2>
+                
+                <div class="overflow-x-auto">
+                    <table class="table table-zebra w-full">
+                        <tbody>
+                            <tr>
+                                <td class="font-bold">{% trans "Müşteri" %}</td>
+                                <td>{{ customer.name }}</td>
+                            </tr>
+                            {% if customer.company_name %}
+                            <tr>
+                                <td class="font-bold">{% trans "Şirket" %}</td>
+                                <td>{{ customer.company_name }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if customer.tax_office %}
+                            <tr>
+                                <td class="font-bold">{% trans "Vergi Dairesi" %}</td>
+                                <td>{{ customer.tax_office }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if customer.tax_number %}
+                            <tr>
+                                <td class="font-bold">{% trans "Vergi No / TC Kimlik" %}</td>
+                                <td>{{ customer.tax_number }}</td>
+                            </tr>
+                            {% endif %}
+                            <tr>
+                                <td class="font-bold">{% trans "Email" %}</td>
+                                <td>{{ customer.email }}</td>
+                            </tr>
+                            <tr>
+                                <td class="font-bold">{% trans "Telefon" %}</td>
+                                <td>{{ customer.phone }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="divider"></div>
+                
+                <h3 class="text-lg font-semibold">{% trans "Fatura Adresi" %}</h3>
+                {% if order.billing_address %}
+                    <div class="p-4 bg-base-200 rounded-lg">
+                        <p>{{ order.billing_address.name }}</p>
+                        <p>{{ order.billing_address.street }}</p>
+                        <p>{{ order.billing_address.city }}, {{ order.billing_address.state }} {{ order.billing_address.postal_code }}</p>
+                        <p>{{ order.billing_address.country }}</p>
+                    </div>
+                {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        {% trans "Fatura adresi bulunamadı" %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Items -->
+    <div class="card bg-base-100 shadow-xl mt-6">
+        <div class="card-body">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="card-title">{% trans "Fatura Kalemleri" %}</h2>
+                {% if invoice.status == 'draft' %}
+                    <a href="{% url 'invoices:invoice-item-create' invoice_id=invoice.pk %}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus mr-2"></i>{% trans "Kalem Ekle" %}
+                    </a>
+                {% endif %}
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="table table-zebra w-full">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>{% trans "Açıklama" %}</th>
+                            <th class="text-right">{% trans "Miktar" %}</th>
+                            <th class="text-right">{% trans "Birim Fiyat" %}</th>
+                            <th class="text-right">{% trans "İndirim" %}</th>
+                            <th class="text-right">{% trans "Ara Toplam" %}</th>
+                            <th class="text-right">{% trans "KDV (%)" %}</th>
+                            <th class="text-right">{% trans "KDV Tutarı" %}</th>
+                            <th class="text-right">{% trans "Toplam" %}</th>
+                            {% if invoice.status == 'draft' %}
+                                <th>{% trans "İşlemler" %}</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ item.description }}</td>
+                                <td class="text-right">{{ item.quantity }}</td>
+                                <td class="text-right">{{ item.unit_price|floatformat:2 }} ₺</td>
+                                <td class="text-right">{{ item.discount_amount|floatformat:2 }} ₺</td>
+                                <td class="text-right">{{ item.line_total|floatformat:2 }} ₺</td>
+                                <td class="text-right">{{ item.tax_rate }}%</td>
+                                <td class="text-right">{{ item.tax_amount|floatformat:2 }} ₺</td>
+                                <td class="text-right font-bold">{{ item.total_with_tax|floatformat:2 }} ₺</td>
+                                {% if invoice.status == 'draft' %}
+                                    <td>
+                                        <div class="flex space-x-2">
+                                            <a href="{% url 'invoices:invoice-item-update' item.pk %}" class="btn btn-sm btn-ghost">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form action="{% url 'invoices:invoice-item-delete' item.pk %}" method="post" class="inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-ghost" onclick="return confirm('Bu kalemi silmek istediğinizden emin misiniz?')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                {% endif %}
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="{% if invoice.status == 'draft' %}10{% else %}9{% endif %}" class="text-center py-4">
+                                    <div class="alert alert-info mb-0">
+                                        {% trans "Fatura kalemi bulunamadı." %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr class="bg-base-200">
+                            <td colspan="5" class="text-right font-bold">{% trans "Ara Toplam" %}</td>
+                            <td colspan="4" class="text-right font-bold">{{ invoice.subtotal|floatformat:2 }} ₺</td>
+                            {% if invoice.status == 'draft' %}<td></td>{% endif %}
+                        </tr>
+                        <tr class="bg-base-200">
+                            <td colspan="5" class="text-right font-bold">{% trans "KDV Tutarı" %}</td>
+                            <td colspan="4" class="text-right font-bold">{{ invoice.tax_amount|floatformat:2 }} ₺</td>
+                            {% if invoice.status == 'draft' %}<td></td>{% endif %}
+                        </tr>
+                        {% if invoice.shipping_cost > 0 %}
+                        <tr class="bg-base-200">
+                            <td colspan="5" class="text-right font-bold">{% trans "Kargo Ücreti" %}</td>
+                            <td colspan="4" class="text-right font-bold">{{ invoice.shipping_cost|floatformat:2 }} ₺</td>
+                            {% if invoice.status == 'draft' %}<td></td>{% endif %}
+                        </tr>
+                        {% endif %}
+                        {% if invoice.discount_amount > 0 %}
+                        <tr class="bg-base-200">
+                            <td colspan="5" class="text-right font-bold">{% trans "İndirim" %}</td>
+                            <td colspan="4" class="text-right font-bold">-{{ invoice.discount_amount|floatformat:2 }} ₺</td>
+                            {% if invoice.status == 'draft' %}<td></td>{% endif %}
+                        </tr>
+                        {% endif %}
+                        <tr class="bg-base-300">
+                            <td colspan="5" class="text-right font-bold text-lg">{% trans "Genel Toplam" %}</td>
+                            <td colspan="4" class="text-right font-bold text-lg">{{ invoice.total_amount|floatformat:2 }} ₺</td>
+                            {% if invoice.status == 'draft' %}<td></td>{% endif %}
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Buttons -->
+    <div class="flex justify-end space-x-4 mt-6">
+        {% if invoice.status == 'draft' %}
+            <a href="{% url 'invoices:invoice-update' invoice.pk %}" class="btn btn-primary">
+                <i class="fas fa-edit mr-2"></i>{% trans "Düzenle" %}
+            </a>
+            <a href="{% url 'invoices:invoice-delete' invoice.pk %}" class="btn btn-error">
+                <i class="fas fa-trash mr-2"></i>{% trans "Sil" %}
+            </a>
+        {% endif %}
+        {% if invoice.status == 'issued' %}
+            <form action="#" method="post" class="inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-check-circle mr-2"></i>{% trans "Ödendi İşaretle" %}
+                </button>
+            </form>
+        {% endif %}
+        <a href="{% url 'invoices:invoice-pdf' invoice.pk %}" class="btn btn-secondary" target="_blank">
+            <i class="fas fa-file-pdf mr-2"></i>{% trans "PDF Görüntüle" %}
+        </a>
+        {% if invoice.status != 'draft' and customer.email %}
+        <button class="btn btn-info" onclick="document.getElementById('email-modal').showModal()">
+            <i class="fas fa-envelope mr-2"></i>{% trans "E-posta Gönder" %}
+        </button>
+        {% endif %}
+        <a href="{% url 'orders:order-detail' order.pk %}" class="btn btn-ghost">
+            <i class="fas fa-box mr-2"></i>{% trans "Siparişi Görüntüle" %}
+        </a>
+    </div>
+</div>
+
+<!-- Email Modal -->
+<dialog id="email-modal" class="modal">
+    <div class="modal-box">
+        <h3 class="font-bold text-lg">{% trans "Faturayı E-posta ile Gönder" %}</h3>
+        <form method="post" action="{% url 'invoices:send-invoice-email' invoice.pk %}" class="py-4">
+            {% csrf_token %}
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text">{% trans "Alıcı" %}</span>
+                </label>
+                <input type="text" value="{{ customer.email }}" class="input input-bordered" disabled />
+                <label class="label">
+                    <span class="label-text-alt">{% trans "Müşterinin kayıtlı e-posta adresi" %}</span>
+                </label>
+            </div>
+            
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text">{% trans "Özel Mesaj (İsteğe Bağlı)" %}</span>
+                </label>
+                <textarea name="custom_message" class="textarea textarea-bordered" placeholder="{% trans 'Eklemek istediğiniz özel bir mesaj varsa buraya yazabilirsiniz.' %}"></textarea>
+            </div>
+            
+            <div class="modal-action">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-paper-plane mr-2"></i>{% trans "Gönder" %}
+                </button>
+                <button type="button" class="btn btn-ghost" onclick="document.getElementById('email-modal').close()">{% trans "İptal" %}</button>
+            </div>
+        </form>
+    </div>
+</dialog>
+{% endblock %}

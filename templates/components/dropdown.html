@@ -1,0 +1,115 @@
+{% load component_tags %}
+<!-- 
+Açılır menü (dropdown) komponenti.
+Kullanımı:
+{% include "components/dropdown.html" with 
+  id="user-menu"
+  button_text="İşlemler"
+  button_icon="menu"
+  button_class="btn-primary"
+  items="Profil:users:user-profile,Ayarlar:settings:user-settings,Çıkış Yap:accounts:logout"
+  position="dropdown-end"
+%}
+
+veya içerik bloğu ile:
+
+{% include "components/dropdown.html" with button_text="İşlemler" %}
+  {% block content %}
+    <li><a href="{% url 'users:user-profile' %}">Profil</a></li>
+    <li><a href="{% url 'settings:user-settings' %}">Ayarlar</a></li>
+    <li><a href="{% url 'accounts:logout' %}">Çıkış Yap</a></li>
+  {% endblock %}
+{% include "components/dropdown.html" %}
+
+Format: "Etiket:url_name:url_param,Etiket2:url_name2:,..."
+
+Pozisyonlar:
+- dropdown-end (sağa hizalı, varsayılan)
+- dropdown-left (sola hizalı)
+- dropdown-right (sağa hizalı)
+- dropdown-top (yukarı açılır)
+- dropdown-bottom (aşağı açılır, varsayılan)
+
+Button İkonları:
+- menu (menü)
+- user (kullanıcı)
+- settings (ayarlar)
+- dots (üç nokta)
+- plus (artı)
+- filter (filtre)
+-->
+
+<div class="dropdown {{ position|default:'dropdown-end' }} {{ class }}">
+  <label
+    tabindex="0"
+    class="btn {{ button_class|default:'' }}"
+    id="{{ id|default:'dropdown' }}-trigger"
+  >
+    {% if button_icon %}
+      <span class="mr-1">
+        {% if button_icon == "menu" %}
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+        {% elif button_icon == "user" %}
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+        {% elif button_icon == "settings" %}
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        {% elif button_icon == "dots" %}
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
+        </svg>
+        {% elif button_icon == "plus" %}
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        {% elif button_icon == "filter" %}
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+        </svg>
+        {% endif %}
+      </span>
+    {% endif %}
+    
+    {% if button_text %}{{ button_text }}{% endif %}
+    
+    {% if not button_icon and not button_text %}
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+      </svg>
+    {% endif %}
+  </label>
+  
+  <ul
+    tabindex="0"
+    class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52 z-50"
+    id="{{ id|default:'dropdown' }}-content"
+  >
+    {% if items %}
+      {% for item in items|split:"," %}
+        {% with parts=item|split:":" %}
+          <li>
+            {% if parts.1 %}
+              {% if parts.2 %}
+                <a href="{% url parts.1 parts.2 %}">{{ parts.0 }}</a>
+              {% else %}
+                <a href="{% url parts.1 %}">{{ parts.0 }}</a>
+              {% endif %}
+            {% else %}
+              <span class="text-base-content opacity-60">{{ parts.0 }}</span>
+            {% endif %}
+          </li>
+        {% endwith %}
+      {% endfor %}
+    {% else %}
+      {% block content %}
+        <!-- Özel dropdown içeriği buraya gelecek -->
+      {% endblock %}
+    {% endif %}
+  </ul>
+</div>

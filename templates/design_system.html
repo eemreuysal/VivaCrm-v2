@@ -1,0 +1,613 @@
+{% extends "base/base_design_system.html" %}
+{% load static %}
+{% load component_tags %}
+
+{% block title %}Tasarım Sistemi - VivaCRM{% endblock %}
+
+{% block content %}
+<div class="container mx-auto py-8">
+    <h1 class="text-4xl font-bold mb-4">VivaCRM Tasarım Sistemi</h1>
+    <p class="text-base-content opacity-70 mb-8">Bu sayfa VivaCRM'nin tasarım sistemi bileşenlerini ve kullanım örneklerini gösterir.</p>
+    
+    <!-- Renk Şeması -->
+    <section class="mb-10">
+        <h2 class="text-2xl font-bold mb-4 border-b pb-2">Renk Şeması</h2>
+        
+        <div class="mb-6">
+            <h3 class="text-xl font-semibold mb-3">Ana Renkler (Yeşil)</h3>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                <div>
+                    <div class="w-full h-16 bg-primary-50 rounded shadow-sm mb-1"></div>
+                    <div class="text-xs">primary-50<br><span class="font-mono">#f0fdf4</span></div>
+                </div>
+                <div>
+                    <div class="w-full h-16 bg-primary-200 rounded shadow-sm mb-1"></div>
+                    <div class="text-xs">primary-200<br><span class="font-mono">#bbf7d0</span></div>
+                </div>
+                <div>
+                    <div class="w-full h-16 bg-primary-500 rounded shadow-sm mb-1 border border-white"></div>
+                    <div class="text-xs">primary-500<br><span class="font-mono">#22c55e</span></div>
+                </div>
+                <div>
+                    <div class="w-full h-16 bg-primary-700 rounded shadow-sm mb-1 border border-white"></div>
+                    <div class="text-xs">primary-700<br><span class="font-mono">#15803d</span></div>
+                </div>
+                <div>
+                    <div class="w-full h-16 bg-primary-900 rounded shadow-sm mb-1 border border-white"></div>
+                    <div class="text-xs">primary-900<br><span class="font-mono">#14532d</span></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mb-6">
+            <h3 class="text-xl font-semibold mb-3">İkincil Renkler (Mavi)</h3>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                <div>
+                    <div class="w-full h-16 bg-secondary-50 rounded shadow-sm mb-1"></div>
+                    <div class="text-xs">secondary-50<br><span class="font-mono">#eff6ff</span></div>
+                </div>
+                <div>
+                    <div class="w-full h-16 bg-secondary-200 rounded shadow-sm mb-1"></div>
+                    <div class="text-xs">secondary-200<br><span class="font-mono">#bfdbfe</span></div>
+                </div>
+                <div>
+                    <div class="w-full h-16 bg-secondary-500 rounded shadow-sm mb-1 border border-white"></div>
+                    <div class="text-xs">secondary-500<br><span class="font-mono">#3b82f6</span></div>
+                </div>
+                <div>
+                    <div class="w-full h-16 bg-secondary-700 rounded shadow-sm mb-1 border border-white"></div>
+                    <div class="text-xs">secondary-700<br><span class="font-mono">#1d4ed8</span></div>
+                </div>
+                <div>
+                    <div class="w-full h-16 bg-secondary-900 rounded shadow-sm mb-1 border border-white"></div>
+                    <div class="text-xs">secondary-900<br><span class="font-mono">#1e3a8a</span></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mb-6">
+            <h3 class="text-xl font-semibold mb-3">Vurgu Renkleri (Amber)</h3>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                <div>
+                    <div class="w-full h-16 bg-accent-50 rounded shadow-sm mb-1"></div>
+                    <div class="text-xs">accent-50<br><span class="font-mono">#fffbeb</span></div>
+                </div>
+                <div>
+                    <div class="w-full h-16 bg-accent-200 rounded shadow-sm mb-1"></div>
+                    <div class="text-xs">accent-200<br><span class="font-mono">#fde68a</span></div>
+                </div>
+                <div>
+                    <div class="w-full h-16 bg-accent-500 rounded shadow-sm mb-1 border border-white"></div>
+                    <div class="text-xs">accent-500<br><span class="font-mono">#f59e0b</span></div>
+                </div>
+                <div>
+                    <div class="w-full h-16 bg-accent-700 rounded shadow-sm mb-1 border border-white"></div>
+                    <div class="text-xs">accent-700<br><span class="font-mono">#b45309</span></div>
+                </div>
+                <div>
+                    <div class="w-full h-16 bg-accent-900 rounded shadow-sm mb-1 border border-white"></div>
+                    <div class="text-xs">accent-900<br><span class="font-mono">#78350f</span></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mb-6">
+            <h3 class="text-xl font-semibold mb-3">Anlamsal Renkler</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div>
+                    <div class="w-full h-16 bg-success rounded shadow-sm mb-1 border border-white"></div>
+                    <div class="text-xs">success<br><span class="font-mono">#22c55e</span></div>
+                </div>
+                <div>
+                    <div class="w-full h-16 bg-info rounded shadow-sm mb-1 border border-white"></div>
+                    <div class="text-xs">info<br><span class="font-mono">#3b82f6</span></div>
+                </div>
+                <div>
+                    <div class="w-full h-16 bg-warning rounded shadow-sm mb-1 border border-white"></div>
+                    <div class="text-xs">warning<br><span class="font-mono">#f59e0b</span></div>
+                </div>
+                <div>
+                    <div class="w-full h-16 bg-error rounded shadow-sm mb-1 border border-white"></div>
+                    <div class="text-xs">error<br><span class="font-mono">#ef4444</span></div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Tipografi -->
+    <section class="mb-10">
+        <h2 class="text-2xl font-bold mb-4 border-b pb-2">Tipografi</h2>
+        
+        <div class="mb-6">
+            <h3 class="text-xl font-semibold mb-3">Font Ailesi</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="p-4 border rounded shadow-sm">
+                    <p class="font-sans mb-2">Inter (Sans-serif)</p>
+                    <p class="font-sans text-sm opacity-70">ABCDEFGHIJKLMNOPQRSTUVWXYZ<br>abcdefghijklmnopqrstuvwxyz<br>0123456789</p>
+                </div>
+                <div class="p-4 border rounded shadow-sm">
+                    <p class="font-mono mb-2">Fira Code (Monospace)</p>
+                    <p class="font-mono text-sm opacity-70">ABCDEFGHIJKLMNOPQRSTUVWXYZ<br>abcdefghijklmnopqrstuvwxyz<br>0123456789</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mb-6">
+            <h3 class="text-xl font-semibold mb-3">Font Boyutları</h3>
+            <div class="space-y-3">
+                <div class="p-2 border rounded shadow-sm">
+                    <span class="text-xs">text-xs (0.75rem / 12px)</span>
+                </div>
+                <div class="p-2 border rounded shadow-sm">
+                    <span class="text-sm">text-sm (0.875rem / 14px)</span>
+                </div>
+                <div class="p-2 border rounded shadow-sm">
+                    <span class="text-base">text-base (1rem / 16px)</span>
+                </div>
+                <div class="p-2 border rounded shadow-sm">
+                    <span class="text-lg">text-lg (1.125rem / 18px)</span>
+                </div>
+                <div class="p-2 border rounded shadow-sm">
+                    <span class="text-xl">text-xl (1.25rem / 20px)</span>
+                </div>
+                <div class="p-2 border rounded shadow-sm">
+                    <span class="text-2xl">text-2xl (1.5rem / 24px)</span>
+                </div>
+                <div class="p-2 border rounded shadow-sm">
+                    <span class="text-3xl">text-3xl (1.875rem / 30px)</span>
+                </div>
+                <div class="p-2 border rounded shadow-sm">
+                    <span class="text-4xl">text-4xl (2.25rem / 36px)</span>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Boşluk Sistemi -->
+    <section class="mb-10">
+        <h2 class="text-2xl font-bold mb-4 border-b pb-2">Boşluk Sistemi</h2>
+        
+        <div class="mb-6">
+            <h3 class="text-xl font-semibold mb-3">Boşluk Örnekleri</h3>
+            <div class="space-y-6">
+                <div>
+                    <p class="text-sm mb-2">4px - 0.25rem - spacing-1</p>
+                    <div class="bg-gray-200 p-1 w-1 h-1"></div>
+                </div>
+                <div>
+                    <p class="text-sm mb-2">8px - 0.5rem - spacing-2</p>
+                    <div class="bg-gray-200 p-1 w-2 h-2"></div>
+                </div>
+                <div>
+                    <p class="text-sm mb-2">16px - 1rem - spacing-4</p>
+                    <div class="bg-gray-200 p-1 w-4 h-4"></div>
+                </div>
+                <div>
+                    <p class="text-sm mb-2">24px - 1.5rem - spacing-6</p>
+                    <div class="bg-gray-200 p-1 w-6 h-6"></div>
+                </div>
+                <div>
+                    <p class="text-sm mb-2">32px - 2rem - spacing-8</p>
+                    <div class="bg-gray-200 p-1 w-8 h-8"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Köşe Yuvarlaklıkları -->
+    <section class="mb-10">
+        <h2 class="text-2xl font-bold mb-4 border-b pb-2">Köşe Yuvarlaklıkları</h2>
+        
+        <div class="mb-6">
+            <h3 class="text-xl font-semibold mb-3">Köşe Örnekleri</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                    <div class="bg-gray-200 w-24 h-24 rounded-none border"></div>
+                    <p class="text-sm mt-1">rounded-none</p>
+                </div>
+                <div>
+                    <div class="bg-gray-200 w-24 h-24 rounded-sm border"></div>
+                    <p class="text-sm mt-1">rounded-sm</p>
+                </div>
+                <div>
+                    <div class="bg-gray-200 w-24 h-24 rounded border"></div>
+                    <p class="text-sm mt-1">rounded</p>
+                </div>
+                <div>
+                    <div class="bg-gray-200 w-24 h-24 rounded-md border"></div>
+                    <p class="text-sm mt-1">rounded-md</p>
+                </div>
+                <div>
+                    <div class="bg-gray-200 w-24 h-24 rounded-lg border"></div>
+                    <p class="text-sm mt-1">rounded-lg</p>
+                </div>
+                <div>
+                    <div class="bg-gray-200 w-24 h-24 rounded-xl border"></div>
+                    <p class="text-sm mt-1">rounded-xl</p>
+                </div>
+                <div>
+                    <div class="bg-gray-200 w-24 h-24 rounded-2xl border"></div>
+                    <p class="text-sm mt-1">rounded-2xl</p>
+                </div>
+                <div>
+                    <div class="bg-gray-200 w-24 h-24 rounded-full border"></div>
+                    <p class="text-sm mt-1">rounded-full</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Gölgeler -->
+    <section class="mb-10">
+        <h2 class="text-2xl font-bold mb-4 border-b pb-2">Gölgeler</h2>
+        
+        <div class="mb-6">
+            <h3 class="text-xl font-semibold mb-3">Gölge Örnekleri</h3>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
+                <div>
+                    <div class="bg-white w-full h-24 shadow-sm rounded p-3 flex items-end">
+                        <p class="text-sm">shadow-sm</p>
+                    </div>
+                </div>
+                <div>
+                    <div class="bg-white w-full h-24 shadow rounded p-3 flex items-end">
+                        <p class="text-sm">shadow (default)</p>
+                    </div>
+                </div>
+                <div>
+                    <div class="bg-white w-full h-24 shadow-md rounded p-3 flex items-end">
+                        <p class="text-sm">shadow-md</p>
+                    </div>
+                </div>
+                <div>
+                    <div class="bg-white w-full h-24 shadow-lg rounded p-3 flex items-end">
+                        <p class="text-sm">shadow-lg</p>
+                    </div>
+                </div>
+                <div>
+                    <div class="bg-white w-full h-24 shadow-xl rounded p-3 flex items-end">
+                        <p class="text-sm">shadow-xl</p>
+                    </div>
+                </div>
+                <div>
+                    <div class="bg-white w-full h-24 shadow-2xl rounded p-3 flex items-end">
+                        <p class="text-sm">shadow-2xl</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Bileşenler -->
+    <section class="mb-10">
+        <h2 class="text-2xl font-bold mb-4 border-b pb-2">Bileşenler</h2>
+        
+        <div class="mb-6">
+            <h3 class="text-xl font-semibold mb-3">Butonlar</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <button class="btn btn-primary">Primary</button>
+                <button class="btn btn-secondary">Secondary</button>
+                <button class="btn btn-accent">Accent</button>
+                <button class="btn btn-neutral">Neutral</button>
+                <button class="btn btn-info">Info</button>
+                <button class="btn btn-success">Success</button>
+                <button class="btn btn-warning">Warning</button>
+                <button class="btn btn-error">Error</button>
+                <button class="btn">Default</button>
+                <button class="btn btn-outline">Outline</button>
+                <button class="btn btn-ghost">Ghost</button>
+                <button class="btn btn-link">Link</button>
+            </div>
+        </div>
+        
+        <div class="mb-6">
+            <h3 class="text-xl font-semibold mb-3">Kartlar</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="card bg-base-100 shadow-md">
+                    <div class="card-body">
+                        <h2 class="card-title">Kart Başlığı</h2>
+                        <p>Kart içeriği burada yer alır. Metinler, görüntüler ve diğer içerikler eklenebilir.</p>
+                        <div class="card-actions justify-end">
+                            <button class="btn btn-primary btn-sm">Tamam</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card bg-base-100 shadow-md">
+                    <figure>
+                        <div class="bg-gray-200 w-full h-40 flex items-center justify-center">
+                            <span class="text-gray-500">Görsel</span>
+                        </div>
+                    </figure>
+                    <div class="card-body">
+                        <h2 class="card-title">Görsel Kart</h2>
+                        <p>Görsel içeren bir kart örneği.</p>
+                        <div class="card-actions justify-end">
+                            <button class="btn btn-primary btn-sm">Detaylar</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card bg-base-200 shadow-md">
+                    <div class="card-body">
+                        <h2 class="card-title">Farklı Arkaplan</h2>
+                        <p>Farklı bir arkaplan rengine sahip kart.</p>
+                        <div class="card-actions justify-end">
+                            <button class="btn btn-ghost btn-sm">İptal</button>
+                            <button class="btn btn-primary btn-sm">Kaydet</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mb-6">
+            <h3 class="text-xl font-semibold mb-3">Formlar</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="card bg-base-100 shadow-md">
+                    <div class="card-body">
+                        <h2 class="card-title">Giriş Formu</h2>
+                        <div class="form-control w-full">
+                            <label class="label">
+                                <span class="label-text">E-posta</span>
+                            </label>
+                            <input type="email" placeholder="E-posta adresiniz" class="input input-bordered w-full" />
+                        </div>
+                        <div class="form-control w-full">
+                            <label class="label">
+                                <span class="label-text">Şifre</span>
+                            </label>
+                            <input type="password" placeholder="Şifreniz" class="input input-bordered w-full" />
+                        </div>
+                        <div class="form-control mt-2">
+                            <label class="label cursor-pointer justify-start gap-2">
+                                <input type="checkbox" class="checkbox checkbox-primary" />
+                                <span class="label-text">Beni hatırla</span>
+                            </label>
+                        </div>
+                        <div class="card-actions mt-4">
+                            <button class="btn btn-primary w-full">Giriş Yap</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card bg-base-100 shadow-md">
+                    <div class="card-body">
+                        <h2 class="card-title">Form Elemanları</h2>
+                        <div class="form-control w-full mb-2">
+                            <label class="label">
+                                <span class="label-text">Seçim</span>
+                            </label>
+                            <select class="select select-bordered w-full">
+                                <option disabled selected>Seçiniz</option>
+                                <option>Seçenek 1</option>
+                                <option>Seçenek 2</option>
+                                <option>Seçenek 3</option>
+                            </select>
+                        </div>
+                        <div class="form-control w-full mb-2">
+                            <label class="label">
+                                <span class="label-text">Dosya</span>
+                            </label>
+                            <input type="file" class="file-input file-input-bordered w-full" />
+                        </div>
+                        <div class="form-control w-full">
+                            <label class="label">
+                                <span class="label-text">Açıklama</span>
+                            </label>
+                            <textarea class="textarea textarea-bordered" placeholder="Açıklama"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mb-6">
+            <h3 class="text-xl font-semibold mb-3">Uyarılar</h3>
+            <div class="space-y-3">
+                <div class="alert alert-info">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>Bilgi: Yeni bir sürüm mevcut.</span>
+                </div>
+                <div class="alert alert-success">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span>Başarı: İşlem tamamlandı!</span>
+                </div>
+                <div class="alert alert-warning">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                    <span>Uyarı: Dikkat etmeniz gerekiyor!</span>
+                </div>
+                <div class="alert alert-error">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span>Hata: Bir sorun oluştu!</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Yeni Bileşenler -->
+    <section class="mb-10">
+        <h2 class="text-2xl font-bold mb-4 border-b pb-2">Ek Bileşenler</h2>
+        
+        <!-- Uyarılar -->
+        <div class="mb-8">
+            <h3 class="text-xl font-semibold mb-3">Uyarılar (Alerts)</h3>
+            <div class="space-y-4">
+                <div>
+                    <p class="text-sm font-medium mb-2">Bilgi Uyarısı:</p>
+                    {% include "components/alert.html" with type="info" message="Bu bir bilgi mesajıdır." icon=True %}
+                </div>
+                <div>
+                    <p class="text-sm font-medium mb-2">Başarı Uyarısı:</p>
+                    {% include "components/alert.html" with type="success" message="İşlem başarıyla tamamlandı." icon=True %}
+                </div>
+                <div>
+                    <p class="text-sm font-medium mb-2">Uyarı Mesajı:</p>
+                    {% include "components/alert.html" with type="warning" message="Dikkat etmeniz gereken bir durum var." icon=True %}
+                </div>
+                <div>
+                    <p class="text-sm font-medium mb-2">Hata Uyarısı:</p>
+                    {% include "components/alert.html" with type="error" message="Bir hata oluştu, lütfen tekrar deneyin." icon=True %}
+                </div>
+                <div>
+                    <p class="text-sm font-medium mb-2">Kapatılabilir Uyarı:</p>
+                    {% include "components/alert.html" with type="info" message="Bu uyarıyı kapatabilirsiniz." icon=True dismissible=True %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Rozetler -->
+        <div class="mb-8">
+            <h3 class="text-xl font-semibold mb-3">Rozetler (Badges)</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                    <p class="text-sm font-medium mb-2">Durum Rozetleri:</p>
+                    <div class="space-y-2">
+                        {% include "components/badge.html" with text="Aktif" type="success" icon="check" %}
+                        {% include "components/badge.html" with text="Beklemede" type="warning" icon="clock" %}
+                        {% include "components/badge.html" with text="İptal" type="error" icon="x" %}
+                        {% include "components/badge.html" with text="Taslak" type="info" icon="info" %}
+                    </div>
+                </div>
+                <div>
+                    <p class="text-sm font-medium mb-2">Boyutlar:</p>
+                    <div class="space-y-2">
+                        {% include "components/badge.html" with text="Küçük" size="sm" type="primary" %}
+                        {% include "components/badge.html" with text="Normal" type="primary" %}
+                        {% include "components/badge.html" with text="Büyük" size="lg" type="primary" %}
+                    </div>
+                </div>
+                <div>
+                    <p class="text-sm font-medium mb-2">Renkler:</p>
+                    <div class="space-y-2">
+                        {% include "components/badge.html" with text="Birincil" type="primary" %}
+                        {% include "components/badge.html" with text="İkincil" type="secondary" %}
+                        {% include "components/badge.html" with text="Vurgu" type="accent" %}
+                        {% include "components/badge.html" with text="Nötr" type="neutral" %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Breadcrumb -->
+        <div class="mb-8">
+            <h3 class="text-xl font-semibold mb-3">Ekmek Kırıntısı (Breadcrumb)</h3>
+            <div class="space-y-4">
+                <div>
+                    <p class="text-sm font-medium mb-2">Basit Örnek:</p>
+                    {% include "components/breadcrumb.html" with items="Anasayfa::,Müşteriler::,Müşteri Detayı::" %}
+                </div>
+                <div>
+                    <p class="text-sm font-medium mb-2">URL'lerle Örnek (bu demo için gerçek URL'ler kullanılmamıştır):</p>
+                    {% include "components/breadcrumb.html" with items="Anasayfa:dashboard:dashboard,Müşteriler:customers:customer-list,Müşteri Detayı::" %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tabs -->
+        <div class="mb-8">
+            <h3 class="text-xl font-semibold mb-3">Sekmeler (Tabs)</h3>
+            <div class="space-y-4">
+                <div>
+                    <p class="text-sm font-medium mb-2">Basit Sekme Örneği:</p>
+                    {% include "components/tabs.html" with id="demo-tabs" tabs="Genel Bilgiler,İletişim,Adresler" initial_tab=0 %}
+                        {% block tab_0 %}
+                            <div class="p-4 border rounded-lg">
+                                <h4 class="text-lg font-semibold mb-2">Genel Bilgiler</h4>
+                                <p>Bu sekme genel bilgileri içerir. Buraya formlar, bilgi kartları veya başka içerikler yerleştirilebilir.</p>
+                            </div>
+                        {% endblock %}
+                        
+                        {% block tab_1 %}
+                            <div class="p-4 border rounded-lg">
+                                <h4 class="text-lg font-semibold mb-2">İletişim</h4>
+                                <p>Bu sekme iletişim bilgilerini içerir. E-posta, telefon ve diğer iletişim bilgileri burada gösterilebilir.</p>
+                            </div>
+                        {% endblock %}
+                        
+                        {% block tab_2 %}
+                            <div class="p-4 border rounded-lg">
+                                <h4 class="text-lg font-semibold mb-2">Adresler</h4>
+                                <p>Bu sekme adres bilgilerini içerir. Teslimat ve fatura adresleri burada listelenebilir.</p>
+                            </div>
+                        {% endblock %}
+                    {% include "components/tabs.html" %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Empty States -->
+        <div class="mb-8">
+            <h3 class="text-xl font-semibold mb-3">Boş Durumlar (Empty States)</h3>
+            <div class="space-y-4">
+                <div class="border rounded-lg">
+                    <p class="text-sm font-medium p-2 bg-base-200 rounded-t-lg">Veri Bulunamadı Örneği:</p>
+                    {% include "components/empty_state.html" with 
+                        title="Hiç müşteri bulunamadı" 
+                        message="Henüz hiç müşteri kaydı oluşturulmamış. Hemen yeni müşteri ekleyerek başlayın." 
+                        action_text="Müşteri Ekle" 
+                        action_url="#" 
+                        icon="users" 
+                    %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Dropdown -->
+        <div class="mb-8">
+            <h3 class="text-xl font-semibold mb-3">Açılır Menüler (Dropdowns)</h3>
+            <div class="flex flex-wrap gap-4">
+                <div>
+                    <p class="text-sm font-medium mb-2">Basit Dropdown:</p>
+                    {% include "components/dropdown.html" with 
+                        button_text="İşlemler" 
+                        button_class="btn-primary" 
+                        items="Profil:#,Ayarlar:#,Çıkış Yap:#" 
+                    %}
+                </div>
+                <div>
+                    <p class="text-sm font-medium mb-2">İkonlu Dropdown:</p>
+                    {% include "components/dropdown.html" with 
+                        button_icon="dots" 
+                        button_class="btn-ghost" 
+                        position="dropdown-left" 
+                    %}
+                        {% block content %}
+                            <li><a href="#">Düzenle</a></li>
+                            <li><a href="#">Kopyala</a></li>
+                            <li><a href="#">Sil</a></li>
+                        {% endblock %}
+                    {% include "components/dropdown.html" %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tooltip -->
+        <div class="mb-8">
+            <h3 class="text-xl font-semibold mb-3">İpuçları (Tooltips)</h3>
+            <div class="flex flex-wrap gap-4">
+                <div>
+                    {% include "components/tooltip.html" with text="Üste açılan ipucu" position="tooltip-top" %}
+                        <button class="btn btn-primary">Yukarı</button>
+                    {% include "components/tooltip.html" %}
+                </div>
+                <div>
+                    {% include "components/tooltip.html" with text="Alta açılan ipucu" position="tooltip-bottom" %}
+                        <button class="btn btn-secondary">Aşağı</button>
+                    {% include "components/tooltip.html" %}
+                </div>
+                <div>
+                    {% include "components/tooltip.html" with text="Sola açılan ipucu" position="tooltip-left" %}
+                        <button class="btn btn-accent">Sol</button>
+                    {% include "components/tooltip.html" %}
+                </div>
+                <div>
+                    {% include "components/tooltip.html" with text="Sağa açılan ipucu" position="tooltip-right" %}
+                        <button class="btn btn-info">Sağ</button>
+                    {% include "components/tooltip.html" %}
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

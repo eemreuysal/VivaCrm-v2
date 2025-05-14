@@ -1,0 +1,51 @@
+{% extends "base/base_auth.html" %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block title %}Giriş{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center">
+  <div class="max-w-md w-full">
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <div class="text-center mb-6">
+          <img src="{% static 'img/vivacrm-logo.png' %}" alt="VivaCRM" class="h-12 mx-auto" />
+          <h2 class="text-2xl font-bold mt-4">VivaCRM'e Hoş Geldiniz</h2>
+          <p class="text-base-content opacity-70 text-sm mt-1">Hesabınıza giriş yapın</p>
+        </div>
+        
+        <form method="post" hx-boost="false">
+          {% csrf_token %}
+          {{ form|crispy }}
+          
+          <div class="form-control mt-6">
+            <button type="submit" class="btn btn-primary w-full">GİRİŞ YAP</button>
+          </div>
+          
+          <div class="divider text-xs text-base-content opacity-50 my-4">VEYA</div>
+          
+          <div class="space-y-3 mt-2">
+            <div class="text-sm text-center">
+              <a href="{% url 'accounts:password_reset' %}" class="text-primary hover:underline">
+                Şifrenizi mi unuttunuz?
+              </a>
+            </div>
+            
+            <div class="text-sm text-center">
+              Hesabınız yok mu?
+              <a href="{% url 'accounts:register' %}" class="text-primary hover:underline">
+                Kaydolun
+              </a>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <div class="text-center mt-6 text-xs text-base-content opacity-60">
+      © 2025 VivaCRM | <a href="#" class="hover:underline">Koşullar</a> | <a href="#" class="hover:underline">Gizlilik</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,58 @@
+# Core
+Django==5.0.14
+djangorestframework==3.15.0
+drf-spectacular==0.28.0
+python-dotenv==1.0.1
+
+# Database
+psycopg2-binary==2.9.9
+redis==5.0.1
+django-redis==5.4.0
+hiredis==2.2.3
+
+# Monitoring & Logging
+sentry-sdk==2.7.0
+django-prometheus==2.3.1
+elastic-apm==6.21.3
+django-health-check==3.18.1
+
+# Authentication
+django-allauth==0.61.0
+argon2-cffi==23.1.0
+bleach==6.1.0
+
+# Task Queue
+celery==5.5.2
+django-celery-beat==2.6.0
+django-celery-results==2.5.1
+
+# Search
+django-filter==24.2
+
+# Testing
+pytest==8.2.0
+pytest-django==4.11.1
+factory-boy==3.3.0
+coverage==7.5.3
+
+# Development
+django-debug-toolbar==4.3.0
+django-extensions==3.2.3
+black==24.3.0
+flake8==7.0.0
+pre-commit==3.6.0
+
+# Template Engine & Forms
+django-crispy-forms==2.1
+crispy-tailwind==1.0.0
+
+# File Processing
+pandas==2.2.2
+openpyxl==3.1.5
+xlsxwriter==3.1.9
+
+# PDF Generation
+WeasyPrint==60.2
+
+# Frontend Utilities (referenced in templates)
+# htmx and alpinejs are loaded via CDN, not as Python dependencies

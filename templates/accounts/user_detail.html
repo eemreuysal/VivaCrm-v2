@@ -1,0 +1,82 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}{{ object.get_full_name }}{% endblock %}
+
+{% block content %}
+<div class="container p-4 mx-auto">
+  <div class="card bg-base-100 shadow-xl">
+    <div class="card-body">
+      <div class="flex flex-col md:flex-row md:items-center">
+        <div class="avatar mr-4 mb-4 md:mb-0">
+          <div class="w-24 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
+            {% if object.avatar %}
+              <img src="{{ object.avatar.url }}" alt="{{ object.get_full_name }}" />
+            {% else %}
+              <img src="{% static 'images/default-avatar.png' %}" alt="{{ object.get_full_name }}" />
+            {% endif %}
+          </div>
+        </div>
+        
+        <div>
+          <h2 class="text-2xl font-bold">{{ object.get_full_name }}</h2>
+          {% if object.title %}
+            <p class="text-lg font-medium text-primary">{{ object.title }}</p>
+          {% endif %}
+          {% if object.department %}
+            <p class="text-base text-gray-500">{{ object.department }}</p>
+          {% endif %}
+        </div>
+        
+        {% if object == request.user %}
+        <div class="ml-auto mt-4 md:mt-0">
+          <a href="{% url 'accounts:user-update' %}" class="btn btn-outline btn-primary">
+            Profili Düzenle
+          </a>
+        </div>
+        {% endif %}
+      </div>
+      
+      <div class="divider"></div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="stats shadow">
+          <div class="stat">
+            <div class="stat-title">E-posta</div>
+            <div class="stat-value text-lg">{{ object.email }}</div>
+          </div>
+        </div>
+        
+        <div class="stats shadow">
+          <div class="stat">
+            <div class="stat-title">Telefon</div>
+            <div class="stat-value text-lg">{{ object.phone|default:"Belirtilmedi" }}</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mt-6">
+        <h3 class="text-xl font-bold mb-4">Son İşlemler</h3>
+        <div class="overflow-x-auto">
+          <table class="table table-zebra">
+            <thead>
+              <tr>
+                <th>Tarih</th>
+                <th>İşlem</th>
+                <th>Detay</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="3" class="text-center">
+                  Henüz işlem kaydı bulunmamaktadır.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

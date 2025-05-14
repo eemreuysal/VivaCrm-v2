@@ -1,0 +1,45 @@
+filebeat.inputs:
+- type: log
+  enabled: true
+  paths:
+    - /logs/vivacrm.log
+    - /logs/error.log
+  json.keys_under_root: true
+  json.overwrite_keys: true
+  json.add_error_key: true
+  tags: ["vivacrm", "app"]
+
+- type: log
+  enabled: true
+  paths:
+    - /logs/security.log
+  json.keys_under_root: true
+  json.overwrite_keys: true
+  fields:
+    app: vivacrm
+    log_type: security
+  tags: ["vivacrm", "security"]
+
+processors:
+  - add_host_metadata: ~
+  - add_cloud_metadata: ~
+  - add_docker_metadata: ~
+  - add_kubernetes_metadata: ~
+
+output.elasticsearch:
+  hosts: ["elasticsearch:9200"]
+  indices:
+    - index: "vivacrm-app-%{+yyyy.MM.dd}"
+      when.contains:
+        tags: "app"
+    - index: "vivacrm-security-%{+yyyy.MM.dd}"
+      when.contains:
+        tags: "security"
+
+logging.level: info
+logging.to_files: true
+logging.files:
+  path: /usr/share/filebeat/logs
+  name: filebeat.log
+  keepfiles: 7
+  permissions: 0644

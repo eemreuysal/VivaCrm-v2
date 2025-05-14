@@ -1,0 +1,81 @@
+# Bandit yapılandırma dosyası
+exclude_dirs:
+  - '/venv/'
+  - '/node_modules/'
+  - '.git'
+  - '__pycache__'
+  - '/migrations/'
+
+# Bandit tarafından kullanılacak testlerin listesi
+tests:
+  - B101  # assert kullanımı
+  - B102  # exec kullanımı
+  - B103  # küme yapılandırması
+  - B104  # os modüllerinde hardcode edilen bağlantılar
+  - B105  # hardcode edilmiş parola stringi
+  - B106  # hardcode edilmiş parola fonksiyonu argümanı
+  - B107  # hardcode edilmiş parola varsayılan değeri
+  - B108  # güvensiz gecici dosya/dizin
+  - B110  # try-except-pass kullanımı
+  - B112  # try-except-continue kullanımı
+  - B201  # flask komut çalıştırma
+  - B301  # pickle kullanımı
+  - B303  # md5 kullanımı
+  - B307  # eval kullanımı
+  - B308  # ilkel mark_safe kullanımı
+  - B310  # güvensiz şifreleme
+  - B311  # rastgele kullanımı
+  - B312  # telnetlib kullanımı
+  - B313  # xml kullanımı
+  - B314  # xml.etree.ElementTree
+  - B315  # xml.sax
+  - B316  # xml.expat
+  - B317  # xml kullanımı
+  - B318  # xml elementleri
+  - B319  # xml elementleri
+  - B320  # xml elementleri
+  - B321  # ftplib kullanımı
+  - B323  # güvensiz YAML yükleyicisi
+  - B324  # güvensiz pickle kullanımı
+  - B401  # import telnetlib
+  - B402  # import ftplib
+  - B403  # import pickle
+  - B404  # import subprocess
+  - B405  # import xml.etree
+  - B406  # import xml.sax
+  - B407  # import xml.expat
+  - B408  # import xml
+  - B409  # import lxml
+  - B410  # import flask_debug
+  - B411  # import xmlrpclib
+  - B412  # import httpoxy
+  - B413  # import pyCrypto
+  - B414  # import Request
+  - B501  # assert koşulları
+  - B502  # güvensiz pickle
+  - B503  # güvensiz Django verifikasyonu
+  - B504  # güvensiz Django remove
+  - B505  # güvensiz deserialization
+  - B506  # güvensiz yaml yükleme
+  - B507  # güvensiz django ekstra operatörleri
+  - B601  # parametre enjeksiyonu
+  - B602  # OS komut enjeksiyonu
+  - B603  # süreç oluşturma fonksiyonları
+  - B604  # güvensiz tempfile/mktemp kullanımı
+  - B605  # süreç harici komut enjeksiyonu
+  - B606  # güvensiz oluşturma komuru
+  - B607  # güvensiz tar kullanımı
+  - B608  # hardcode edilmiş SQL sorguları
+  - B609  # güvensiz wildcard kullanımı
+  - B610  # güvensiz Django db modeli kullanımı
+  - B611  # güvensiz XXE oluşturma
+  - B701  # güvensiz novalidate sertifikası
+  - B702  # uzun süre bekleyen yarım açık SSL/TLS bağlantıları
+  - B703  # django csrf koruması açık değil
+
+skips:
+  - B101  # Ignore assert statements in tests
+
+# Şiddet seviyeleri
+severity_level: LOW
+confidence_level: HIGH

@@ -1,0 +1,44 @@
+{% extends "base/base_dashboard.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if object %}Adres Düzenle{% else %}Yeni Adres{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">{% if object %}Adres Düzenle{% else %}Yeni Adres{% endif %}</h1>
+    <div class="text-sm breadcrumbs">
+      <ul>
+        <li><a href="{% url 'dashboard:dashboard' %}">VivaCRM</a></li>
+        <li><a href="{% url 'customers:customer-list' %}">Müşteriler</a></li>
+        <li>
+          {% if object %}
+            <a href="{% url 'customers:customer-detail' pk=object.customer.pk %}">{{ object.customer.name }}</a>
+          {% else %}
+            <a href="{% url 'customers:customer-detail' pk=view.kwargs.customer_pk %}">Müşteri</a>
+          {% endif %}
+        </li>
+        <li>{% if object %}Adres Düzenle{% else %}Yeni Adres{% endif %}</li>
+      </ul>
+    </div>
+  </div>
+  
+  <div class="card bg-base-100 shadow-xl max-w-2xl mx-auto">
+    <div class="card-body">
+      <form method="post" hx-boost="true">
+        {% csrf_token %}
+        {% crispy form %}
+        
+        <div class="flex justify-end space-x-3 mt-6">
+          {% if object %}
+            <a href="{% url 'customers:customer-detail' pk=object.customer.pk %}" class="btn btn-ghost">İptal</a>
+          {% else %}
+            <a href="{% url 'customers:customer-detail' pk=view.kwargs.customer_pk %}" class="btn btn-ghost">İptal</a>
+          {% endif %}
+          <button type="submit" class="btn btn-primary">Kaydet</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

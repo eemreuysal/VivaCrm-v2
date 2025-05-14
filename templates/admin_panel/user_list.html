@@ -1,0 +1,130 @@
+{% extends "admin_panel/base_admin.html" %}
+{% load static %}
+
+{% block admin_title %}Yönetim Paneli - Kullanıcı Yönetimi{% endblock %}
+
+{% block breadcrumb %}
+<li>Kullanıcı Yönetimi</li>
+{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-6">
+  <h1 class="text-2xl font-bold">Kullanıcı Yönetimi</h1>
+  <a href="{% url 'accounts:register' %}" class="btn btn-primary">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+    </svg>
+    Yeni Kullanıcı
+  </a>
+</div>
+
+<!-- Filtreleme ve Arama -->
+<div class="card bg-base-100 shadow-xl mb-6">
+  <div class="card-body">
+    <div class="flex flex-col md:flex-row gap-4">
+      <div class="flex-grow">
+        <form method="get" action="{% url 'admin_panel:user-list' %}" class="flex gap-2">
+          <input type="text" name="q" value="{{ search_query }}" class="input input-bordered w-full" placeholder="Kullanıcı ara...">
+          <button type="submit" class="btn btn-primary">Ara</button>
+          {% if search_query %}
+          <a href="{% url 'admin_panel:user-list' %}" class="btn btn-ghost">Sıfırla</a>
+          {% endif %}
+        </form>
+      </div>
+      <div class="flex gap-2">
+        <a href="{% url 'admin_panel:user-list' %}" class="btn btn-sm {% if not status_filter %}btn-primary{% else %}btn-outline btn-primary{% endif %}">
+          Tümü ({{ users.paginator.count }})
+        </a>
+        <a href="{% url 'admin_panel:user-list' %}?status=active" class="btn btn-sm {% if status_filter == 'active' %}btn-primary{% else %}btn-outline btn-primary{% endif %}">
+          Aktif ({{ active_count }})
+        </a>
+        <a href="{% url 'admin_panel:user-list' %}?status=inactive" class="btn btn-sm {% if status_filter == 'inactive' %}btn-primary{% else %}btn-outline btn-primary{% endif %}">
+          Pasif ({{ inactive_count }})
+        </a>
+        <a href="{% url 'admin_panel:user-list' %}?status=staff" class="btn btn-sm {% if status_filter == 'staff' %}btn-primary{% else %}btn-outline btn-primary{% endif %}">
+          Yöneticiler ({{ staff_count }})
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Kullanıcı Listesi -->
+<div class="card bg-base-100 shadow-xl">
+  <div class="card-body">
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full">
+        <thead>
+          <tr>
+            <th>Kullanıcı Adı</th>
+            <th>İsim</th>
+            <th>E-posta</th>
+            <th>Kayıt Tarihi</th>
+            <th>Son Giriş</th>
+            <th>Durum</th>
+            <th>İşlemler</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user in users %}
+          <tr>
+            <td>{{ user.username }}</td>
+            <td>{{ user.get_full_name }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.date_joined|date:"d.m.Y H:i" }}</td>
+            <td>{{ user.last_login|date:"d.m.Y H:i"|default:"Hiç giriş yapmadı" }}</td>
+            <td>
+              {% if user.is_active %}
+              <span class="badge badge-success">Aktif</span>
+              {% else %}
+              <span class="badge badge-error">Pasif</span>
+              {% endif %}
+              
+              {% if user.is_staff %}
+              <span class="badge badge-info">Personel</span>
+              {% endif %}
+              
+              {% if user.is_superuser %}
+              <span class="badge badge-warning">Süper Kullanıcı</span>
+              {% endif %}
+            </td>
+            <td>
+              <a href="{% url 'admin_panel:user-detail' username=user.username %}" class="btn btn-xs btn-primary">Detay</a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="7" class="text-center py-4">Arama kriterlerinize uygun kullanıcı bulunamadı.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="flex justify-center mt-4">
+      <div class="btn-group">
+        {% if page_obj.has_previous %}
+        <a href="?page=1{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="btn btn-sm">«</a>
+        <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="btn btn-sm">‹</a>
+        {% else %}
+        <a class="btn btn-sm btn-disabled">«</a>
+        <a class="btn btn-sm btn-disabled">‹</a>
+        {% endif %}
+        
+        <a class="btn btn-sm btn-active">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</a>
+        
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="btn btn-sm">›</a>
+        <a href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="btn btn-sm">»</a>
+        {% else %}
+        <a class="btn btn-sm btn-disabled">›</a>
+        <a class="btn btn-sm btn-disabled">»</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

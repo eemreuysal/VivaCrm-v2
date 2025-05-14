@@ -1,0 +1,188 @@
+{% extends "admin_panel/base_admin.html" %}
+{% load static %}
+
+{% block admin_title %}Yönetim Paneli - Kullanıcı Detayı{% endblock %}
+
+{% block breadcrumb %}
+<li><a href="{% url 'admin_panel:user-list' %}">Kullanıcı Yönetimi</a></li>
+<li>{{ user_obj.username }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-6">
+  <h1 class="text-2xl font-bold">Kullanıcı Detayı: {{ user_obj.username }}</h1>
+  
+  <div class="flex gap-2">
+    {% if user.is_superuser %}
+    <form method="post" action="{% url 'accounts:user-admin' username=user_obj.username %}">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="toggle_active">
+      <button type="submit" class="btn {% if user_obj.is_active %}btn-warning{% else %}btn-success{% endif %}">
+        {% if user_obj.is_active %}
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+        </svg>
+        Pasif Yap
+        {% else %}
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        Aktif Yap
+        {% endif %}
+      </button>
+    </form>
+    
+    <form method="post" action="{% url 'accounts:user-admin' username=user_obj.username %}">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="toggle_staff">
+      <button type="submit" class="btn {% if user_obj.is_staff %}btn-error{% else %}btn-info{% endif %}">
+        {% if user_obj.is_staff %}
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+        </svg>
+        Yönetici Yetkisini Kaldır
+        {% else %}
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+        </svg>
+        Yönetici Yap
+        {% endif %}
+      </button>
+    </form>
+    
+    {% if user_obj != request.user %}
+    <button type="button" class="btn btn-error" onclick="document.getElementById('delete-modal').showModal()">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+      </svg>
+      Kullanıcıyı Sil
+    </button>
+    {% endif %}
+    {% endif %}
+  </div>
+</div>
+
+<!-- Kullanıcı detayları ve istatistikleri -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <!-- Kullanıcı bilgileri -->
+  <div class="card bg-base-100 shadow-xl lg:col-span-1">
+    <div class="card-body">
+      <h2 class="card-title">Kullanıcı Bilgileri</h2>
+      
+      <div class="flex flex-col items-center mb-4">
+        <div class="avatar mb-2">
+          <div class="w-24 h-24 rounded-full">
+            {% if user_obj.avatar %}
+            <img src="{{ user_obj.avatar.url }}" alt="{{ user_obj.get_full_name }}" />
+            {% else %}
+            <img src="{% static 'images/default-avatar.png' %}" alt="{{ user_obj.get_full_name }}" />
+            {% endif %}
+          </div>
+        </div>
+        <h3 class="text-xl font-bold">{{ user_obj.get_full_name }}</h3>
+        <p class="text-sm opacity-70">{{ user_obj.email }}</p>
+        
+        <div class="mt-2 flex gap-1 flex-wrap justify-center">
+          {% if user_obj.is_active %}
+          <span class="badge badge-success">Aktif</span>
+          {% else %}
+          <span class="badge badge-error">Pasif</span>
+          {% endif %}
+          
+          {% if user_obj.is_staff %}
+          <span class="badge badge-info">Personel</span>
+          {% endif %}
+          
+          {% if user_obj.is_superuser %}
+          <span class="badge badge-warning">Süper Kullanıcı</span>
+          {% endif %}
+        </div>
+      </div>
+      
+      <div class="divider"></div>
+      
+      <ul class="space-y-2">
+        <li class="flex justify-between">
+          <span class="font-semibold">Kullanıcı Adı:</span>
+          <span>{{ user_obj.username }}</span>
+        </li>
+        <li class="flex justify-between">
+          <span class="font-semibold">Ad:</span>
+          <span>{{ user_obj.first_name }}</span>
+        </li>
+        <li class="flex justify-between">
+          <span class="font-semibold">Soyad:</span>
+          <span>{{ user_obj.last_name }}</span>
+        </li>
+        <li class="flex justify-between">
+          <span class="font-semibold">E-posta:</span>
+          <span>{{ user_obj.email }}</span>
+        </li>
+        <li class="flex justify-between">
+          <span class="font-semibold">Kayıt Tarihi:</span>
+          <span>{{ user_obj.date_joined|date:"d.m.Y H:i" }}</span>
+        </li>
+        <li class="flex justify-between">
+          <span class="font-semibold">Son Giriş:</span>
+          <span>{{ user_obj.last_login|date:"d.m.Y H:i"|default:"Hiç giriş yapmadı" }}</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+  
+  <!-- Kullanıcı istatistikleri ve aktiviteleri -->
+  <div class="lg:col-span-2">
+    <div class="card bg-base-100 shadow-xl mb-6">
+      <div class="card-body">
+        <h2 class="card-title">Kullanıcı İstatistikleri</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+          <div class="stat bg-base-200 rounded-box">
+            <div class="stat-title">Oluşturulan Müşteriler</div>
+            <div class="stat-value">{{ customers_created }}</div>
+          </div>
+          
+          <div class="stat bg-base-200 rounded-box">
+            <div class="stat-title">Oluşturulan Siparişler</div>
+            <div class="stat-value">{{ orders_created }}</div>
+          </div>
+          
+          <div class="stat bg-base-200 rounded-box">
+            <div class="stat-title">Oluşturulan Ürünler</div>
+            <div class="stat-value">{{ products_created }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title">Son Aktiviteler</h2>
+        
+        <div class="alert alert-info mt-4">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          <span>Kullanıcı aktivite kayıtları henüz mevcut değil.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Kullanıcı Silme Modal -->
+<dialog id="delete-modal" class="modal modal-bottom sm:modal-middle">
+  <div class="modal-box">
+    <h3 class="font-bold text-lg text-error">Kullanıcıyı Sil</h3>
+    <p class="py-4">{{ user_obj.username }} kullanıcısını silmek istediğinize emin misiniz? Bu işlem geri alınamaz!</p>
+    <div class="modal-action">
+      <form method="post" action="{% url 'accounts:user-admin' username=user_obj.username %}">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="delete_user">
+        <div class="flex gap-2">
+          <button type="button" class="btn" onclick="document.getElementById('delete-modal').close()">İptal</button>
+          <button type="submit" class="btn btn-error">Kullanıcıyı Sil</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</dialog>
+{% endblock %}

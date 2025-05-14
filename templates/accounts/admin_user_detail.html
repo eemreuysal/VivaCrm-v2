@@ -1,0 +1,192 @@
+{% extends "base/base_dashboard.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Kullanıcı Yönetimi" %} - {{ object.get_full_name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-4">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">{% trans "Kullanıcı Detayı" %}</h1>
+    <div class="text-sm breadcrumbs">
+      <ul>
+        <li><a href="{% url 'dashboard:dashboard' %}">VivaCRM</a></li>
+        <li><a href="{% url 'accounts:user-list' %}">{% trans "Kullanıcılar" %}</a></li>
+        <li>{{ object.get_full_name|default:object.username }}</li>
+      </ul>
+    </div>
+  </div>
+  
+  <div class="card bg-base-100 shadow-xl">
+    <div class="card-body">
+      <div class="flex flex-col md:flex-row md:items-center">
+        <div class="avatar mr-4 mb-4 md:mb-0">
+          <div class="w-24 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
+            {% if object.avatar %}
+              <img src="{{ object.avatar.url }}" alt="{{ object.get_full_name }}" />
+            {% else %}
+              <img src="{% static 'images/default-avatar.png' %}" alt="{{ object.get_full_name }}" />
+            {% endif %}
+          </div>
+        </div>
+        
+        <div>
+          <h2 class="text-2xl font-bold">{{ object.get_full_name|default:object.username }}</h2>
+          {% if object.title %}
+            <p class="text-lg font-medium text-primary">{{ object.title }}</p>
+          {% endif %}
+          {% if object.department %}
+            <p class="text-base text-gray-500">{{ object.department }}</p>
+          {% endif %}
+          
+          <div class="flex flex-wrap gap-1 mt-2">
+            {% if object.is_staff %}
+              <div class="badge badge-primary">{% trans "Yönetici" %}</div>
+            {% endif %}
+            {% if object.is_superuser %}
+              <div class="badge badge-secondary">{% trans "Süper Kullanıcı" %}</div>
+            {% endif %}
+            {% if not object.is_active %}
+              <div class="badge badge-error">{% trans "Pasif" %}</div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="ml-auto mt-4 md:mt-0 flex gap-2">
+          {% if request.user.is_superuser %}
+          <form method="post" action="{% url 'accounts:user-admin-action' username=object.username %}" class="inline">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="toggle_staff">
+            <button type="submit" class="btn btn-sm {% if object.is_staff %}btn-error{% else %}btn-primary{% endif %}">
+              {% if object.is_staff %}
+                {% trans "Yöneticilik Yetkisini Kaldır" %}
+              {% else %}
+                {% trans "Yönetici Yap" %}
+              {% endif %}
+            </button>
+          </form>
+          
+          <form method="post" action="{% url 'accounts:user-admin-action' username=object.username %}" class="inline">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="toggle_active">
+            <button type="submit" class="btn btn-sm {% if object.is_active %}btn-error{% else %}btn-success{% endif %}">
+              {% if object.is_active %}
+                {% trans "Pasif Yap" %}
+              {% else %}
+                {% trans "Aktif Yap" %}
+              {% endif %}
+            </button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+      
+      <div class="divider"></div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="stats shadow">
+          <div class="stat">
+            <div class="stat-title">{% trans "E-posta" %}</div>
+            <div class="stat-value text-lg">{{ object.email }}</div>
+          </div>
+        </div>
+        
+        <div class="stats shadow">
+          <div class="stat">
+            <div class="stat-title">{% trans "Telefon" %}</div>
+            <div class="stat-value text-lg">{{ object.phone|default:_("Belirtilmedi") }}</div>
+          </div>
+        </div>
+        
+        <div class="stats shadow">
+          <div class="stat">
+            <div class="stat-title">{% trans "Kullanıcı Adı" %}</div>
+            <div class="stat-value text-lg">{{ object.username }}</div>
+          </div>
+        </div>
+        
+        <div class="stats shadow">
+          <div class="stat">
+            <div class="stat-title">{% trans "Son Giriş" %}</div>
+            <div class="stat-value text-lg">
+              {% if object.last_login %}
+                {{ object.last_login|date:"d.m.Y H:i" }}
+              {% else %}
+                {% trans "Hiç giriş yapmadı" %}
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="divider"></div>
+      
+      <div class="flex flex-wrap gap-2 justify-end">
+        <a href="{% url 'accounts:user-list' %}" class="btn btn-ghost">
+          {% trans "Listeye Dön" %}
+        </a>
+        
+        {% if request.user.is_superuser %}
+        <a href="#" class="btn btn-warning">
+          {% trans "Şifre Sıfırla" %}
+        </a>
+        
+        {% if object.id != request.user.id %}
+        <button class="btn btn-error" onclick="document.getElementById('delete-user-modal').showModal()">
+          {% trans "Kullanıcıyı Sil" %}
+        </button>
+        {% endif %}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  
+  <!-- Activity -->
+  <div class="card bg-base-100 shadow-xl mt-6">
+    <div class="card-body">
+      <h3 class="text-xl font-bold mb-4">{% trans "Son İşlemler" %}</h3>
+      <div class="overflow-x-auto">
+        <table class="table table-zebra">
+          <thead>
+            <tr>
+              <th>{% trans "Tarih" %}</th>
+              <th>{% trans "İşlem" %}</th>
+              <th>{% trans "Detay" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="3" class="text-center">
+                {% trans "Henüz işlem kaydı bulunmamaktadır." %}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete User Modal -->
+<dialog id="delete-user-modal" class="modal modal-bottom sm:modal-middle">
+  <div class="modal-box">
+    <h3 class="font-bold text-lg text-error">{% trans "Kullanıcıyı Sil" %}</h3>
+    <p class="py-4">
+      {% blocktrans with username=object.username %}
+      <strong>{{ username }}</strong> kullanıcısını silmek üzeresiniz. Bu işlem geri alınamaz.
+      Emin misiniz?
+      {% endblocktrans %}
+    </p>
+    <div class="modal-action">
+      <form method="post" action="{% url 'accounts:user-admin-action' username=object.username %}">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="delete_user">
+        <button type="submit" class="btn btn-error">{% trans "Evet, Kullanıcıyı Sil" %}</button>
+      </form>
+      <button class="btn" onclick="document.getElementById('delete-user-modal').close()">
+        {% trans "İptal" %}
+      </button>
+    </div>
+  </div>
+</dialog>
+{% endblock %}

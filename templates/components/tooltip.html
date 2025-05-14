@@ -1,0 +1,36 @@
+<!-- 
+İpucu (tooltip) komponenti.
+Kullanımı:
+{% include "components/tooltip.html" with 
+  text="Bu bir ipucu metnidir"
+  position="tooltip-top"
+  color="primary"
+%}
+  {% block content %}
+    <!-- İpucu gösterilecek içerik -->
+    <button class="btn">Butonun Üzerine Gelin</button>
+  {% endblock %}
+{% include "components/tooltip.html" %}
+
+Pozisyonlar:
+- tooltip-top
+- tooltip-bottom
+- tooltip-left
+- tooltip-right
+
+Renkler:
+- primary
+- secondary
+- accent
+- info
+- success
+- warning
+- error
+-->
+
+<div class="tooltip {{ position|default:'tooltip-top' }} {{ class }}"
+     data-tip="{{ text }}">
+  {% block content %}
+    <!-- İpucu gösterilecek içerik buraya gelecek -->
+  {% endblock %}
+</div>

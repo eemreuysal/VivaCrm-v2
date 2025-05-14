@@ -1,0 +1,80 @@
+{% extends "base/base_dashboard.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if object %}Sipariş Düzenle{% else %}Yeni Sipariş{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">{% if object %}Sipariş Düzenle{% else %}Yeni Sipariş{% endif %}</h1>
+    <div class="text-sm breadcrumbs">
+      <ul>
+        <li><a href="{% url 'dashboard:dashboard' %}">VivaCRM</a></li>
+        <li><a href="{% url 'orders:order-list' %}">Siparişler</a></li>
+        <li>{% if object %}{{ object.order_number }} Düzenle{% else %}Yeni Sipariş{% endif %}</li>
+      </ul>
+    </div>
+  </div>
+  
+  <div class="card bg-base-100 shadow-xl">
+    <div class="card-body">
+      <form method="post" hx-boost="true">
+        {% csrf_token %}
+        {% crispy form %}
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const customerSelect = document.getElementById('id_customer');
+    const billingAddressSelect = document.getElementById('id_billing_address');
+    const shippingAddressSelect = document.getElementById('id_shipping_address');
+    
+    // Function to update address options based on selected customer
+    function updateAddressSelects() {
+      const customerId = customerSelect.value;
+      
+      // Clear current options
+      billingAddressSelect.innerHTML = '<option value="">---------</option>';
+      shippingAddressSelect.innerHTML = '<option value="">---------</option>';
+      
+      if (customerId) {
+        // Fetch addresses for selected customer
+        fetch(`/customers/${customerId}/`)
+          .then(response => response.text())
+          .then(html => {
+            // Create a temporary element to parse the HTML
+            const tempElement = document.createElement('div');
+            tempElement.innerHTML = html;
+            
+            // Find the addresses table and extract addresses
+            const addressRows = tempElement.querySelectorAll('.addresses-table tbody tr');
+            addressRows.forEach(row => {
+              const addressId = row.dataset.addressId;
+              const addressTitle = row.querySelector('td:first-child').textContent.trim();
+              const addressType = row.querySelector('td:nth-child(2)').textContent.trim();
+              
+              // Create option element
+              const option = new Option(`${addressTitle} (${addressType})`, addressId);
+              
+              // Add to both selects
+              billingAddressSelect.add(option.cloneNode(true));
+              shippingAddressSelect.add(option);
+            });
+          })
+          .catch(error => console.error('Error fetching addresses:', error));
+      }
+    }
+    
+    // Set up event listener
+    customerSelect.addEventListener('change', updateAddressSelects);
+    
+    // Initialize address selects if editing an existing order
+    if (customerSelect.value) {
+      updateAddressSelects();
+    }
+  });
+</script>
+{% endblock %}

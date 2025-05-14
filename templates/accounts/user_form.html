@@ -1,0 +1,27 @@
+{% extends "base/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Profili Düzenle{% endblock %}
+
+{% block content %}
+<div class="container p-4 mx-auto">
+  <div class="card bg-base-100 shadow-xl">
+    <div class="card-body">
+      <h2 class="card-title text-2xl font-bold mb-6">Profil Bilgilerini Düzenle</h2>
+      
+      <form method="post" enctype="multipart/form-data" hx-boost="true">
+        {% csrf_token %}
+        {{ form|crispy }}
+      </form>
+      
+      <div class="divider my-8">Şifre Yönetimi</div>
+      
+      <div class="flex flex-col space-y-4">
+        <a href="{% url 'accounts:password_change' %}" class="btn btn-outline btn-secondary">
+          Şifremi Değiştir
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% load crispy_forms_tags %}
+
+<!-- 
+HTMX ve Alpine.js ile gelişmiş bir form komponenti. 
+Kullanımı:
+{% include "components/form.html" with form=form url="/path/to/submit" method="post" title="Form Başlığı" submit_text="Gönder" %}
+-->
+
+<div class="card bg-base-100 shadow-xl" x-data="{ loading: false, success: false, error: false, errorMessage: '' }">
+  {% if title %}
+  <div class="card-header p-4 bg-base-200 rounded-t-lg">
+    <h2 class="card-title">{{ title }}</h2>
+  </div>
+  {% endif %}
+  
+  <div class="card-body">
+    <!-- Başarı ve hata mesajları -->
+    <div x-show="success" class="alert alert-success shadow-lg mb-4" x-transition>
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+      <span>{% if success_message %}{{ success_message }}{% else %}İşlem başarıyla tamamlandı.{% endif %}</span>
+      <button class="btn btn-ghost btn-sm" @click="success = false">×</button>
+    </div>
+    
+    <div x-show="error" class="alert alert-error shadow-lg mb-4" x-transition>
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+      <span x-text="errorMessage || 'Bir hata oluştu. Lütfen tekrar deneyin.'"></span>
+      <button class="btn btn-ghost btn-sm" @click="error = false">×</button>
+    </div>
+    
+    <!-- Form -->
+    <form 
+      id="{{ id|default:'form' }}"
+      hx-post="{{ url }}" 
+      hx-swap="outerHTML"
+      {% if target %}hx-target="{{ target }}"{% endif %}
+      x-ref="form"
+      @htmx:before-request="loading = true"
+      @htmx:after-request="loading = false"
+      @htmx:response-error="error = true; errorMessage = event.detail.xhr.responseText || 'Bir hata oluştu.'"
+      {% if method %}method="{{ method }}"{% else %}method="post"{% endif %}
+      {% if enctype %}enctype="{{ enctype }}"{% endif %}
+      {% if confirm %}hx-confirm="{{ confirm }}"{% endif %}
+      {{ form_attributes|safe }}
+    >
+      {% csrf_token %}
+      
+      <!-- Form içeriği -->
+      {% if form %}
+        {% crispy form %}
+      {% else %}
+        {{ form_content|safe }}
+      {% endif %}
+      
+      <!-- Form footer ve submit button -->
+      <div class="flex justify-end items-center gap-4 mt-6">
+        {% if cancel_url %}
+        <a href="{{ cancel_url }}" class="btn btn-ghost">İptal</a>
+        {% endif %}
+        
+        <button type="submit" class="btn btn-primary" :disabled="loading">
+          <span x-show="loading" class="loading loading-spinner loading-xs mr-2"></span>
+          {{ submit_text|default:"Gönder" }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,326 @@
+{% extends "base/base_dashboard.html" %}
+{% load static %}
+
+{% block title %}Raporlar{% endblock %}
+
+{% block content %}
+<div>
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">Raporlar</h1>
+    <div class="text-sm breadcrumbs">
+      <ul>
+        <li><a href="{% url 'dashboard:dashboard' %}">VivaCRM</a></li>
+        <li>Raporlar</li>
+      </ul>
+    </div>
+  </div>
+  
+  <!-- Report Types -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <a href="{% url 'reports:sales-report' %}" class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300">
+      <div class="card-body">
+        <h2 class="card-title">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+          Satış Raporları
+        </h2>
+        <p>Satış istatistikleri, gelir analizleri ve sipariş eğilimleri.</p>
+      </div>
+    </a>
+    
+    <a href="{% url 'reports:product-report' %}" class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300">
+      <div class="card-body">
+        <h2 class="card-title">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+          </svg>
+          Ürün Raporları
+        </h2>
+        <p>En çok satan ürünler, stok durumu ve kategori performansı.</p>
+      </div>
+    </a>
+    
+    <a href="{% url 'reports:customer-report' %}" class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300">
+      <div class="card-body">
+        <h2 class="card-title">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+          </svg>
+          Müşteri Raporları
+        </h2>
+        <p>En değerli müşteriler, müşteri kazanımı ve müşteri sadakati analizleri.</p>
+      </div>
+    </a>
+  </div>
+  
+  <!-- Summary Statistics -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <!-- Sales Summary -->
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title">Bu Ay Satış Özeti</h2>
+        
+        <div class="stats stats-vertical shadow bg-base-200 w-full">
+          <div class="stat">
+            <div class="stat-title">Sipariş Sayısı</div>
+            <div class="stat-value">{{ sales_summary.order_count }}</div>
+            <div class="stat-desc">{{ sales_summary.completed_orders }} tamamlandı</div>
+          </div>
+          
+          <div class="stat">
+            <div class="stat-title">Toplam Gelir</div>
+            <div class="stat-value">{{ sales_summary.total_revenue }} ₺</div>
+            <div class="stat-desc">Ortalama Sipariş: {{ sales_summary.avg_order_value|floatformat:2 }} ₺</div>
+          </div>
+          
+          <div class="stat">
+            <div class="stat-title">Tamamlanma Oranı</div>
+            <div class="stat-value">{{ sales_summary.completion_rate|floatformat:1 }}%</div>
+            <div class="stat-desc">{{ sales_summary.cancellation_rate|floatformat:1 }}% iptal</div>
+          </div>
+        </div>
+        
+        <div class="card-actions justify-end mt-4">
+          <a href="{% url 'reports:sales-report' %}" class="btn btn-primary btn-sm">
+            Detaylı Rapor
+          </a>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Inventory Summary -->
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title">Stok Durumu</h2>
+        
+        <div class="stats stats-vertical shadow bg-base-200 w-full">
+          <div class="stat">
+            <div class="stat-title">Toplam Ürün</div>
+            <div class="stat-value">{{ inventory_summary.total_products }}</div>
+          </div>
+          
+          <div class="stat">
+            <div class="stat-title">Düşük Stokta</div>
+            <div class="stat-value text-warning">{{ inventory_summary.low_stock_count }}</div>
+            <div class="stat-desc">10 adedin altında</div>
+          </div>
+          
+          <div class="stat">
+            <div class="stat-title">Tükenmiş</div>
+            <div class="stat-value text-error">{{ inventory_summary.out_of_stock_count }}</div>
+            <div class="stat-desc">Stokta yok</div>
+          </div>
+        </div>
+        
+        <div class="card-actions justify-end mt-4">
+          <a href="{% url 'reports:product-report' %}?report_type=inventory" class="btn btn-primary btn-sm">
+            Detaylı Rapor
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Top Products & Customers -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <!-- Top Products -->
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title">En Çok Satan Ürünler</h2>
+        
+        {% if top_products %}
+        <div class="overflow-x-auto">
+          <table class="table table-zebra w-full">
+            <thead>
+              <tr>
+                <th>Ürün</th>
+                <th class="text-right">Satış Adedi</th>
+                <th class="text-right">Gelir</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for product in top_products %}
+              <tr>
+                <td>
+                  <div class="font-bold">{{ product.product__name }}</div>
+                  <div class="text-sm opacity-70">{{ product.product__code }}</div>
+                </td>
+                <td class="text-right">{{ product.quantity_sold }}</td>
+                <td class="text-right">{{ product.total_revenue }} ₺</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          <span>Bu dönemde satış verisi bulunmamaktadır.</span>
+        </div>
+        {% endif %}
+        
+        <div class="card-actions justify-end mt-4">
+          <a href="{% url 'reports:product-report' %}?report_type=top_products" class="btn btn-primary btn-sm">
+            Detaylı Rapor
+          </a>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Top Customers -->
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title">En İyi Müşteriler</h2>
+        
+        {% if top_customers %}
+        <div class="overflow-x-auto">
+          <table class="table table-zebra w-full">
+            <thead>
+              <tr>
+                <th>Müşteri</th>
+                <th class="text-right">Sipariş</th>
+                <th class="text-right">Harcama</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for customer in top_customers %}
+              <tr>
+                <td>
+                  <div class="font-bold">{{ customer.customer__name }}</div>
+                  {% if customer.customer__company_name %}
+                  <div class="text-sm opacity-70">{{ customer.customer__company_name }}</div>
+                  {% endif %}
+                </td>
+                <td class="text-right">{{ customer.order_count }}</td>
+                <td class="text-right">{{ customer.total_spent }} ₺</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          <span>Bu dönemde müşteri verisi bulunmamaktadır.</span>
+        </div>
+        {% endif %}
+        
+        <div class="card-actions justify-end mt-4">
+          <a href="{% url 'reports:customer-report' %}?report_type=top_customers" class="btn btn-primary btn-sm">
+            Detaylı Rapor
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Payment Methods & Saved Reports -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <!-- Payment Methods -->
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title">Ödeme Yöntemleri</h2>
+        
+        {% if payment_stats %}
+        <div class="overflow-x-auto">
+          <table class="table table-zebra w-full">
+            <thead>
+              <tr>
+                <th>Ödeme Yöntemi</th>
+                <th class="text-right">İşlem</th>
+                <th class="text-right">Tutar</th>
+                <th class="text-right">Oran</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for stat in payment_stats %}
+              <tr>
+                <td>
+                  {% if stat.payment_method == 'credit_card' %}
+                    Kredi Kartı
+                  {% elif stat.payment_method == 'bank_transfer' %}
+                    Banka Havalesi
+                  {% elif stat.payment_method == 'cash' %}
+                    Nakit
+                  {% elif stat.payment_method == 'online_payment' %}
+                    Online Ödeme
+                  {% else %}
+                    Diğer
+                  {% endif %}
+                </td>
+                <td class="text-right">{{ stat.count }}</td>
+                <td class="text-right">{{ stat.total_amount }} ₺</td>
+                <td class="text-right">{{ stat.percentage|floatformat:1 }}%</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          <span>Bu dönemde ödeme verisi bulunmamaktadır.</span>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    
+    <!-- Saved Reports -->
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="card-title">Kaydedilmiş Raporlarım</h2>
+          <a href="{% url 'reports:saved-report-list' %}" class="btn btn-sm btn-outline">
+            Tümünü Gör
+          </a>
+        </div>
+        
+        {% if saved_reports %}
+        <div class="overflow-x-auto">
+          <table class="table table-zebra w-full">
+            <thead>
+              <tr>
+                <th>Rapor Adı</th>
+                <th>Tür</th>
+                <th>Tarih</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for report in saved_reports %}
+              <tr>
+                <td>
+                  <a href="{% url 'reports:saved-report-detail' pk=report.pk %}" class="font-medium hover:underline">
+                    {{ report.name }}
+                  </a>
+                </td>
+                <td>
+                  {% if report.type == 'sales' %}
+                    Satış Raporu
+                  {% elif report.type == 'product' %}
+                    Ürün Raporu
+                  {% elif report.type == 'customer' %}
+                    Müşteri Raporu
+                  {% elif report.type == 'inventory' %}
+                    Stok Raporu
+                  {% else %}
+                    Özel Rapor
+                  {% endif %}
+                </td>
+                <td>{{ report.created_at|date:"d.m.Y" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          <span>Henüz kaydedilmiş raporunuz bulunmamaktadır.</span>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

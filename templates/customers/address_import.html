@@ -1,0 +1,70 @@
+{% extends 'base/base_dashboard.html' %}
+{% load static %}
+
+{% block title %}Import Customer Addresses{% endblock %}
+
+{% block content %}
+<div class="p-4">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Import Customer Addresses</h1>
+        <div class="flex space-x-2">
+            <a href="{% url 'customers:generate_address_template' %}" class="btn btn-primary">
+                <i class="fas fa-download mr-2"></i> Download Template
+            </a>
+            <a href="{% url 'customers:customer_list' %}" class="btn btn-outline">
+                <i class="fas fa-arrow-left mr-2"></i> Back to Customers
+            </a>
+        </div>
+    </div>
+
+    {% include 'components/card.html' with title="Import Customer Addresses from Excel" %}
+        <div class="p-6">
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold mb-2">Instructions</h3>
+                <div class="bg-base-200 p-4 rounded-lg">
+                    <ol class="list-decimal list-inside space-y-2">
+                        <li>Download the Excel template using the button above</li>
+                        <li>Fill in the address data according to the template headers</li>
+                        <li>Required fields are marked with an asterisk (*)</li>
+                        <li>The "Customer Email" field must match an existing customer in the system</li>
+                        <li>For "Address Type", use: "billing", "shipping", or "other"</li>
+                        <li>Upload the completed Excel file using the form below</li>
+                        <li>Check "Update existing addresses" to update addresses that already exist (matched by customer and address title)</li>
+                    </ol>
+                </div>
+            </div>
+
+            <form method="post" enctype="multipart/form-data" hx-encoding="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="form-control mb-4">
+                    <label class="label">
+                        <span class="label-text font-semibold">Excel File</span>
+                    </label>
+                    <input type="file" name="excel_file" accept=".xlsx,.xls" class="file-input file-input-bordered w-full" required />
+                    <div class="text-xs text-base-content/70 mt-1">
+                        Accepted formats: .xlsx, .xls
+                    </div>
+                </div>
+                
+                <div class="form-control mb-6">
+                    <label class="label cursor-pointer justify-start">
+                        <input type="checkbox" name="update_existing" class="checkbox checkbox-primary mr-2" checked />
+                        <span class="label-text">Update existing addresses</span>
+                    </label>
+                    <div class="text-xs text-base-content/70 mt-1">
+                        If checked, existing addresses with the same customer and title will be updated. Otherwise, only new addresses will be created.
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-2">
+                    <a href="{% url 'customers:customer_list' %}" class="btn btn-outline">Cancel</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-upload mr-2"></i> Import Addresses
+                    </button>
+                </div>
+            </form>
+        </div>
+    {% include 'components/card_end.html' %}
+</div>
+{% endblock %}

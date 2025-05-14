@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Fatura {{ invoice.invoice_number }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .header {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .logo {
+            max-height: 60px;
+            margin-bottom: 15px;
+        }
+        h1 {
+            color: #2a3f54;
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        .invoice-info {
+            background-color: #f7f7f7;
+            border: 1px solid #eee;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .invoice-info p {
+            margin: 5px 0;
+        }
+        .button {
+            display: inline-block;
+            background-color: #4caf50;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+        .footer {
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+            margin-top: 30px;
+            font-size: 12px;
+            color: #777;
+        }
+        .label {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="{{ company_logo_url }}" alt="{{ company.name }}" class="logo">
+        <h1>VivaCRM</h1>
+    </div>
+    
+    <p class="greeting">Sayın {{ customer.name }},</p>
+    
+    <p>{{ order.order_date|date:"d.m.Y" }} tarihli siparişinize ait faturanız oluşturulmuştur.</p>
+    
+    <div class="invoice-info">
+        <p><span class="label">Fatura Numarası:</span> {{ invoice.invoice_number }}</p>
+        <p><span class="label">Fatura Tarihi:</span> {{ invoice.issue_date|date:"d.m.Y" }}</p>
+        <p><span class="label">Sipariş Numarası:</span> {{ order.order_number }}</p>
+        <p><span class="label">Toplam Tutar:</span> {{ invoice.total_amount|floatformat:2 }} ₺</p>
+        {% if invoice.due_date %}
+        <p><span class="label">Son Ödeme Tarihi:</span> {{ invoice.due_date|date:"d.m.Y" }}</p>
+        {% endif %}
+    </div>
+    
+    <p>Faturanızın detaylarını görmek ve indirmek için aşağıdaki butona tıklayabilirsiniz:</p>
+    
+    <p>
+        <a href="{{ invoice_url }}" class="button">Faturayı Görüntüle</a>
+    </p>
+    
+    <p>Fatura ile ilgili herhangi bir sorunuz varsa, lütfen bizimle iletişime geçmekten çekinmeyin.</p>
+    
+    <p>Saygılarımızla,<br>VivaCRM Ekibi</p>
+    
+    <div class="footer">
+        <p>{{ company.name }} - {{ company.address }}</p>
+        <p>Tel: {{ company.phone }} - Email: {{ company.email }}</p>
+        <p>Bu e-posta otomatik olarak oluşturulmuştur, lütfen yanıtlamayınız.</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,130 @@
+{% extends "admin_panel/base_admin.html" %}
+{% load static %}
+
+{% block admin_title %}Yönetim Paneli - Sistem Logları{% endblock %}
+
+{% block breadcrumb %}
+<li>Sistem Logları</li>
+{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-6">
+  <h1 class="text-2xl font-bold">Sistem Logları</h1>
+  
+  <div class="flex gap-2">
+    <button class="btn btn-primary">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+      </svg>
+      Logları İndir
+    </button>
+    
+    <button class="btn btn-error">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+      </svg>
+      Logları Temizle
+    </button>
+  </div>
+</div>
+
+<!-- Filtreleme -->
+<div class="card bg-base-100 shadow-xl mb-6">
+  <div class="card-body">
+    <form method="get" action="{% url 'admin_panel:system-logs' %}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text">Log Seviyesi</span>
+        </label>
+        <select name="level" class="select select-bordered w-full">
+          <option value="" selected>Tümü</option>
+          <option value="DEBUG">DEBUG</option>
+          <option value="INFO">INFO</option>
+          <option value="WARNING">WARNING</option>
+          <option value="ERROR">ERROR</option>
+          <option value="CRITICAL">CRITICAL</option>
+        </select>
+      </div>
+      
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text">Kullanıcı</span>
+        </label>
+        <input type="text" name="user" class="input input-bordered" placeholder="Kullanıcı adı...">
+      </div>
+      
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text">Başlangıç Tarihi</span>
+        </label>
+        <input type="date" name="start_date" class="input input-bordered">
+      </div>
+      
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text">Bitiş Tarihi</span>
+        </label>
+        <input type="date" name="end_date" class="input input-bordered">
+      </div>
+      
+      <div class="form-control md:col-span-4">
+        <label class="label">
+          <span class="label-text">Arama</span>
+        </label>
+        <input type="text" name="search" class="input input-bordered" placeholder="Log mesajında ara...">
+      </div>
+      
+      <div class="form-control md:col-span-4">
+        <button type="submit" class="btn btn-primary">Filtreleri Uygula</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Log Listesi -->
+<div class="card bg-base-100 shadow-xl">
+  <div class="card-body">
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full">
+        <thead>
+          <tr>
+            <th>Zaman</th>
+            <th>Seviye</th>
+            <th>Kullanıcı</th>
+            <th>Mesaj</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in logs %}
+          <tr>
+            <td>{{ log.timestamp|date:"d.m.Y H:i:s" }}</td>
+            <td>
+              <span class="badge {% if log.level == 'DEBUG' %}badge-info{% elif log.level == 'INFO' %}badge-success{% elif log.level == 'WARNING' %}badge-warning{% elif log.level == 'ERROR' or log.level == 'CRITICAL' %}badge-error{% endif %}">
+                {{ log.level }}
+              </span>
+            </td>
+            <td>{{ log.user }}</td>
+            <td>{{ log.message }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="4" class="text-center py-4">Herhangi bir log kaydı bulunamadı.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- Pagination -->
+    <div class="flex justify-center mt-4">
+      <div class="btn-group">
+        <a class="btn btn-sm btn-disabled">«</a>
+        <a class="btn btn-sm btn-disabled">‹</a>
+        <a class="btn btn-sm btn-active">1 / 1</a>
+        <a class="btn btn-sm btn-disabled">›</a>
+        <a class="btn btn-sm btn-disabled">»</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Payment Reminder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .content {
+            margin-bottom: 30px;
+        }
+        .footer {
+            font-size: 12px;
+            color: #777;
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        .highlight {
+            background-color: #fef2f2;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #ef4444;
+            margin: 20px 0;
+        }
+        .amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ef4444;
+        }
+        .btn {
+            display: inline-block;
+            background-color: #2563eb;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Payment Reminder</h1>
+    </div>
+    
+    <div class="content">
+        <p>Dear {{ customer.name }},</p>
+        
+        <p>We're writing to remind you that invoice <strong>#{{ invoice.invoice_number }}</strong> is now <strong>{{ days_overdue }} days</strong> overdue.</p>
+        
+        <div class="highlight">
+            <p><strong>Invoice Details:</strong></p>
+            <p>Invoice Number: #{{ invoice.invoice_number }}</p>
+            <p>Invoice Date: {{ invoice.invoice_date }}</p>
+            <p>Due Date: {{ invoice.due_date }}</p>
+            <p>Amount Due: <span class="amount">{{ total_amount }}</span></p>
+        </div>
+        
+        <p>Please arrange for this payment to be made as soon as possible. If you have already sent your payment, please disregard this reminder.</p>
+        
+        <p style="text-align: center; margin: 30px 0;">
+            <a href="{{ site_url }}{% url 'invoices:invoice_detail' invoice.id %}" class="btn">View Invoice</a>
+        </p>
+        
+        <p>If you have any questions about this invoice or if you're experiencing any issues with payment, please don't hesitate to contact our accounts department.</p>
+        
+        <p>Thank you for your prompt attention to this matter.</p>
+        
+        <p>Best regards,<br>
+        The VivaCRM Team</p>
+    </div>
+    
+    <div class="footer">
+        <p>© {% now "Y" %} VivaCRM. All rights reserved.</p>
+        <p>This is an automated payment reminder. Please do not reply to this email.</p>
+    </div>
+</body>
+</html>

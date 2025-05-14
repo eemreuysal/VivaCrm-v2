@@ -1,0 +1,26 @@
+{
+  "name": "vivacrm-v2",
+  "version": "1.0.0",
+  "description": "VivaCRM v2 Frontend",
+  "main": "index.js",
+  "scripts": {
+    "dev": "npx tailwindcss -i ./static/css/src/main.css -o ./static/css/dist/main.css --watch",
+    "build": "npx tailwindcss -i ./static/css/src/main.css -o ./static/css/dist/main.css --minify"
+  },
+  "author": "VivaCRM Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@tailwindcss/forms": "^0.5.7",
+    "@tailwindcss/typography": "^0.5.10",
+    "autoprefixer": "^10.4.17",
+    "daisyui": "^4.7.2",
+    "postcss": "^8.4.35",
+    "tailwindcss": "^3.4.1"
+  },
+  "dependencies": {
+    "alpinejs": "^3.13.5",
+    "apexcharts": "^3.46.0",
+    "htmx.org": "^1.9.10",
+    "svg2img": "^1.0.0-beta.2"
+  }
+}

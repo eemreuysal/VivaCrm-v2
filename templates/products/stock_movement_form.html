@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load i18n %}
+
+{% block title %}{% trans "Yeni Stok Hareketi" %}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-4">
+    <div class="flex justify-between items-center mb-4">
+        <h1 class="text-2xl font-bold">
+            {% if product %}
+                {% trans "Yeni Stok Hareketi" %}: {{ product.name }}
+            {% else %}
+                {% trans "Yeni Stok Hareketi" %}
+            {% endif %}
+        </h1>
+        <a href="{% url 'products:movement-list' %}" class="btn btn-ghost">
+            <i class="fas fa-arrow-left mr-2"></i>{% trans "Listeye Dön" %}
+        </a>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            {% if product %}
+                <div class="alert alert-info mb-4">
+                    <div class="flex items-center">
+                        <div class="mr-4">
+                            <i class="fas fa-info-circle text-2xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold">{{ product.name }}</h3>
+                            <div class="text-sm">
+                                <p><strong>{% trans "Kod" %}:</strong> {{ product.code }}</p>
+                                <p><strong>{% trans "Mevcut Stok" %}:</strong> {{ product.stock }} {% if product.is_physical and product.stock <= 10 %}<span class="badge badge-warning">{% trans "Düşük Stok" %}</span>{% endif %}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            
+            {% crispy form %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Show/hide fields based on movement type
+        const movementTypeField = document.querySelector('[name="movement_type"]');
+        const unitCostField = document.querySelector('[name="unit_cost"]').closest('.form-group');
+        
+        function updateFields() {
+            const movementType = movementTypeField.value;
+            
+            // Show unit cost only for purchase movements
+            if (movementType === 'purchase') {
+                unitCostField.style.display = 'block';
+            } else {
+                unitCostField.style.display = 'none';
+            }
+        }
+        
+        // Initial update
+        updateFields();
+        
+        // Update on change
+        movementTypeField.addEventListener('change', updateFields);
+    });
+</script>
+{% endblock %}

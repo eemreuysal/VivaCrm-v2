@@ -1,0 +1,23 @@
+Sayın {{ customer.name }},
+
+{{ order.order_date|date:"d.m.Y" }} tarihli siparişinize ait faturanız oluşturulmuştur.
+
+Fatura Bilgileri:
+- Fatura Numarası: {{ invoice.invoice_number }}
+- Fatura Tarihi: {{ invoice.issue_date|date:"d.m.Y" }}
+- Sipariş Numarası: {{ order.order_number }}
+- Toplam Tutar: {{ invoice.total_amount|floatformat:2 }} ₺
+{% if invoice.due_date %}- Son Ödeme Tarihi: {{ invoice.due_date|date:"d.m.Y" }}{% endif %}
+
+Faturanızın detaylarını görmek ve indirmek için aşağıdaki bağlantıyı kullanabilirsiniz:
+{{ invoice_url }}
+
+Fatura ile ilgili herhangi bir sorunuz varsa, lütfen bizimle iletişime geçmekten çekinmeyin.
+
+Saygılarımızla,
+VivaCRM Ekibi
+
+---
+{{ company.name }} - {{ company.address }}
+Tel: {{ company.phone }} - Email: {{ company.email }}
+Bu e-posta otomatik olarak oluşturulmuştur, lütfen yanıtlamayınız.

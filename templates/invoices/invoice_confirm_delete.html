@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Fatura Sil" %}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-4">
+    <div class="flex justify-between items-center mb-4">
+        <h1 class="text-2xl font-bold">{% trans "Fatura Sil" %}</h1>
+        <a href="{% url 'invoices:invoice-detail' invoice.pk %}" class="btn btn-ghost">
+            <i class="fas fa-arrow-left mr-2"></i>{% trans "Geri Dön" %}
+        </a>
+    </div>
+    
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h2 class="card-title text-error">{% trans "Fatura Silinecek!" %}</h2>
+            
+            <div class="alert alert-warning mb-4">
+                <i class="fas fa-exclamation-triangle text-xl mr-4"></i>
+                <div>
+                    <p>{% trans "Bu faturayı silmek istediğinizden emin misiniz?" %}</p>
+                    <p><strong>{{ invoice.invoice_number }}</strong> - {{ invoice.order.order_number }} - {{ invoice.order.customer.name }}</p>
+                    <p>{% trans "Bu işlem geri alınamaz." %}</p>
+                </div>
+            </div>
+            
+            <form method="post">
+                {% csrf_token %}
+                <div class="flex justify-end space-x-4 mt-4">
+                    <a href="{% url 'invoices:invoice-detail' invoice.pk %}" class="btn btn-ghost">
+                        {% trans "İptal" %}
+                    </a>
+                    <button type="submit" class="btn btn-error">
+                        <i class="fas fa-trash mr-2"></i>{% trans "Evet, Sil" %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,284 @@
+{% extends "base/base_dashboard.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Ürünler{% endblock %}
+
+{% block content %}
+<div>
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">Ürün Listesi</h1>
+    <div class="text-sm breadcrumbs">
+      <ul>
+        <li><a href="{% url 'dashboard:dashboard' %}">VivaCRM</a></li>
+        <li>Ürünler</li>
+      </ul>
+    </div>
+  </div>
+  
+  <!-- Stock Status Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title text-sm">Toplam Ürün</h2>
+        <p class="text-3xl font-bold text-primary">{{ page_obj.paginator.count }}</p>
+        <p class="text-sm text-base-content opacity-60">
+          <span class="text-success">+{{ new_products|default:0 }}</span> son 30 günde
+        </p>
+      </div>
+    </div>
+    
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title text-sm">Düşük Stoklu Ürünler</h2>
+        <p class="text-3xl font-bold text-warning">{{ low_stock_count }}</p>
+        <p class="text-sm text-base-content opacity-60">
+          Toplam ürünlerin {% widthratio low_stock_count page_obj.paginator.count 100 %}%'si
+        </p>
+      </div>
+    </div>
+    
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title text-sm">Stokta Olmayan Ürünler</h2>
+        <p class="text-3xl font-bold text-error">{{ out_of_stock_count }}</p>
+        <p class="text-sm text-base-content opacity-60">
+          Toplam ürünlerin {% widthratio out_of_stock_count page_obj.paginator.count 100 %}%'si
+        </p>
+      </div>
+    </div>
+  </div>
+  
+  <div class="card bg-base-100 shadow-xl mb-6">
+    <div class="card-body">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="card-title">Ürün Arama</h2>
+        <div class="flex flex-wrap gap-2">
+          <a href="{% url 'products:category-list' %}" class="btn btn-outline btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+            </svg>
+            Kategoriler
+          </a>
+          <div class="dropdown dropdown-end">
+            <label tabindex="0" class="btn btn-outline btn-secondary">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+              </svg>
+              Stok Yönetimi
+            </label>
+            <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+              <li><a href="{% url 'products:movement-list' %}">Stok Hareketleri</a></li>
+              <li><a href="{% url 'products:movement-create' %}">Yeni Stok Hareketi</a></li>
+              <li><a href="{% url 'products:bulk-stock-adjustment' %}">Toplu Stok Ayarlama</a></li>
+            </ul>
+          </div>
+          
+          <div class="dropdown dropdown-end">
+            <label tabindex="0" class="btn btn-outline btn-success">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+              Dışa Aktar
+            </label>
+            <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+              <li><a href="{% url 'products:export_products' %}?{{ request.GET.urlencode }}">Excel'e Aktar (.xlsx)</a></li>
+              <li><a href="{% url 'products:export_products' %}?format=csv&{{ request.GET.urlencode }}">CSV'ye Aktar (.csv)</a></li>
+              <li><a href="{% url 'products:export_stock' %}?{{ request.GET.urlencode }}">Stok Raporunu Dışa Aktar</a></li>
+            </ul>
+          </div>
+          
+          <div class="dropdown dropdown-end">
+            <label tabindex="0" class="btn btn-outline btn-info">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              İçe Aktar
+            </label>
+            <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+              <li><a href="{% url 'products:product_import' %}">Ürünleri İçe Aktar</a></li>
+              <li><a href="{% url 'products:stock_adjustment_import' %}">Stok Ayarlamalarını İçe Aktar</a></li>
+              <li><a href="{% url 'products:generate_product_template' %}">Ürün Şablonu İndir</a></li>
+            </ul>
+          </div>
+          
+          <a href="{% url 'products:product-create' %}" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Yeni Ürün
+          </a>
+        </div>
+      </div>
+      
+      <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-4" hx-get="{% url 'products:product-list' %}" hx-target="#products-table" hx-swap="outerHTML">
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Arama</span>
+          </label>
+          <input type="text" name="query" value="{{ form.query.value|default:'' }}" placeholder="Ürün adı, kodu, barkod..." class="input input-bordered w-full" />
+        </div>
+        
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Kategori</span>
+          </label>
+          <select name="category" class="select select-bordered w-full">
+            <option value="">Tüm Kategoriler</option>
+            {% for category in form.fields.category.queryset %}
+            <option value="{{ category.id }}" {% if form.category.value|stringformat:'s' == category.id|stringformat:'s' %}selected{% endif %}>{{ category }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Durum</span>
+          </label>
+          <select name="status" class="select select-bordered w-full">
+            <option value="">Tümü</option>
+            {% for key, value in form.fields.status.choices %}
+            {% if key %}
+            <option value="{{ key }}" {% if form.status.value == key %}selected{% endif %}>{{ value }}</option>
+            {% endif %}
+            {% endfor %}
+          </select>
+        </div>
+        
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Stok Durumu</span>
+          </label>
+          <div class="flex flex-col space-y-2">
+            <label class="cursor-pointer label justify-start">
+              <input type="checkbox" name="in_stock" class="checkbox checkbox-primary" {% if form.in_stock.value %}checked{% endif %} />
+              <span class="label-text ml-2">Sadece stokta olanlar</span>
+            </label>
+            <label class="cursor-pointer label justify-start">
+              <input type="checkbox" name="low_stock" class="checkbox checkbox-warning" {% if form.low_stock.value %}checked{% endif %} />
+              <span class="label-text ml-2">Düşük stoklu ürünler</span>
+            </label>
+          </div>
+          
+          <button type="submit" class="btn btn-primary mt-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            Ara
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <div id="products-table" class="card bg-base-100 shadow-xl overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full">
+        <thead>
+          <tr>
+            <th>Kod / Ürün</th>
+            <th>Kategori</th>
+            <th>Fiyat</th>
+            <th>Stok</th>
+            <th>Durum</th>
+            <th>İşlemler</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for product in products %}
+          <tr>
+            <td>
+              <div class="font-bold">{{ product.code }}</div>
+              <div>{{ product.name }}</div>
+            </td>
+            <td>{{ product.category|default:"-" }}</td>
+            <td>
+              <div>{{ product.price }} ₺</div>
+              {% if product.discount_price %}
+              <div class="text-sm line-through opacity-60">{{ product.discount_price }} ₺</div>
+              {% endif %}
+            </td>
+            <td>
+              <div class="flex items-center">
+                {{ product.stock }}
+                {% if product.is_physical and product.stock <= 10 and product.stock > 0 %}
+                  <span class="badge badge-warning ml-2">Düşük</span>
+                {% endif %}
+                {% if product.is_physical and product.stock == 0 %}
+                  <span class="badge badge-error ml-2">Tükendi</span>
+                {% endif %}
+              </div>
+              <div class="mt-1">
+                <a href="{% url 'products:movement-create' %}?product={{ product.id }}" class="text-xs text-primary hover:underline">Stok Ekle</a>
+              </div>
+            </td>
+            <td>
+              {% if product.status == 'available' %}
+              <div class="badge badge-success gap-2">{{ product.get_status_display }}</div>
+              {% elif product.status == 'unavailable' %}
+              <div class="badge badge-error gap-2">{{ product.get_status_display }}</div>
+              {% elif product.status == 'coming_soon' %}
+              <div class="badge badge-warning gap-2">{{ product.get_status_display }}</div>
+              {% else %}
+              <div class="badge badge-ghost gap-2">{{ product.get_status_display }}</div>
+              {% endif %}
+            </td>
+            <td>
+              <div class="flex space-x-2">
+                <a href="{% url 'products:product-detail' slug=product.slug %}" class="btn btn-square btn-sm btn-ghost text-primary">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </a>
+                
+                <a href="{% url 'products:product-update' slug=product.slug %}" class="btn btn-square btn-sm btn-ghost text-secondary">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                </a>
+                
+                <a href="{% url 'products:product-delete' slug=product.slug %}" class="btn btn-square btn-sm btn-ghost text-error">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="text-center py-8">
+              <div class="flex flex-col items-center justify-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-base-content opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+                <p class="text-base-content opacity-60">Henüz ürün kaydı bulunmamaktadır veya arama kriterleriyle eşleşen ürün yok.</p>
+                <a href="{% url 'products:product-create' %}" class="btn btn-primary btn-sm mt-2">Yeni Ürün Ekle</a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    
+    {% if is_paginated %}
+    <div class="flex justify-center py-4 border-t border-base-300">
+      <div class="btn-group">
+        {% if page_obj.has_previous %}
+        <a href="?page=1{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.in_stock %}&in_stock={{ request.GET.in_stock }}{% endif %}" class="btn btn-sm">«</a>
+        <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.in_stock %}&in_stock={{ request.GET.in_stock }}{% endif %}" class="btn btn-sm">‹</a>
+        {% endif %}
+        
+        <button class="btn btn-sm">Sayfa {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</button>
+        
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.in_stock %}&in_stock={{ request.GET.in_stock }}{% endif %}" class="btn btn-sm">›</a>
+        <a href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.in_stock %}&in_stock={{ request.GET.in_stock }}{% endif %}" class="btn btn-sm">»</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
