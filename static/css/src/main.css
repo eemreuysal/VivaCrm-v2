@@ -1,6 +1,47 @@
+/**
+ * VivaCRM Main CSS File
+ * ITCSS architectural pattern implementation
+ * Import order is important!
+ */
+
+/* Tailwind Base - Must come first for DaisyUI */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* 00. Settings - Variables and constants */
+@import "./00-settings/_variables.css";
+@import "./00-settings/_fonts.css";
+@import "./00-settings/_daisyui.css";
+
+/* 01. Tools - Mixins and functions */
+/* Currently empty - add as needed */
+
+/* 02. Generic - Reset and normalize styles */
+@import "./02-generic/_theme.css";
+
+/* 03. Elements - HTML element styling */
+@import "./03-elements/_typography.css";
+
+/* 04. Objects - Design patterns, no cosmetics */
+/* Currently empty - add as needed */
+
+/* 05. Components - UI components */
+@import "./05-components/_avatar.css";
+@import "./05-components/_card.css";
+@import "./05-components/_dashboard.css";
+@import "./05-components/_menu.css";
+@import "./05-components/_navbar.css";
+@import "./05-components/sidebar.css";
+@import "./05-components/notifications.css";
+@import "./05-components/charts.css";
+
+/* 06. Themes - Theme specific overrides */
+@import "./06-themes/_dark.css";
+
+/* 07. Utilities - Single-purpose helper classes */
+@import "./07-utilities/_animations.css";
+@import "./07-utilities/_helpers.css";
 
 /* Custom base styles */
 @layer base {
@@ -9,7 +50,7 @@
   }
   
   body {
-    @apply font-sans text-base antialiased text-gray-800 bg-slate-50;
+    @apply font-sans text-base antialiased;
   }
   
   h1, h2, h3, h4, h5, h6 {
@@ -34,110 +75,5 @@
   
   a {
     @apply transition-colors duration-200;
-  }
-}
-
-/* Custom components */
-@layer components {
-  .btn-icon {
-    @apply inline-flex items-center justify-center;
-  }
-  
-  .card-dashboard {
-    @apply bg-white rounded-lg shadow-card overflow-hidden;
-  }
-  
-  .form-input-float {
-    @apply peer block w-full rounded border border-gray-300 bg-transparent px-3 py-2 leading-6 outline-none transition-colors duration-200 ease-in-out focus:border-primary-500 focus:outline-none;
-  }
-  
-  .form-label-float {
-    @apply absolute -top-2.5 left-3 z-10 origin-[0] -translate-y-4 scale-75 transform bg-white px-1 text-sm text-gray-500 duration-200 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:scale-100 peer-focus:-top-2.5 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-primary-500;
-  }
-  
-  .table-base {
-    @apply min-w-full divide-y divide-gray-200;
-  }
-  
-  .table-header {
-    @apply px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
-  }
-  
-  .table-data {
-    @apply px-6 py-4 whitespace-nowrap text-sm text-gray-800;
-  }
-  
-  .status-badge {
-    @apply inline-flex items-center justify-center px-2 py-1 text-xs font-medium rounded-full;
-  }
-  
-  .status-badge-success {
-    @apply status-badge bg-green-100 text-green-800;
-  }
-  
-  .status-badge-warning {
-    @apply status-badge bg-yellow-100 text-yellow-800;
-  }
-  
-  .status-badge-error {
-    @apply status-badge bg-red-100 text-red-800;
-  }
-  
-  .status-badge-info {
-    @apply status-badge bg-blue-100 text-blue-800;
-  }
-  
-  /* Form enhancements */
-  .form-group {
-    @apply mb-4;
-  }
-  
-  .form-label {
-    @apply block text-sm font-medium text-gray-700 mb-1;
-  }
-  
-  .form-help {
-    @apply mt-1 text-sm text-gray-500;
-  }
-  
-  .form-error {
-    @apply mt-1 text-sm text-red-600;
-  }
-  
-  /* HTMX indicators */
-  .htmx-indicator {
-    @apply opacity-0 transition duration-300;
-  }
-  
-  .htmx-request .htmx-indicator {
-    @apply opacity-100;
-  }
-  
-  .htmx-request.htmx-indicator {
-    @apply opacity-100;
-  }
-}
-
-/* Custom utilities */
-@layer utilities {
-  .text-shadow {
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-  
-  .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-500 to-primary-700;
-  }
-  
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-  
-  .no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-  
-  .animate-spin-slow {
-    animation: spin 3s linear infinite;
   }
 }

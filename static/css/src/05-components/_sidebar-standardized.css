@@ -1,0 +1,153 @@
+/**
+ * VivaCRM Sidebar Component - Standardized
+ * Merkezi sidebar stillerini içerir
+ */
+
+/* Sidebar Container */
+.sidebar {
+  @apply bg-base-200 w-64 min-h-screen transition-all duration-300;
+  transition: var(--viva-transition-theme), width 0.3s ease, transform 0.3s ease;
+}
+
+/* Glass Effect Sidebar */
+.sidebar-glass {
+  @apply backdrop-blur-sm bg-opacity-80 border-r border-base-300/50;
+}
+
+/* Sidebar Brand */
+.sidebar-brand {
+  @apply p-4 bg-gradient-to-r from-primary to-primary-focus flex items-center gap-3;
+}
+
+.sidebar-logo {
+  @apply w-10 h-10 rounded-full bg-white/20 flex items-center justify-center backdrop-blur;
+}
+
+.sidebar-logo-text {
+  @apply text-white font-bold text-xl;
+}
+
+.sidebar-title {
+  @apply text-xl font-bold text-white;
+}
+
+.sidebar-subtitle {
+  @apply text-xs text-white/80;
+}
+
+/* Sidebar Section */
+.sidebar-section {
+  @apply py-2 px-3;
+}
+
+.sidebar-section-title {
+  @apply text-xs uppercase font-medium text-base-content/70 px-3 py-2;
+}
+
+/* Menu Styling */
+.sidebar-menu {
+  @apply space-y-1 py-2;
+}
+
+/* Menu Item */
+.sidebar-link {
+  @apply flex items-center gap-2 p-3 rounded-lg transition-all duration-200 relative text-base-content hover:bg-primary/10;
+}
+
+.sidebar-link.active {
+  @apply bg-primary/10 text-primary font-medium;
+}
+
+.sidebar-link.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  @apply bg-primary rounded-r-lg;
+}
+
+.sidebar-link-icon {
+  @apply w-5 h-5;
+}
+
+.sidebar-link-text {
+  @apply text-sm;
+}
+
+.sidebar-link-badge {
+  @apply ml-auto text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full;
+}
+
+/* Nested Menus */
+.sidebar-submenu {
+  @apply pl-5 mt-1 space-y-1;
+}
+
+/* Has Active Child */
+.sidebar-link-parent.has-active-child {
+  @apply font-medium;
+}
+
+.sidebar-link-parent.has-active-child > .sidebar-link {
+  @apply bg-primary/5;
+}
+
+/* Theme Toggle */
+.sidebar-theme-toggle {
+  @apply p-4 mt-auto;
+}
+
+.sidebar-theme-toggle-box {
+  @apply form-control bg-base-300 rounded-box p-3;
+}
+
+/* Collapsible Sidebar States */
+.sidebar.collapsed {
+  width: 80px;
+}
+
+.sidebar.collapsed .sidebar-link-text,
+.sidebar.collapsed .sidebar-section-title,
+.sidebar.collapsed .sidebar-subtitle,
+.sidebar.collapsed .sidebar-link-badge {
+  @apply hidden;
+}
+
+.sidebar.collapsed .sidebar-logo {
+  @apply mx-auto;
+}
+
+.sidebar.collapsed .sidebar-brand {
+  @apply justify-center;
+}
+
+/* Content Adjustment */
+.sidebar-content {
+  width: calc(100% - 256px);
+  @apply transition-all duration-300;
+}
+
+.sidebar-content.expanded {
+  width: calc(100% - 80px);
+}
+
+/* Mobile Responsive */
+@media (max-width: 1024px) {
+  .sidebar {
+    @apply fixed z-40 shadow-xl -translate-x-full;
+  }
+  
+  .sidebar.open {
+    @apply translate-x-0;
+  }
+  
+  .sidebar-content {
+    width: 100%;
+  }
+  
+  .sidebar-backdrop {
+    @apply fixed inset-0 bg-black/30 z-30 lg:hidden;
+  }
+}

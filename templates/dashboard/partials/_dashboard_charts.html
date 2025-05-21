@@ -1,0 +1,147 @@
+<!-- Dashboard Charts - Enhanced for HTMX integration -->
+<div class="charts-container grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6" hx-preserve data-chart-container id="main-charts-container" 
+     hx-on:htmx:after-swap="window.vivaChartFix.refreshCharts()">
+    
+    <!-- Sales Chart -->
+    <div class="chart-card card bg-base-100 shadow-xl hover-scale animate-fade-in" style="animation-delay: 0.3s;">
+        <div class="card-body p-4">
+            <div class="flex justify-between items-center mb-2">
+                <div>
+                    <h3 class="card-title text-lg font-semibold">Satış Trendi</h3>
+                    <div class="text-xs text-base-content/60">{{ period_description }}</div>
+                </div>
+                
+                <div class="btn-icon w-8 h-8 bg-primary/10 text-primary rounded-full flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
+                </div>
+            </div>
+            
+            <!-- Chart Loading State -->
+            <div x-show="loading" class="loading-container w-full py-12">
+                <span class="loading loading-spinner loading-lg text-primary"></span>
+                <span class="loading-text">Veriler yükleniyor...</span>
+            </div>
+            
+            <!-- Chart Container -->
+            <div 
+                id="salesChart" 
+                x-show="!loading" 
+                class="w-full h-72 mt-2 chart-container"
+                style="width: 100%; height: 300px; min-width: 300px; min-height: 300px;"
+                data-chart-type="sales"
+                data-width="100%"
+                data-height="300"
+                data-categories='{{ sales_labels|safe }}'
+                data-series='{{ sales_data|safe }}'
+                hx-swap-oob="true">
+            </div>
+            
+            <!-- No Data State -->
+            <div x-show="!loading && ({{ sales_data|default:'[]' }} === '[]' || {{ sales_data|default:'[]' }}.length === 0)" class="empty-state">
+                <div class="empty-state-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                </div>
+                <p>Bu dönem için veri bulunamadı</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Category Chart -->
+    <div class="chart-card card bg-base-100 shadow-xl hover-scale animate-fade-in" style="animation-delay: 0.4s;">
+        <div class="card-body p-4">
+            <div class="flex justify-between items-center mb-2">
+                <div>
+                    <h3 class="card-title text-lg font-semibold">Kategori Dağılımı</h3>
+                    <div class="text-xs text-base-content/60">{{ period_description }}</div>
+                </div>
+                
+                <div class="btn-icon w-8 h-8 bg-secondary/10 text-secondary rounded-full flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                    </svg>
+                </div>
+            </div>
+            
+            <!-- Chart Loading State -->
+            <div x-show="loading" class="loading-container w-full py-12">
+                <span class="loading loading-spinner loading-lg text-secondary"></span>
+                <span class="loading-text">Veriler yükleniyor...</span>
+            </div>
+            
+            <!-- Chart Container -->
+            <div 
+                id="categoryChart" 
+                x-show="!loading" 
+                class="w-full h-72 mt-2 chart-container"
+                style="width: 100%; height: 300px; min-width: 300px; min-height: 300px;"
+                data-chart-type="category"
+                data-width="100%"
+                data-height="300"
+                data-categories='{{ category_labels|safe }}'
+                data-series='{{ category_data|safe }}'
+                hx-swap-oob="true">
+            </div>
+            
+            <!-- No Data State -->
+            <div x-show="!loading && ({{ category_data|default:'[]' }} === '[]' || {{ category_data|default:'[]' }}.length === 0)" class="empty-state">
+                <div class="empty-state-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                </div>
+                <p>Bu dönem için veri bulunamadı</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="chart-card card bg-base-100 shadow-xl mb-6 hover-scale animate-fade-in" style="animation-delay: 0.5s;">
+    <div class="card-body p-4">
+        <div class="flex justify-between items-center mb-2">
+            <div>
+                <h3 class="card-title text-lg font-semibold">Sipariş Durumları</h3>
+                <div class="text-xs text-base-content/60">{{ period_description }}</div>
+            </div>
+            
+            <div class="btn-icon w-8 h-8 bg-accent/10 text-accent rounded-full flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+            </div>
+        </div>
+        
+        <!-- Chart Loading State -->
+        <div x-show="loading" class="loading-container w-full py-12">
+            <span class="loading loading-spinner loading-lg text-accent"></span>
+            <span class="loading-text">Veriler yükleniyor...</span>
+        </div>
+        
+        <!-- Chart Container -->
+        <div 
+            id="ordersChart" 
+            x-show="!loading" 
+            class="w-full h-72 mt-2 chart-container"
+            style="width: 100%; height: 300px; min-width: 300px; min-height: 300px;"
+            data-chart-type="orders"
+            data-width="100%"
+            data-height="300"
+            data-categories='{{ orders_labels|safe }}'
+            data-series='{{ orders_data|safe }}'
+            hx-swap-oob="true">
+        </div>
+        
+        <!-- No Data State -->
+        <div x-show="!loading && ({{ orders_data|default:'[]' }} === '[]' || {{ orders_data|default:'[]' }}.length === 0)" class="empty-state">
+            <div class="empty-state-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+            </div>
+            <p>Bu dönem için veri bulunamadı</p>
+        </div>
+    </div>
+</div>

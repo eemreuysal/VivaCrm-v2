@@ -1,0 +1,186 @@
+/**
+ * VivaCRM Dark Mode - Standardized
+ * Merkezi dark mode yönetimi ve component overrides
+ */
+
+/* Dark Mode Component Overrides */
+[data-theme="vivacrmDark"] {
+  /* Text Colors */
+  body {
+    @apply text-gray-100;
+    transition: var(--viva-transition-theme);
+  }
+  
+  /* ===== Menu Overrides ===== */
+  .menu-link:not(.active):hover {
+    background-color: hsl(var(--b3, 219 18% 8%) / 0.5);
+  }
+  
+  .menu-item.has-active-child > .menu-link {
+    @apply bg-green-500/20;
+  }
+  
+  /* ===== Navbar Overrides ===== */
+  .navbar {
+    background-color: hsl(var(--b2, 220 17% 11%));
+    @apply border-gray-800;
+    transition: var(--viva-transition-theme);
+  }
+  
+  .navbar-dropdown-content {
+    background-color: hsl(var(--b2, 220 17% 11%));
+    @apply ring-white/10;
+    transition: var(--viva-transition-theme);
+  }
+  
+  /* ===== Avatar Overrides ===== */
+  .avatar-status {
+    @apply ring-gray-900;
+  }
+  
+  .avatar-group .avatar {
+    @apply border-gray-700;
+  }
+  
+  /* ===== Cards & Modals ===== */
+  .card, .card-body {
+    background-color: hsl(var(--b2, 220 17% 11%));
+    @apply border-gray-800;
+    transition: var(--viva-transition-theme);
+  }
+  
+  .modal-box {
+    background-color: hsl(var(--b2, 220 17% 11%));
+    transition: var(--viva-transition-theme);
+  }
+  
+  /* ===== Forms ===== */
+  .input, .textarea, .select {
+    background-color: hsl(var(--b2, 220 17% 11%));
+    @apply border-gray-700;
+    transition: var(--viva-transition-theme);
+  }
+  
+  .input:focus, .textarea:focus, .select:focus {
+    @apply border-primary/60;
+  }
+  
+  input[type="checkbox"], input[type="radio"] {
+    @apply border-gray-700 bg-gray-800;
+  }
+  
+  .form-control label {
+    @apply text-gray-300;
+  }
+  
+  /* ===== Tables ===== */
+  .table {
+    @apply border-gray-700;
+  }
+  
+  .table thead {
+    background-color: hsl(var(--b3, 219 18% 8%));
+  }
+  
+  .table tbody tr:hover {
+    background-color: hsl(var(--b3, 219 18% 8%) / 0.5);
+  }
+  
+  /* ===== Dropdowns ===== */
+  .dropdown-content {
+    background-color: hsl(var(--b2, 220 17% 11%));
+    @apply border-gray-700 shadow-xl;
+    transition: var(--viva-transition-theme);
+  }
+  
+  /* ===== Tabs ===== */
+  .tabs-boxed {
+    background-color: hsl(var(--b3, 219 18% 8%));
+  }
+  
+  .tab {
+    @apply text-gray-400;
+    transition: var(--viva-transition-theme);
+  }
+  
+  .tab.tab-active {
+    background-color: hsl(var(--b1, 220 18% 14%));
+    @apply text-primary;
+  }
+  
+  /* ===== Links ===== */
+  a {
+    @apply text-blue-400 hover:text-blue-300;
+    transition: var(--viva-transition-theme);
+  }
+  
+  /* ===== Code blocks ===== */
+  code {
+    @apply bg-gray-800 text-gray-300;
+  }
+  
+  pre {
+    @apply bg-gray-800 text-gray-300;
+  }
+  
+  /* ===== Tooltips ===== */
+  .tooltip {
+    background-color: hsl(var(--b3, 219 18% 8%));
+    @apply text-gray-100;
+  }
+  
+  /* ===== Modals ===== */
+  .modal {
+    background-color: rgba(0, 0, 0, 0.8);
+  }
+  
+  /* ===== Alerts ===== */
+  .alert {
+    @apply border-gray-700;
+  }
+  
+  .alert-info {
+    @apply bg-blue-900/30 text-blue-300;
+  }
+  
+  .alert-success {
+    @apply bg-green-900/30 text-green-300;
+  }
+  
+  .alert-warning {
+    @apply bg-amber-900/30 text-amber-300;
+  }
+  
+  .alert-error {
+    @apply bg-red-900/30 text-red-300;
+  }
+  
+  /* ===== Buttons ===== */
+  .btn {
+    transition: var(--viva-transition-theme);
+  }
+  
+  .btn-ghost {
+    @apply hover:bg-gray-700;
+  }
+  
+  /* ===== Badges ===== */
+  .badge {
+    transition: var(--viva-transition-theme);
+  }
+  
+  /* ===== Progress ===== */
+  .progress {
+    @apply bg-gray-700;
+  }
+  
+  /* ===== Dividers ===== */
+  .divider:before, .divider:after {
+    @apply bg-gray-700;
+  }
+  
+  /* ===== Skeleton Loading ===== */
+  .skeleton {
+    @apply bg-gray-700;
+  }
+}

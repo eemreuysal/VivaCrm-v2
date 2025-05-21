@@ -1,0 +1,128 @@
+{% load static %}
+{% comment %}
+    Unified JavaScript Include Implementation
+    Desteklenen tüm yaklaşımlar (traditional ve Vite) için kapsamlı çözüm
+    
+    Kullanımı:
+    {% include 'includes/js_unified_implementation.html' with 
+       use_vite=True|False           # Vite entegrasyonu kullanılsın mı? (opsiyonel, varsayılan: Django settings'deki değer)
+       defer=True|False              # Tüm JS'lerin defer özniteliği (opsiyonel, varsayılan: True)
+       need_charts=True|False        # Grafik ihtiyacı olup olmadığı (opsiyonel, varsayılan: False)
+       need_htmx=True|False          # HTMX ihtiyacı olup olmadığı (opsiyonel, varsayılan: True)
+       need_alpine=True|False        # Alpine.js ihtiyacı olup olmadığı (opsiyonel, varsayılan: True)
+       environment="production"      # Environment adı (opsiyonel, varsayılan: "production")
+       alpine_is_synchronous=False   # Alpine.js yüklemesi blocking olsun mu? (opsiyonel, varsayılan: False)
+    %}
+    
+    Not: Bu dosya js_unified.html içinde kullanılır, doğrudan sayfalardan çağrılmaz.
+{% endcomment %}
+
+{% with use_vite=use_vite|default:settings.USE_VITE|default:False %}
+
+<!-- 1. Alpine.js Core -->
+{% if need_alpine|default:True %}
+    {% if not use_vite %}
+        <!-- Traditional Alpine.js loading -->
+        <script src="{% static 'js/vendor/alpine.min.js' %}" {% if not alpine_is_synchronous|default:False %}{% if defer|default:True %}defer{% endif %}{% endif %}></script>
+    {% else %}
+        <!-- When using Vite, Alpine.js would be imported in the main entry file -->
+    {% endif %}
+{% endif %}
+
+<!-- 2. HTMX Library -->
+{% if need_htmx|default:True %}
+    {% if not use_vite %}
+        <script src="{% static 'js/vendor/htmx.min.js' %}" {% if defer|default:True %}defer{% endif %}></script>
+    {% else %}
+        <!-- When using Vite, HTMX would be imported in the main entry file -->
+    {% endif %}
+{% endif %}
+
+<!-- 3. Chart Library (when needed) -->
+{% if need_charts|default:False or 'dashboard' in request.path or 'reports' in request.path %}
+    <script src="{% static 'js/vendor/apexcharts.min.js' %}" {% if defer|default:True %}defer{% endif %}></script>
+{% endif %}
+
+<!-- 4. Unified Alpine.js Initialization -->
+<script src="{% static 'js/alpine-unified.js' %}" {% if defer|default:True %}defer{% endif %}></script>
+
+<!-- 5. Dashboard Components (only on dashboard pages) -->
+{% if 'dashboard' in request.path %}
+    <script src="{% static 'js/dashboard-init-unified.js' %}" {% if defer|default:True %}defer{% endif %}></script>
+{% endif %}
+
+<!-- 6. Main Application Entry -->
+{% if use_vite %}
+    {% load django_vite %}
+    
+    <!-- Vite HMR Client (dev only) -->
+    {% if debug %}
+        {% vite_hmr_client %}
+    {% endif %}
+    
+    <!-- Main JS entry point -->
+    {% vite_asset 'js/main.js' %}
+    
+    <!-- Additional Vite entries when needed -->
+    {% if 'dashboard' in request.path %}
+        {% vite_asset 'js/dashboard.js' %}
+    {% endif %}
+{% else %}
+    <!-- Traditional JS loading -->
+    {% if debug %}
+        <!-- Skip Module imports on auth pages -->
+        {% if not 'login' in request.path and not 'register' in request.path %}
+            <script type="module">
+                import { default as app } from '{% static "js/app-modern.js" %}';
+                
+                // Modern implementation - Ensure Alpine is initialized
+                if (window.VivaCRM && window.VivaCRM.Alpine && window.VivaCRM.Alpine.initialize) {
+                    window.VivaCRM.Alpine.initialize();
+                }
+            </script>
+        {% endif %}
+    {% else %}
+        <!-- Production Mode: Optimized Bundles -->
+        <script src="{% static 'js/dist/app.min.js' %}" {% if defer|default:True %}defer{% endif %}></script>
+    {% endif %}
+{% endif %}
+
+<!-- 7. Environment and CSRF Setup -->
+<script>
+    // Global configuration
+    window.VivaCRM = window.VivaCRM || {};
+    Object.assign(window.VivaCRM, {
+        debug: {{ debug|yesno:"true,false" }},
+        version: '2.0.0',
+        environment: '{{ environment|default:"production" }}',
+        apiBase: '{{ api_base|default:"/api/v1" }}',
+        csrfToken: '{{ csrf_token }}'
+    });
+    
+    // HTMX CSRF setup
+    document.addEventListener('DOMContentLoaded', () => {
+        document.body.setAttribute('hx-headers', JSON.stringify({
+            'X-CSRFToken': '{{ csrf_token }}'
+        }));
+    });
+    
+    // Debug mode indicator
+    document.documentElement.setAttribute('data-debug', '{{ debug|yesno:"true,false" }}');
+</script>
+
+<!-- 8. Error Tracking in Production -->
+{% if not debug %}
+<script>
+    window.addEventListener('error', function(event) {
+        // Basic error tracking for production
+        console.error('Runtime error:', event.error);
+        
+        // Could send to monitoring service here
+        if (window.VivaCRM && window.VivaCRM.errorReporter) {
+            window.VivaCRM.errorReporter(event.error);
+        }
+    });
+</script>
+{% endif %}
+
+{% endwith %}

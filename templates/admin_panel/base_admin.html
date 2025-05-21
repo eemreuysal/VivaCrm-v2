@@ -1,15 +1,29 @@
 {% extends "base/base.html" %}
 {% load static %}
 
+{% block extra_js %}
+<!-- Merkezi ThemeManager base.html'de yükleniyor. Buraya ek JS ekleyin. -->
+{% endblock %}
+
 {% block extra_head %}
 <style>
   .admin-sidebar {
     width: 280px;
     min-height: 100vh;
+    transition: all 0.3s ease;
+  }
+  
+  .admin-sidebar.collapsed {
+    width: 80px;
   }
   
   .admin-content {
     width: calc(100% - 280px);
+    transition: all 0.3s ease;
+  }
+  
+  .admin-content.expanded {
+    width: calc(100% - 80px);
   }
   
   @media (max-width: 1024px) {
@@ -17,6 +31,8 @@
       width: 0;
       position: fixed;
       z-index: 40;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+      transform: translateX(-100%);
     }
     
     .admin-content {
@@ -25,101 +41,186 @@
     
     .admin-sidebar.open {
       width: 280px;
+      transform: translateX(0);
     }
+  }
+  
+  .sidebar-link {
+    @apply flex items-center gap-2 p-3 rounded-lg transition-all duration-200 relative;
+  }
+  
+  .sidebar-link:hover {
+    @apply bg-primary/10;
+  }
+  
+  .sidebar-link.active {
+    @apply bg-primary/10 text-primary font-medium;
+  }
+  
+  .sidebar-link.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background-color: theme('colors.primary.DEFAULT');
+    border-top-right-radius: theme('borderRadius.lg');
+    border-bottom-right-radius: theme('borderRadius.lg');
+  }
+  
+  /* Custom scrollbar for webkit browsers */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: rgba(100, 100, 100, 0.4);
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 100, 100, 0.6);
+  }
+  
+  /* Smooth fade-in animation for alerts */
+  .alert {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 </style>
 {% endblock %}
 
 {% block body %}
-<div class="flex flex-row h-screen" data-theme="vivacrm">
+<div class="flex flex-row h-screen bg-base-200 overflow-hidden" x-data="{ isSidebarCollapsed: localStorage.getItem('vivacrm-admin-sidebar-collapsed') === 'true' || false }" x-init="$watch('isSidebarCollapsed', value => localStorage.setItem('vivacrm-admin-sidebar-collapsed', value))">
   <!-- Admin Sidebar -->
-  <div class="admin-sidebar bg-base-200 shadow-lg" id="adminSidebar">
-    <div class="p-4 flex items-center">
-      <div class="avatar mr-3">
-        <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white font-bold text-xl">
-          A
-        </div>
-      </div>
-      <h1 class="text-2xl font-bold">Yönetim Paneli</h1>
+  <div class="admin-sidebar bg-base-100 shadow-lg border-r border-base-300 overflow-y-auto" id="adminSidebar" :class="{'collapsed': isSidebarCollapsed}">
+    <div class="p-4 flex items-center" :class="{'justify-center': isSidebarCollapsed}">
+      <a href="{% url 'admin_panel:dashboard' %}" class="flex items-center hover:opacity-90 transition-opacity">
+        <img src="{% static 'img/vivacrm-logo.svg' %}" alt="VivaCRM" class="h-10" />
+        <h1 class="text-xl font-bold ml-2" x-show="!isSidebarCollapsed">Yönetim Paneli</h1>
+      </a>
     </div>
     
-    <div class="divider"></div>
+    <div class="divider mx-3" x-show="!isSidebarCollapsed"></div>
     
-    <ul class="menu p-4 pt-0 text-base-content">
+    <ul class="menu p-3 pt-0 text-base-content space-y-1">
       <li>
-        <a href="{% url 'admin_panel:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+        <a href="{% url 'admin_panel:dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" :class="{'justify-center': isSidebarCollapsed}">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
           </svg>
-          Gösterge Paneli
+          <span x-show="!isSidebarCollapsed">Gösterge Paneli</span>
+          <span class="tooltip tooltip-right" x-show="isSidebarCollapsed" data-tip="Gösterge Paneli"></span>
         </a>
       </li>
       
       <li>
-        <a href="{% url 'admin_panel:user-list' %}" class="{% if request.resolver_match.url_name == 'user-list' or request.resolver_match.url_name == 'user-detail' %}active{% endif %}">
+        <a href="{% url 'admin_panel:user-list' %}" class="sidebar-link {% if request.resolver_match.url_name == 'user-list' or request.resolver_match.url_name == 'user-detail' %}active{% endif %}" :class="{'justify-center': isSidebarCollapsed}">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
-          Kullanıcı Yönetimi
+          <span x-show="!isSidebarCollapsed">Kullanıcı Yönetimi</span>
+          <span class="tooltip tooltip-right" x-show="isSidebarCollapsed" data-tip="Kullanıcı Yönetimi"></span>
         </a>
       </li>
       
       <li>
-        <a href="{% url 'admin_panel:system-settings' %}" class="{% if request.resolver_match.url_name == 'system-settings' %}active{% endif %}">
+        <a href="{% url 'admin_panel:system-settings' %}" class="sidebar-link {% if request.resolver_match.url_name == 'system-settings' %}active{% endif %}" :class="{'justify-center': isSidebarCollapsed}">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
-          Sistem Ayarları
+          <span x-show="!isSidebarCollapsed">Sistem Ayarları</span>
+          <span class="tooltip tooltip-right" x-show="isSidebarCollapsed" data-tip="Sistem Ayarları"></span>
         </a>
       </li>
       
       <li>
-        <a href="{% url 'admin_panel:system-logs' %}" class="{% if request.resolver_match.url_name == 'system-logs' %}active{% endif %}">
+        <a href="{% url 'admin_panel:system-logs' %}" class="sidebar-link {% if request.resolver_match.url_name == 'system-logs' %}active{% endif %}" :class="{'justify-center': isSidebarCollapsed}">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          Sistem Logları
+          <span x-show="!isSidebarCollapsed">Sistem Logları</span>
+          <span class="tooltip tooltip-right" x-show="isSidebarCollapsed" data-tip="Sistem Logları"></span>
         </a>
       </li>
       
       <li>
-        <a href="{% url 'admin_panel:backup' %}" class="{% if request.resolver_match.url_name == 'backup' %}active{% endif %}">
+        <a href="{% url 'admin_panel:backup' %}" class="sidebar-link {% if request.resolver_match.url_name == 'backup' %}active{% endif %}" :class="{'justify-center': isSidebarCollapsed}">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
           </svg>
-          Yedekleme ve Geri Yükleme
+          <span x-show="!isSidebarCollapsed">Yedekleme ve Geri Yükleme</span>
+          <span class="tooltip tooltip-right" x-show="isSidebarCollapsed" data-tip="Yedekleme ve Geri Yükleme"></span>
         </a>
       </li>
       
-      <div class="divider"></div>
+      <li>
+        <a href="{% url 'core_import:import-history' %}" class="sidebar-link {% if 'import' in request.resolver_match.url_name %}active{% endif %}" :class="{'justify-center': isSidebarCollapsed}">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+          </svg>
+          <span x-show="!isSidebarCollapsed">Import Geçmişi</span>
+          <span class="tooltip tooltip-right" x-show="isSidebarCollapsed" data-tip="Import Geçmişi"></span>
+        </a>
+      </li>
+      
+      <div class="divider my-2" x-show="!isSidebarCollapsed"></div>
       
       <li>
-        <a href="{% url 'dashboard:dashboard' %}">
+        <a href="{% url 'dashboard:dashboard' %}" class="sidebar-link" :class="{'justify-center': isSidebarCollapsed}">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
           </svg>
-          Ana Sayfaya Dön
+          <span x-show="!isSidebarCollapsed">Ana Sayfaya Dön</span>
+          <span class="tooltip tooltip-right" x-show="isSidebarCollapsed" data-tip="Ana Sayfaya Dön"></span>
         </a>
+      </li>
+      
+      <!-- Sidebar Collapse Button -->
+      <li class="mt-auto">
+        <button @click="isSidebarCollapsed = !isSidebarCollapsed" class="sidebar-link w-full text-left" :class="{'justify-center': isSidebarCollapsed}">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" :class="{'rotate-180': isSidebarCollapsed}">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+          </svg>
+          <span x-show="!isSidebarCollapsed">Sidebar'ı Daralt</span>
+          <span class="tooltip tooltip-right" x-show="isSidebarCollapsed" data-tip="Sidebar'ı Genişlet"></span>
+        </button>
       </li>
     </ul>
   </div>
   
   <!-- Main Content -->
-  <div class="admin-content flex flex-col">
+  <div class="admin-content flex flex-col" :class="{'expanded': isSidebarCollapsed}">
     <!-- Navbar -->
-    <div class="navbar bg-base-100 shadow-md">
+    <div class="navbar bg-base-100 shadow-md sticky top-0 z-10 transition-all duration-300">
       <div class="flex-none">
-        <button class="btn btn-square btn-ghost lg:hidden" id="sidebarToggle">
+        <button class="btn btn-sm btn-ghost btn-circle lg:hidden" id="sidebarToggle">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-5 h-5 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
         </button>
       </div>
       
       <div class="flex-1">
-        <span class="text-lg font-bold ml-2">{% block admin_title %}Yönetim Paneli{% endblock %}</span>
+        <h1 class="text-lg font-bold ml-2 flex items-center">
+          {% block admin_title %}Yönetim Paneli{% endblock %}
+          <span class="badge badge-primary ml-3 text-xs">Yönetici</span>
+        </h1>
       </div>
       
       <div class="flex-none gap-2">
+        <!-- Theme Toggle Button -->
+        {% include 'includes/theme_switcher_unified.html' with button_class="btn btn-ghost btn-circle" %}
+        
         <div class="dropdown dropdown-end">
           <label tabindex="0" class="btn btn-ghost btn-circle avatar">
             <div class="w-10 rounded-full">
@@ -136,20 +237,36 @@
               <span class="text-xs opacity-50">{{ request.user.email }}</span>
             </li>
             <div class="divider my-0"></div>
-            <li><a href="{% url 'accounts:user-detail' username=request.user.username %}">Profilim</a></li>
-            <li><a href="{% url 'accounts:user-update' %}">Ayarlar</a></li>
+            <li><a href="{% url 'accounts:user-detail' username=request.user.username %}" class="flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              Profilim
+            </a></li>
+            <li><a href="{% url 'accounts:user-update' %}" class="flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              Ayarlar
+            </a></li>
             <div class="divider my-0"></div>
-            <li><a href="{% url 'accounts:logout' %}">Çıkış</a></li>
+            <li><a href="{% url 'accounts:logout' %}" class="flex items-center gap-2 text-error">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              Çıkış
+            </a></li>
           </ul>
         </div>
       </div>
     </div>
     
     <!-- Breadcrumb -->
-    <div class="px-6 py-2 bg-base-200 border-b">
+    <div class="px-6 py-2 bg-base-100 border-b border-base-300 shadow-sm">
       <div class="text-sm breadcrumbs">
         <ul>
-          <li><a href="{% url 'admin_panel:dashboard' %}">Yönetim Paneli</a></li>
+          <li><a href="{% url 'admin_panel:dashboard' %}" class="font-medium hover:text-primary">Yönetim Paneli</a></li>
           {% block breadcrumb %}{% endblock %}
         </ul>
       </div>
@@ -159,15 +276,39 @@
     {% if messages %}
     <div class="p-4">
       {% for message in messages %}
-      <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-error{% elif message.tags == 'warning' %}alert-warning{% else %}alert-info{% endif %} mb-2">
-        <span>{{ message }}</span>
+      <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-error{% elif message.tags == 'warning' %}alert-warning{% else %}alert-info{% endif %} mb-2 shadow-md">
+        <div class="flex items-center">
+          {% if message.tags == 'success' %}
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          {% elif message.tags == 'error' %}
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          {% elif message.tags == 'warning' %}
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          {% else %}
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          {% endif %}
+          <span>{{ message }}</span>
+        </div>
+        <button class="btn btn-sm btn-ghost" onclick="this.parentElement.remove()">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
       {% endfor %}
     </div>
     {% endif %}
     
     <!-- Main Content -->
-    <div class="p-6 flex-grow overflow-auto">
+    <div class="p-6 flex-grow overflow-auto bg-base-200">
       {% block content %}{% endblock %}
     </div>
   </div>
@@ -178,8 +319,50 @@
     const sidebarToggle = document.getElementById('sidebarToggle');
     const sidebar = document.getElementById('adminSidebar');
     
+    // Mobile sidebar toggle
     sidebarToggle.addEventListener('click', function() {
       sidebar.classList.toggle('open');
+    });
+    
+    // Close sidebar when clicking outside on mobile
+    document.addEventListener('click', function(event) {
+      const isMobile = window.innerWidth < 1024;
+      if (isMobile && sidebar.classList.contains('open') && 
+          !sidebar.contains(event.target) && 
+          event.target !== sidebarToggle) {
+        sidebar.classList.remove('open');
+      }
+    });
+    
+    // Theme initialization is handled by the standardized ThemeManager
+    
+    // Auto hide/show navbar on scroll
+    let lastScrollTop = 0;
+    const navbar = document.querySelector('.navbar.bg-base-100.shadow-md.sticky');
+    window.addEventListener('scroll', function() {
+      let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      if (scrollTop > lastScrollTop && scrollTop > 80) {
+        // Scroll down - hide navbar
+        navbar.style.transform = 'translateY(-100%)';
+      } else {
+        // Scroll up - show navbar
+        navbar.style.transform = 'translateY(0)';
+      }
+      lastScrollTop = scrollTop;
+    });
+    
+    // Auto dismiss alerts after 5 seconds
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+      setTimeout(() => {
+        alert.style.opacity = '0';
+        alert.style.transform = 'translateY(-10px)';
+        setTimeout(() => {
+          if (alert.parentElement) {
+            alert.remove();
+          }
+        }, 300);
+      }, 5000);
     });
   });
 </script>

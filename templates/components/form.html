@@ -1,67 +1,182 @@
+{% comment %}
+Gelişmiş form bileşeni.
+
+Kullanımı:
+{% include "components/form.html" with 
+  id="unique-form-id"                         # Benzersiz ID (zorunlu)
+  form=form_instance                          # Form nesnesi (zorunlu)
+  title="Form Başlığı"                        # Form başlığı (isteğe bağlı)
+  subtitle="Alt başlık açıklaması"            # Alt başlık (isteğe bağlı)
+  url="/api/endpoint/"                        # Form gönderim URL'i (zorunlu)
+  method="post"                               # HTTP metodu - post veya put (varsayılan: post)
+  submit_text="Kaydet"                        # Gönder butonu metni (varsayılan: "Kaydet")
+  cancel_text="İptal"                         # İptal butonu metni (isteğe bağlı)
+  cancel_url="/back/url/"                     # İptal URL'i (isteğe bağlı)
+  enctype="multipart/form-data"               # Encoding type (isteğe bağlı, dosya yükleme için)
+  show_border=True                            # Form çerçevesi göster (varsayılan: True)
+  column_count=2                              # Sütun sayısı - 1, 2 veya 3 (varsayılan: 1)
+  target="#target-element"                    # HTMX hedef elementi (isteğe bağlı)
+  swap="outerHTML"                            # HTMX swap metodu (isteğe bağlı)
+  on_success="successCallback()"              # Başarılı işlem callback'i (isteğe bağlı)
+  on_error="errorCallback()"                  # Hata callback'i (isteğe bağlı)
+  class="mt-4"                                # Form container CSS sınıfı (isteğe bağlı)
+  submit_class="btn-primary"                  # Gönder butonu CSS sınıfı (isteğe bağlı)
+  cancel_class="btn-ghost"                    # İptal butonu CSS sınıfı (isteğe bağlı)
+  loading=True                                # Yükleniyor göster/gizle (varsayılan: True)
+  trigger="submit"                            # HTMX tetikleyici olay (varsayılan: submit)
+  hidden_fields=hidden_fields_dict            # Gizli alanlar sözlüğü (isteğe bağlı)
+  hints=True                                  # Form yardım metinleri göster (varsayılan: True)
+  errors=True                                 # Form hata mesajları göster (varsayılan: True)
+  responsive=True                             # Form responsive davranış (varsayılan: True)
+  disable_on_submit=True                      # Gönderim sırasında butonu devre dışı bırak (varsayılan: True)
+%}
+  {% block before_fields %}
+    <!-- Alanlardan önce gelen içerik -->
+  {% endblock %}
+  
+  {% block after_fields %}
+    <!-- Alanlardan sonra gelen içerik -->
+  {% endblock %}
+  
+  {% block buttons %}
+    <!-- Özel butonlar -->
+  {% endblock %}
+{% endcomment %}
+
 {% load crispy_forms_tags %}
 
-<!-- 
-HTMX ve Alpine.js ile gelişmiş bir form komponenti. 
-Kullanımı:
-{% include "components/form.html" with form=form url="/path/to/submit" method="post" title="Form Başlığı" submit_text="Gönder" %}
--->
-
-<div class="card bg-base-100 shadow-xl" x-data="{ loading: false, success: false, error: false, errorMessage: '' }">
-  {% if title %}
-  <div class="card-header p-4 bg-base-200 rounded-t-lg">
-    <h2 class="card-title">{{ title }}</h2>
-  </div>
+<div id="{{ id|default:'form-container' }}" class="w-full {{ class }}">
+  {% if show_border|default:True %}
+  <div class="card bg-base-100 shadow-lg">
+    <div class="card-body">
   {% endif %}
-  
-  <div class="card-body">
-    <!-- Başarı ve hata mesajları -->
-    <div x-show="success" class="alert alert-success shadow-lg mb-4" x-transition>
-      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-      <span>{% if success_message %}{{ success_message }}{% else %}İşlem başarıyla tamamlandı.{% endif %}</span>
-      <button class="btn btn-ghost btn-sm" @click="success = false">×</button>
-    </div>
     
-    <div x-show="error" class="alert alert-error shadow-lg mb-4" x-transition>
-      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-      <span x-text="errorMessage || 'Bir hata oluştu. Lütfen tekrar deneyin.'"></span>
-      <button class="btn btn-ghost btn-sm" @click="error = false">×</button>
+    {% if title %}
+    <div class="mb-6">
+      <h2 class="card-title text-xl font-bold">{{ title }}</h2>
+      {% if subtitle %}
+      <p class="text-base-content/70 mt-1">{{ subtitle }}</p>
+      {% endif %}
     </div>
+    {% endif %}
     
-    <!-- Form -->
     <form 
       id="{{ id|default:'form' }}"
-      hx-post="{{ url }}" 
-      hx-swap="outerHTML"
-      {% if target %}hx-target="{{ target }}"{% endif %}
-      x-ref="form"
-      @htmx:before-request="loading = true"
-      @htmx:after-request="loading = false"
-      @htmx:response-error="error = true; errorMessage = event.detail.xhr.responseText || 'Bir hata oluştu.'"
-      {% if method %}method="{{ method }}"{% else %}method="post"{% endif %}
+      method="{{ method|default:'post' }}"
+      action="{{ url }}"
       {% if enctype %}enctype="{{ enctype }}"{% endif %}
-      {% if confirm %}hx-confirm="{{ confirm }}"{% endif %}
-      {{ form_attributes|safe }}
+      {% if target %}hx-target="{{ target }}"{% endif %}
+      {% if swap %}hx-swap="{{ swap }}"{% endif %}
+      {% if trigger %}hx-trigger="{{ trigger }}"{% endif %}
+      class="form-container"
+      x-data="{ 
+        isSubmitting: false,
+        validationErrors: {},
+        
+        submitForm() {
+          if (this.isSubmitting) return;
+          
+          {% if disable_on_submit|default:True %}
+          this.isSubmitting = true;
+          {% endif %}
+          
+          // Form gönderildiğinde callback
+          {% if on_success %}
+          document.addEventListener('htmx:afterOnLoad', (evt) => {
+            if (evt.detail.elt.id === '{{ id|default:'form' }}' && evt.detail.xhr.status >= 200 && evt.detail.xhr.status < 300) {
+              {{ on_success|safe }}
+            }
+          }, { once: true });
+          {% endif %}
+          
+          // Hata durumunda callback
+          {% if on_error %}
+          document.addEventListener('htmx:responseError', (evt) => {
+            if (evt.detail.elt.id === '{{ id|default:'form' }}') {
+              this.isSubmitting = false;
+              {{ on_error|safe }}
+            }
+          }, { once: true });
+          {% endif %}
+
+          // Submit tamamlandığında
+          document.addEventListener('htmx:afterRequest', (evt) => {
+            if (evt.detail.elt.id === '{{ id|default:'form' }}') {
+              this.isSubmitting = false;
+            }
+          }, { once: true });
+        }
+      }"
+      @submit="submitForm()"
     >
       {% csrf_token %}
       
-      <!-- Form içeriği -->
-      {% if form %}
-        {% crispy form %}
-      {% else %}
-        {{ form_content|safe }}
+      {% block before_fields %}{% endblock %}
+      
+      <!-- Gizli Alanlar -->
+      {% if hidden_fields %}
+        {% for name, value in hidden_fields.items %}
+          <input type="hidden" name="{{ name }}" value="{{ value }}">
+        {% endfor %}
       {% endif %}
       
-      <!-- Form footer ve submit button -->
-      <div class="flex justify-end items-center gap-4 mt-6">
-        {% if cancel_url %}
-        <a href="{{ cancel_url }}" class="btn btn-ghost">İptal</a>
+      <!-- Form Hata Mesajları -->
+      {% if errors|default:True and form.non_field_errors %}
+        <div class="alert alert-error mb-6">
+          <div>
+            {% for error in form.non_field_errors %}
+              <p>{{ error }}</p>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+      
+      <!-- Form Alanları -->
+      <div class="{% if responsive|default:True %}grid grid-cols-1 {% if column_count >= 2 %}md:grid-cols-2{% endif %} {% if column_count >= 3 %}xl:grid-cols-3{% endif %} gap-4{% endif %}">
+        {% if column_count == 1 %}
+          {{ form|crispy }}
+        {% else %}
+          {% for field in form %}
+            <div class="form-group">
+              {% if field.field.widget.attrs.full_width %}
+                <div class="{% if column_count == 2 %}md:col-span-2{% elif column_count == 3 %}md:col-span-2 xl:col-span-3{% endif %}">
+              {% endif %}
+              
+              {{ field|as_crispy_field }}
+              
+              {% if field.field.widget.attrs.full_width %}
+                </div>
+              {% endif %}
+            </div>
+          {% endfor %}
         {% endif %}
-        
-        <button type="submit" class="btn btn-primary" :disabled="loading">
-          <span x-show="loading" class="loading loading-spinner loading-xs mr-2"></span>
-          {{ submit_text|default:"Gönder" }}
-        </button>
+      </div>
+      
+      {% block after_fields %}{% endblock %}
+      
+      <!-- Form Butonları -->
+      <div class="card-actions justify-end mt-8 space-x-2">
+        {% block buttons %}
+          {% if cancel_text and cancel_url %}
+            <a href="{{ cancel_url }}" class="btn {{ cancel_class|default:'btn-ghost' }}">
+              {{ cancel_text }}
+            </a>
+          {% endif %}
+          
+          <button 
+            type="submit" 
+            class="btn {{ submit_class|default:'btn-primary' }}"
+            :disabled="isSubmitting"
+          >
+            <span x-show="isSubmitting && {{ loading|default:True|lower }}" class="loading loading-spinner loading-sm mr-1"></span>
+            {{ submit_text|default:"Kaydet" }}
+          </button>
+        {% endblock %}
       </div>
     </form>
+    
+  {% if show_border|default:True %}
+    </div>
   </div>
+  {% endif %}
 </div>

@@ -3,6 +3,11 @@
 
 {% block title %}{{ product.name }}{% endblock %}
 
+{% block extra_css %}
+<!-- Lightbox CSS -->
+<link href="https://cdn.jsdelivr.net/npm/lightgallery@2.7.1/css/lightgallery.min.css" rel="stylesheet">
+{% endblock %}
+
 {% block content %}
 <div class="container mx-auto">
   <div class="flex justify-between items-center mb-6">
@@ -16,349 +21,807 @@
     </div>
   </div>
   
-  <div class="card bg-base-100 shadow-xl mb-6">
-    <div class="card-body">
-      <div class="flex justify-between items-start">
-        <div>
-          <h2 class="card-title text-2xl">
-            {{ product.name }}
-            <div class="badge badge-primary ml-2">{{ product.code }}</div>
-            {% if product.status == 'available' %}
-            <div class="badge badge-success">{{ product.get_status_display }}</div>
-            {% elif product.status == 'unavailable' %}
-            <div class="badge badge-error">{{ product.get_status_display }}</div>
-            {% elif product.status == 'coming_soon' %}
-            <div class="badge badge-warning">{{ product.get_status_display }}</div>
-            {% else %}
-            <div class="badge badge-ghost">{{ product.get_status_display }}</div>
-            {% endif %}
-          </h2>
-          <p class="text-lg">{{ product.category|default:"Kategorisiz" }}</p>
-        </div>
-        
-        <div class="flex space-x-2">
-          <a href="{% url 'products:product-update' slug=product.slug %}" class="btn btn-primary">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-            </svg>
-            Düzenle
-          </a>
-          <a href="{% url 'products:product-delete' slug=product.slug %}" class="btn btn-error btn-outline">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-            Sil
-          </a>
-        </div>
-      </div>
-      
-      <div class="divider"></div>
-      
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- Product Images -->
-        <div class="col-span-1">
-          <h3 class="text-lg font-semibold mb-3">Ürün Görselleri</h3>
-          
-          <div class="grid grid-cols-2 gap-2">
-            {% for image in product.images.all %}
-            <div class="relative">
-              <img src="{{ image.image.url }}" alt="{{ image.alt_text }}" class="w-full h-32 object-cover rounded-lg">
-              {% if image.is_primary %}
-              <div class="absolute top-2 right-2 badge badge-primary">Ana Görsel</div>
-              {% endif %}
-              <button class="absolute bottom-2 right-2 btn btn-xs btn-error btn-circle" onclick="deleteImage({{ image.id }})">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            {% empty %}
-            <div class="col-span-2 bg-base-200 h-32 rounded-lg flex items-center justify-center">
-              <p class="text-center text-base-content/60">Görsel bulunmamaktadır</p>
-            </div>
-            {% endfor %}
-          </div>
-          
-          <div class="mt-3">
-            <button class="btn btn-outline btn-primary btn-sm w-full" onclick="document.getElementById('image-modal').showModal()">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              Görsel Ekle
-            </button>
-          </div>
-        </div>
-        
-        <!-- Product Details -->
-        <div class="col-span-2">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Pricing -->
-            <div>
-              <h3 class="text-lg font-semibold mb-3">Fiyat Bilgileri</h3>
-              <div class="overflow-x-auto">
-                <table class="table">
-                  <tbody>
-                    <tr>
-                      <td class="font-bold">Satış Fiyatı</td>
-                      <td>{{ product.price }} ₺</td>
-                    </tr>
-                    {% if product.discount_price %}
-                    <tr>
-                      <td class="font-bold">İndirimli Fiyat</td>
-                      <td>{{ product.discount_price }} ₺</td>
-                    </tr>
-                    {% endif %}
-                    <tr>
-                      <td class="font-bold">KDV Oranı</td>
-                      <td>%{{ product.tax_rate }}</td>
-                    </tr>
-                    <tr>
-                      <td class="font-bold">KDV Tutarı</td>
-                      <td>{{ product.tax_amount }} ₺</td>
-                    </tr>
-                    <tr>
-                      <td class="font-bold">Toplam Fiyat</td>
-                      <td class="font-semibold">{{ product.price_with_tax }} ₺</td>
-                    </tr>
-                    {% if product.cost %}
-                    <tr>
-                      <td class="font-bold">Maliyet</td>
-                      <td>{{ product.cost }} ₺</td>
-                    </tr>
-                    {% if product.profit_margin %}
-                    <tr>
-                      <td class="font-bold">Kar Marjı</td>
-                      <td>%{{ product.profit_margin }}</td>
-                    </tr>
-                    {% endif %}
-                    {% endif %}
-                  </tbody>
-                </table>
+  <!-- Main Product Card -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
+    <!-- Sidebar Navigation -->
+    <div class="lg:col-span-3">
+      <div class="sticky top-20">
+        <div class="card bg-base-100 shadow-xl mb-6">
+          <div class="card-body p-4">
+            <div class="flex items-center mb-4">
+              <div class="avatar mr-3">
+                <div class="w-12 h-12 rounded-full">
+                  {% if product.images.exists and product.get_primary_image %}
+                    <img src="{{ product.get_primary_image.url }}" alt="{{ product.name }}" />
+                  {% else %}
+                    <div class="bg-base-300 flex items-center justify-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+              <div>
+                <h2 class="font-bold text-base">{{ product.name }}</h2>
+                <div class="badge badge-primary">{{ product.code }}</div>
               </div>
             </div>
             
-            <!-- Inventory -->
-            <div>
-              <div class="flex justify-between items-center mb-3">
-                <h3 class="text-lg font-semibold">Stok Bilgileri</h3>
-                <a href="{% url 'products:movement-create' %}?product={{ product.id }}" class="btn btn-outline btn-primary btn-sm">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-                  </svg>
-                  Stok Hareketi
-                </a>
+            <div class="divider my-2"></div>
+            
+            <!-- Quick Stats -->
+            <div class="stats stats-vertical shadow bg-base-200 w-full mb-4">
+              <div class="stat p-2">
+                <div class="stat-title">Stok</div>
+                <div class="stat-value text-lg">{{ product.stock }}</div>
+                {% if product.is_physical and product.stock <= 10 and product.stock > 0 %}
+                  <div class="stat-desc text-warning">Düşük Stok</div>
+                {% elif product.is_physical and product.stock == 0 %}
+                  <div class="stat-desc text-error">Stokta Yok</div>
+                {% else %}
+                  <div class="stat-desc">Normal Seviye</div>
+                {% endif %}
               </div>
-              <div class="overflow-x-auto">
-                <table class="table">
-                  <tbody>
-                    <tr>
-                      <td class="font-bold">Stok Miktarı</td>
-                      <td>
-                        <div class="flex items-center">
-                          {{ product.stock }}
-                          {% if product.is_physical and product.stock <= 10 and product.stock > 0 %}
-                            <span class="badge badge-warning ml-2">Düşük Stok</span>
-                          {% endif %}
-                          {% if product.is_physical and product.stock == 0 %}
-                            <span class="badge badge-error ml-2">Stokta Yok</span>
-                          {% endif %}
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td class="font-bold">Ürün Tipi</td>
-                      <td>{% if product.is_physical %}Fiziksel Ürün{% else %}Dijital Ürün / Hizmet{% endif %}</td>
-                    </tr>
-                    {% if product.is_physical %}
-                    <tr>
-                      <td class="font-bold">Ağırlık</td>
-                      <td>{{ product.weight|default:"-" }} kg</td>
-                    </tr>
-                    <tr>
-                      <td class="font-bold">Boyutlar</td>
-                      <td>{{ product.dimensions|default:"-" }}</td>
-                    </tr>
-                    {% endif %}
-                    <tr>
-                      <td class="font-bold">SKU</td>
-                      <td>{{ product.sku|default:"-" }}</td>
-                    </tr>
-                    <tr>
-                      <td class="font-bold">Barkod</td>
-                      <td>{{ product.barcode|default:"-" }}</td>
-                    </tr>
-                  </tbody>
-                </table>
+              
+              <div class="stat p-2">
+                <div class="stat-title">Satış Fiyatı</div>
+                <div class="stat-value text-lg">{{ product.price }} {{ system_settings.currency_symbol }}</div>
+                {% if product.discount_price %}
+                  <div class="stat-desc text-success">İndirimli: {{ product.discount_price }} {{ system_settings.currency_symbol }}</div>
+                {% endif %}
               </div>
             </div>
-          </div>
-          
-          {% if product.description %}
-          <div class="mt-6">
-            <h3 class="text-lg font-semibold mb-3">Ürün Açıklaması</h3>
-            <div class="p-4 bg-base-200 rounded-lg">
-              {{ product.description|linebreaks }}
-            </div>
-          </div>
-          {% endif %}
-          
-          <!-- Product Attributes -->
-          <div class="mt-6">
-            <div class="flex justify-between items-center mb-3">
-              <h3 class="text-lg font-semibold">Ürün Özellikleri</h3>
-              <button class="btn btn-outline btn-primary btn-sm" onclick="document.getElementById('attribute-modal').showModal()">
+            
+            <!-- Navigation Links -->
+            <ul class="menu menu-compact bg-base-100 w-full">
+              <li class="menu-title">
+                <span>Hızlı Erişim</span>
+              </li>
+              <li><a href="#genel-bilgiler" class="active" id="nav-genel">Genel Bilgiler</a></li>
+              <li><a href="#gorseller" id="nav-gorseller">Görseller</a></li>
+              <li><a href="#fiyatlar" id="nav-fiyatlar">Fiyatlandırma</a></li>
+              <li><a href="#stok" id="nav-stok">Stok Bilgileri</a></li>
+              <li><a href="#ozellikler" id="nav-ozellikler">Ürün Özellikleri</a></li>
+              <li><a href="#aciklama" id="nav-aciklama">Açıklama</a></li>
+              <li><a href="#hareketler" id="nav-hareketler">Stok Hareketleri</a></li>
+              <li><a href="#sistem" id="nav-sistem">Sistem Bilgileri</a></li>
+            </ul>
+            
+            <div class="divider my-2"></div>
+            
+            <!-- Action Buttons -->
+            <div class="space-y-2">
+              <a href="{% url 'products:product-update' slug=product.slug %}" class="btn btn-primary w-full">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                 </svg>
-                Özellik Ekle
-              </button>
-            </div>
-            
-            {% if product.attribute_values.exists %}
-            <div class="overflow-x-auto">
-              <table class="table table-zebra w-full">
-                <thead>
-                  <tr>
-                    <th>Özellik</th>
-                    <th>Değer</th>
-                    <th>İşlemler</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for attr_value in product.attribute_values.all %}
-                  <tr>
-                    <td>{{ attr_value.attribute.name }}</td>
-                    <td>{{ attr_value.value }}</td>
-                    <td class="flex space-x-1">
-                      <button class="btn btn-square btn-sm btn-ghost" onclick="editAttributeValue({{ attr_value.id }})">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                        </svg>
-                      </button>
-                      <button class="btn btn-square btn-sm btn-ghost" onclick="deleteAttributeValue({{ attr_value.id }})">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-            {% else %}
-            <div class="alert alert-info">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-              <span>Henüz ürün özelliği eklenmemiştir.</span>
-            </div>
-            {% endif %}
-          </div>
-          
-          <!-- System Info -->
-          <div class="mt-6">
-            <h3 class="text-lg font-semibold mb-3">Sistem Bilgileri</h3>
-            <div class="overflow-x-auto">
-              <table class="table">
-                <tbody>
-                  <tr>
-                    <td class="font-bold">Oluşturulma Tarihi</td>
-                    <td>{{ product.created_at|date:"d.m.Y H:i" }}</td>
-                  </tr>
-                  <tr>
-                    <td class="font-bold">Son Güncelleme</td>
-                    <td>{{ product.updated_at|date:"d.m.Y H:i" }}</td>
-                  </tr>
-                </tbody>
-              </table>
+                Düzenle
+              </a>
+              
+              <a href="{% url 'products:movement-create' %}?product={{ product.id }}" class="btn btn-secondary w-full">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                </svg>
+                Stok Hareketi
+              </a>
+              
+              <a href="{% url 'products:product-delete' slug=product.slug %}" class="btn btn-error btn-outline w-full">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Sil
+              </a>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-  
-  <!-- Stock Movements Card -->
-  <div class="card bg-base-100 shadow-xl mb-6">
-    <div class="card-body">
-      <div class="flex justify-between items-start">
-        <h2 class="card-title">Stok Hareketleri</h2>
-        <a href="{% url 'products:movement-list' %}?product={{ product.id }}" class="btn btn-link">Tümünü Görüntüle</a>
+    
+    <!-- Main Content -->
+    <div class="lg:col-span-9">
+      <!-- Status Banner -->
+      <div class="alert mb-6
+        {% if product.status == 'available' %}alert-success
+        {% elif product.status == 'unavailable' %}alert-error
+        {% elif product.status == 'coming_soon' %}alert-warning
+        {% else %}alert-info{% endif %}">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <div>
+          <span class="font-bold">Ürün Durumu:</span> {{ product.get_status_display }}
+          {% if product.is_physical and product.stock <= 10 and product.stock > 0 %}
+            <span class="badge badge-warning ml-2">Düşük Stok</span>
+          {% endif %}
+          {% if product.is_physical and product.stock == 0 %}
+            <span class="badge badge-error ml-2">Stokta Yok</span>
+          {% endif %}
+        </div>
       </div>
       
-      <div class="overflow-x-auto">
-        <table class="table table-zebra w-full">
-          <thead>
-            <tr>
-              <th>Hareket Tipi</th>
-              <th class="text-right">Miktar</th>
-              <th>Önceki Stok</th>
-              <th>Yeni Stok</th>
-              <th>Tarih</th>
-              <th>Oluşturan</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for movement in stock_movements %}
-              <tr>
-                <td>
-                  {% if movement.movement_type == 'purchase' %}
-                    <span class="badge badge-info">{{ movement.get_movement_type_display }}</span>
-                  {% elif movement.movement_type == 'sale' %}
-                    <span class="badge badge-warning">{{ movement.get_movement_type_display }}</span>
-                  {% elif movement.movement_type == 'return' %}
-                    <span class="badge badge-success">{{ movement.get_movement_type_display }}</span>
-                  {% elif movement.movement_type == 'adjustment' %}
-                    <span class="badge badge-primary">{{ movement.get_movement_type_display }}</span>
-                  {% elif movement.movement_type == 'inventory' %}
-                    <span class="badge badge-secondary">{{ movement.get_movement_type_display }}</span>
-                  {% elif movement.movement_type == 'waste' %}
-                    <span class="badge badge-error">{{ movement.get_movement_type_display }}</span>
-                  {% else %}
-                    <span class="badge">{{ movement.get_movement_type_display }}</span>
-                  {% endif %}
-                </td>
-                <td class="text-right">
-                  {% if movement.movement_type in 'purchase,return,adjustment,inventory' %}
-                    <span class="text-success">+{{ movement.quantity }}</span>
-                  {% else %}
-                    <span class="text-error">-{{ movement.quantity }}</span>
-                  {% endif %}
-                </td>
-                <td>{{ movement.previous_stock }}</td>
-                <td>{{ movement.new_stock }}</td>
-                <td>{{ movement.created_at|date:"d.m.Y H:i" }}</td>
-                <td>{{ movement.created_by }}</td>
-              </tr>
-            {% empty %}
-              <tr>
-                <td colspan="6" class="text-center py-4">
-                  <div class="alert alert-info mb-0">
-                    Henüz stok hareketi bulunmamaktadır.
+      <!-- Tabs -->
+      <div class="tabs tabs-boxed mb-6">
+        <a class="tab tab-active" data-tab="genel-bilgiler" href="#genel-bilgiler">Genel</a>
+        <a class="tab" data-tab="gorseller" href="#gorseller">Görseller</a>
+        <a class="tab" data-tab="fiyatlar" href="#fiyatlar">Fiyatlandırma</a>
+        <a class="tab" data-tab="stok" href="#stok">Stok</a>
+        <a class="tab" data-tab="ozellikler" href="#ozellikler">Özellikler</a>
+        <a class="tab" data-tab="aciklama" href="#aciklama">Açıklama</a>
+        <a class="tab" data-tab="hareketler" href="#hareketler">Stok Hareketleri</a>
+      </div>
+      
+      <!-- Tab Content -->
+      <div class="tab-content">
+        <!-- General Information -->
+        <div id="genel-bilgiler" class="tab-pane active">
+          <div class="card bg-base-100 shadow-xl mb-6">
+            <div class="card-body">
+              <h2 class="card-title text-2xl mb-4">
+                {{ product.name }}
+                <div class="badge badge-primary ml-2">{{ product.code }}</div>
+              </h2>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 class="text-lg font-semibold mb-2">Temel Bilgiler</h3>
+                  <div class="overflow-x-auto">
+                    <table class="table">
+                      <tbody>
+                        <tr>
+                          <td class="font-bold">Kategori</td>
+                          <td>{{ product.category|default:"Kategorisiz" }}</td>
+                        </tr>
+                        <tr>
+                          <td class="font-bold">Ürün Ailesi</td>
+                          <td>{{ product.family|default:"Belirtilmemiş" }}</td>
+                        </tr>
+                        <tr>
+                          <td class="font-bold">Ürün Tipi</td>
+                          <td>{% if product.is_physical %}Fiziksel Ürün{% else %}Dijital Ürün / Hizmet{% endif %}</td>
+                        </tr>
+                        <tr>
+                          <td class="font-bold">SKU</td>
+                          <td>{{ product.sku|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                          <td class="font-bold">Barkod</td>
+                          <td>{{ product.barcode|default:"-" }}</td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-      
-      <div class="mt-4">
-        <a href="{% url 'products:movement-create' %}?product={{ product.id }}" class="btn btn-primary">
-          <i class="fas fa-plus-circle mr-2"></i>Yeni Stok Hareketi
-        </a>
+                </div>
+                
+                <div>
+                  <h3 class="text-lg font-semibold mb-2">Temel Özellikler</h3>
+                  <div class="overflow-x-auto">
+                    <table class="table">
+                      <tbody>
+                        {% for attr_value in product.attribute_values.all %}
+                          {% if attr_value.attribute.name == "Renk" or attr_value.attribute.name == "Boyut" or attr_value.attribute.name == "Materyal" or attr_value.attribute.name == "Marka" %}
+                            <tr>
+                              <td class="font-bold">{{ attr_value.attribute.name }}</td>
+                              <td>{{ attr_value.value }}</td>
+                            </tr>
+                          {% endif %}
+                        {% endfor %}
+                        
+                        {% if product.is_physical %}
+                        <tr>
+                          <td class="font-bold">Ağırlık</td>
+                          <td>{{ product.weight|default:"-" }} kg</td>
+                        </tr>
+                        <tr>
+                          <td class="font-bold">Boyutlar</td>
+                          <td>{{ product.dimensions|default:"-" }}</td>
+                        </tr>
+                        {% endif %}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Images Tab -->
+        <div id="gorseller" class="tab-pane">
+          <div class="card bg-base-100 shadow-xl mb-6">
+            <div class="card-body">
+              <div class="flex justify-between items-center mb-4">
+                <h2 class="card-title">Ürün Görselleri</h2>
+                <button class="btn btn-primary btn-sm" onclick="document.getElementById('image-modal').showModal()">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                  Görsel Ekle
+                </button>
+              </div>
+              
+              {% if product.images.exists %}
+                <div id="lightgallery" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {% for image in product.images.all %}
+                    <div class="relative group" data-src="{{ image.image.url }}" data-sub-html="<h4>{{ product.name }}</h4><p>{{ image.alt_text }}</p>">
+                      <img src="{{ image.image.url }}" alt="{{ image.alt_text }}" class="w-full h-40 object-cover rounded-lg cursor-pointer">
+                      
+                      {% if image.is_primary %}
+                        <div class="absolute top-2 right-2 badge badge-primary">Ana Görsel</div>
+                      {% endif %}
+                      
+                      <div class="absolute inset-0 bg-black bg-opacity-50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                        <button class="btn btn-circle btn-sm" onclick="event.stopPropagation(); setAsPrimary({{ image.id }})">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </button>
+                        <button class="btn btn-circle btn-sm btn-error" onclick="event.stopPropagation(); deleteImage({{ image.id }})">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+                <div class="text-sm text-base-content/70 mt-4">
+                  <p>* Görseller üzerine tıklayarak tam boyutta görüntüleyebilirsiniz.</p>
+                  <p>* Bir görselin üzerine gelerek ana görsel olarak ayarlayabilir veya silebilirsiniz.</p>
+                </div>
+              {% else %}
+                <div class="alert alert-info flex flex-col items-center py-12">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span class="text-lg">Henüz ürün görseli eklenmemiştir.</span>
+                  <button class="btn btn-primary mt-4" onclick="document.getElementById('image-modal').showModal()">
+                    Görsel Ekle
+                  </button>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        
+        <!-- Pricing Tab -->
+        <div id="fiyatlar" class="tab-pane">
+          <div class="card bg-base-100 shadow-xl mb-6">
+            <div class="card-body">
+              <h2 class="card-title mb-4">Fiyat Bilgileri</h2>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <!-- Price Card -->
+                  <div class="card bg-base-200">
+                    <div class="card-body p-4">
+                      <div class="flex justify-between items-center">
+                        <h3 class="card-title text-md">Satış Fiyatı</h3>
+                        <div class="text-2xl font-bold">{{ product.price }} {{ system_settings.currency_symbol }}</div>
+                      </div>
+                      
+                      {% if product.discount_price %}
+                        <div class="flex justify-between items-center mt-2">
+                          <h3 class="card-title text-md text-success">İndirimli Fiyat</h3>
+                          <div class="text-2xl font-bold text-success">{{ product.discount_price }} {{ system_settings.currency_symbol }}</div>
+                        </div>
+                        <div class="flex justify-between items-center text-sm mt-2">
+                          <span>İndirim Oranı</span>
+                          <div class="badge badge-success">%{{ product.discount_percentage|floatformat:0 }}</div>
+                        </div>
+                      {% endif %}
+                      
+                      <div class="divider my-2"></div>
+                      
+                      <div class="flex justify-between items-center">
+                        <h3 class="card-title text-md">Toplam Fiyat (KDV Dahil)</h3>
+                        <div class="text-2xl font-bold">{{ product.price_with_tax }} {{ system_settings.currency_symbol }}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <div class="overflow-x-auto">
+                    <table class="table table-zebra">
+                      <tbody>
+                        <tr>
+                          <td class="font-bold">KDV Oranı</td>
+                          <td>%{{ product.tax_rate }}</td>
+                        </tr>
+                        <tr>
+                          <td class="font-bold">KDV Tutarı</td>
+                          <td>{{ product.tax_amount }} {{ system_settings.currency_symbol }}</td>
+                        </tr>
+                        {% if product.cost %}
+                        <tr>
+                          <td class="font-bold">Maliyet</td>
+                          <td>{{ product.cost }} {{ system_settings.currency_symbol }}</td>
+                        </tr>
+                        {% if product.profit_margin %}
+                        <tr>
+                          <td class="font-bold">Kar Marjı</td>
+                          <td>%{{ product.profit_margin }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if product.profit_amount %}
+                        <tr>
+                          <td class="font-bold">Kar Tutarı</td>
+                          <td>{{ product.profit_amount }} {{ system_settings.currency_symbol }}</td>
+                        </tr>
+                        {% endif %}
+                        {% endif %}
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  {% if product.cost %}
+                  <div class="mt-4">
+                    <div class="w-full bg-base-200 rounded-full h-4 mt-2">
+                      <div class="bg-success h-4 rounded-full" style="width: {{ product.profit_margin }}%"></div>
+                    </div>
+                    <div class="text-xs mt-1 text-center">Kar Marjı: %{{ product.profit_margin }}</div>
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Inventory Tab -->
+        <div id="stok" class="tab-pane">
+          <div class="card bg-base-100 shadow-xl mb-6">
+            <div class="card-body">
+              <div class="flex justify-between items-center mb-4">
+                <h2 class="card-title">Stok Bilgileri</h2>
+                <a href="{% url 'products:movement-create' %}?product={{ product.id }}" class="btn btn-primary btn-sm">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                  </svg>
+                  Stok Hareketi Ekle
+                </a>
+              </div>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <!-- Stock Card -->
+                  <div class="card bg-base-200">
+                    <div class="card-body p-4">
+                      <div class="flex justify-between items-center">
+                        <h3 class="card-title text-md">Güncel Stok</h3>
+                        <div class="text-3xl font-bold
+                          {% if product.is_physical and product.stock <= 10 and product.stock > 0 %}text-warning
+                          {% elif product.is_physical and product.stock == 0 %}text-error
+                          {% else %}text-success{% endif %}">
+                          {{ product.stock }}
+                        </div>
+                      </div>
+                      
+                      {% if product.is_physical %}
+                        {% if product.threshold_stock %}
+                        <div class="flex justify-between items-center mt-2 text-sm">
+                          <span>Min. Stok Seviyesi</span>
+                          <div>{{ product.threshold_stock }}</div>
+                        </div>
+                        
+                        <div class="mt-4">
+                          <div class="w-full bg-base-300 rounded-full h-4">
+                            <div class="{% if product.stock <= product.threshold_stock %}bg-error{% else %}bg-success{% endif %} h-4 rounded-full" 
+                              style="width: {% widthratio product.stock product.threshold_stock|add:product.stock|add:20 100 %}%"></div>
+                          </div>
+                          <div class="text-xs mt-1 text-center">
+                            {% if product.stock <= product.threshold_stock %}
+                              Stok kritik seviyenin altında
+                            {% else %}
+                              Stok güvenli seviyede
+                            {% endif %}
+                          </div>
+                        </div>
+                        {% endif %}
+                      {% else %}
+                        <div class="alert alert-info mt-3">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                          <span>Dijital ürün/hizmet için stok takibi yapılmaktadır.</span>
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                  
+                  <!-- Last Stock Movement -->
+                  {% if last_movement %}
+                  <div class="mt-4">
+                    <h3 class="font-semibold mb-2">Son Stok Hareketi</h3>
+                    <div class="bg-base-200 p-3 rounded-lg">
+                      <div class="flex justify-between">
+                        <span class="font-medium">{{ last_movement.get_movement_type_display }}</span>
+                        <span class="{% if last_movement.movement_type in 'purchase,return,adjustment,inventory' %}text-success{% else %}text-error{% endif %}">
+                          {% if last_movement.movement_type in 'purchase,return,adjustment,inventory' %}+{% else %}-{% endif %}{{ last_movement.quantity }}
+                        </span>
+                      </div>
+                      <div class="flex justify-between text-sm mt-2">
+                        <span>{{ last_movement.created_at|date:"d.m.Y H:i" }}</span>
+                        <span>{{ last_movement.created_by }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  {% endif %}
+                </div>
+                
+                <div>
+                  <div class="overflow-x-auto">
+                    <table class="table table-zebra">
+                      <tbody>
+                        <tr>
+                          <td class="font-bold">Ürün Tipi</td>
+                          <td>{% if product.is_physical %}Fiziksel Ürün{% else %}Dijital Ürün / Hizmet{% endif %}</td>
+                        </tr>
+                        {% if product.is_physical %}
+                        <tr>
+                          <td class="font-bold">Ağırlık</td>
+                          <td>{{ product.weight|default:"-" }} kg</td>
+                        </tr>
+                        <tr>
+                          <td class="font-bold">Boyutlar</td>
+                          <td>{{ product.dimensions|default:"-" }}</td>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                          <td class="font-bold">SKU</td>
+                          <td>{{ product.sku|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                          <td class="font-bold">Barkod</td>
+                          <td>{{ product.barcode|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                          <td class="font-bold">Stok Durumu</td>
+                          <td>
+                            {% if product.is_physical and product.stock <= 10 and product.stock > 0 %}
+                              <span class="badge badge-warning">Düşük Stok</span>
+                            {% elif product.is_physical and product.stock == 0 %}
+                              <span class="badge badge-error">Stokta Yok</span>
+                            {% else %}
+                              <span class="badge badge-success">Stok Yeterli</span>
+                            {% endif %}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  <div class="mt-4">
+                    <a href="{% url 'products:movement-list' %}?product={{ product.id }}" class="btn btn-outline btn-secondary w-full">
+                      Tüm Stok Hareketlerini Görüntüle
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Attributes Tab -->
+        <div id="ozellikler" class="tab-pane">
+          <div class="card bg-base-100 shadow-xl mb-6">
+            <div class="card-body">
+              <div class="flex justify-between items-center mb-4">
+                <h2 class="card-title">Ürün Özellikleri</h2>
+                <button class="btn btn-primary btn-sm" onclick="document.getElementById('attribute-modal').showModal()">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                  Özellik Ekle
+                </button>
+              </div>
+              
+              {% if product.attribute_values.exists %}
+                <div class="overflow-x-auto">
+                  <table class="table table-zebra w-full">
+                    <thead>
+                      <tr>
+                        <th>Özellik</th>
+                        <th>Değer</th>
+                        <th class="text-right">İşlemler</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for attr_value in product.attribute_values.all %}
+                        <tr>
+                          <td>{{ attr_value.attribute.name }}</td>
+                          <td>{{ attr_value.value }}</td>
+                          <td class="text-right">
+                            <div class="flex justify-end space-x-1">
+                              <button class="btn btn-sm btn-circle btn-ghost" onclick="editAttributeValue({{ attr_value.id }})" data-tooltip-target="edit-tooltip-{{ attr_value.id }}">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                </svg>
+                              </button>
+                              <div id="edit-tooltip-{{ attr_value.id }}" role="tooltip" class="tooltip">Düzenle</div>
+                              
+                              <button class="btn btn-sm btn-circle btn-ghost text-error" onclick="deleteAttributeValue({{ attr_value.id }})" data-tooltip-target="delete-tooltip-{{ attr_value.id }}">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </button>
+                              <div id="delete-tooltip-{{ attr_value.id }}" role="tooltip" class="tooltip">Sil</div>
+                            </div>
+                          </td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              {% else %}
+                <div class="alert alert-info flex flex-col items-center py-10">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Henüz ürün özelliği eklenmemiştir.</span>
+                  <button class="btn btn-primary mt-4" onclick="document.getElementById('attribute-modal').showModal()">
+                    Özellik Ekle
+                  </button>
+                </div>
+              {% endif %}
+              
+              <div class="text-sm text-base-content/70 mt-4">
+                <p>* Ürün özellikleri, arama filtrelerinde ve kategorilerde kullanılır.</p>
+                <p>* Renk, boyut, marka gibi önemli özellikler ekleyerek ürünlerinizi daha iyi kategorize edebilirsiniz.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Description Tab -->
+        <div id="aciklama" class="tab-pane">
+          <div class="card bg-base-100 shadow-xl mb-6">
+            <div class="card-body">
+              <div class="flex justify-between items-center mb-4">
+                <h2 class="card-title">Ürün Açıklaması</h2>
+                <a href="{% url 'products:product-update' slug=product.slug %}#description" class="btn btn-outline btn-primary btn-sm">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                  Açıklama Düzenle
+                </a>
+              </div>
+              
+              {% if product.description %}
+                <div class="prose max-w-none bg-base-200 p-6 rounded-lg">
+                  {{ product.description|linebreaks }}
+                </div>
+              {% else %}
+                <div class="alert alert-info flex flex-col items-center py-10">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Henüz ürün açıklaması eklenmemiştir.</span>
+                  <a href="{% url 'products:product-update' slug=product.slug %}#description" class="btn btn-primary mt-4">
+                    Açıklama Ekle
+                  </a>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        
+        <!-- Stock Movements Tab -->
+        <div id="hareketler" class="tab-pane">
+          <div class="card bg-base-100 shadow-xl mb-6">
+            <div class="card-body">
+              <div class="flex justify-between items-center mb-4">
+                <h2 class="card-title">Stok Hareketleri</h2>
+                <a href="{% url 'products:movement-create' %}?product={{ product.id }}" class="btn btn-primary btn-sm">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                  Yeni Stok Hareketi
+                </a>
+              </div>
+              
+              <div class="overflow-x-auto">
+                <table class="table table-zebra w-full">
+                  <thead>
+                    <tr>
+                      <th>Hareket Tipi</th>
+                      <th class="text-right">Miktar</th>
+                      <th>Önceki Stok</th>
+                      <th>Yeni Stok</th>
+                      <th>Tarih</th>
+                      <th>Oluşturan</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for movement in stock_movements %}
+                      <tr>
+                        <td>
+                          {% if movement.movement_type == 'purchase' %}
+                            <span class="badge badge-info">{{ movement.get_movement_type_display }}</span>
+                          {% elif movement.movement_type == 'sale' %}
+                            <span class="badge badge-warning">{{ movement.get_movement_type_display }}</span>
+                          {% elif movement.movement_type == 'return' %}
+                            <span class="badge badge-success">{{ movement.get_movement_type_display }}</span>
+                          {% elif movement.movement_type == 'adjustment' %}
+                            <span class="badge badge-primary">{{ movement.get_movement_type_display }}</span>
+                          {% elif movement.movement_type == 'inventory' %}
+                            <span class="badge badge-secondary">{{ movement.get_movement_type_display }}</span>
+                          {% elif movement.movement_type == 'waste' %}
+                            <span class="badge badge-error">{{ movement.get_movement_type_display }}</span>
+                          {% else %}
+                            <span class="badge">{{ movement.get_movement_type_display }}</span>
+                          {% endif %}
+                        </td>
+                        <td class="text-right">
+                          {% if movement.movement_type in 'purchase,return,adjustment,inventory' %}
+                            <span class="text-success">+{{ movement.quantity }}</span>
+                          {% else %}
+                            <span class="text-error">-{{ movement.quantity }}</span>
+                          {% endif %}
+                        </td>
+                        <td>{{ movement.previous_stock }}</td>
+                        <td>{{ movement.new_stock }}</td>
+                        <td>{{ movement.created_at|date:"d.m.Y H:i" }}</td>
+                        <td>{{ movement.created_by }}</td>
+                      </tr>
+                    {% empty %}
+                      <tr>
+                        <td colspan="6" class="text-center py-6">
+                          <div class="alert alert-info mb-0">
+                            Henüz stok hareketi bulunmamaktadır.
+                          </div>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              
+              <div class="flex justify-between items-center mt-4">
+                <div>
+                  {% if stock_movements.exists %}
+                    <span class="text-sm text-base-content/70">Toplam {{ stock_movements.count }} adet stok hareketi bulunmaktadır.</span>
+                  {% endif %}
+                </div>
+                <a href="{% url 'products:movement-list' %}?product={{ product.id }}" class="btn btn-outline btn-secondary btn-sm">
+                  Tüm Stok Hareketlerini Görüntüle
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- System Info Tab -->
+        <div id="sistem" class="tab-pane">
+          <div class="card bg-base-100 shadow-xl mb-6">
+            <div class="card-body">
+              <h2 class="card-title mb-4">Sistem Bilgileri</h2>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 class="font-semibold mb-2">Temel Bilgiler</h3>
+                  <div class="overflow-x-auto">
+                    <table class="table table-zebra">
+                      <tbody>
+                        <tr>
+                          <td class="font-bold">Ürün ID</td>
+                          <td>{{ product.id }}</td>
+                        </tr>
+                        <tr>
+                          <td class="font-bold">Oluşturulma Tarihi</td>
+                          <td>{{ product.created_at|date:"d.m.Y H:i" }}</td>
+                        </tr>
+                        <tr>
+                          <td class="font-bold">Son Güncelleme</td>
+                          <td>{{ product.updated_at|date:"d.m.Y H:i" }}</td>
+                        </tr>
+                        <tr>
+                          <td class="font-bold">Slug</td>
+                          <td>{{ product.slug }}</td>
+                        </tr>
+                        <tr>
+                          <td class="font-bold">Durum</td>
+                          <td>{{ product.get_status_display }}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 class="font-semibold mb-2">İstatistikler</h3>
+                  <div class="overflow-x-auto">
+                    <table class="table table-zebra">
+                      <tbody>
+                        <tr>
+                          <td class="font-bold">Satış Sayısı</td>
+                          <td>{{ product.sales_count }}</td>
+                        </tr>
+                        <tr>
+                          <td class="font-bold">Toplam Satış</td>
+                          <td>{{ product.total_sales }} {{ system_settings.currency_symbol }}</td>
+                        </tr>
+                        <tr>
+                          <td class="font-bold">Görüntülenme</td>
+                          <td>{{ product.view_count }}</td>
+                        </tr>
+                        <tr>
+                          <td class="font-bold">Aktif Siparişlerde</td>
+                          <td>{{ product.active_orders_count }}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="mt-6">
+                <a href="{% url 'products:product-update' slug=product.slug %}" class="btn btn-primary">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                  Düzenle
+                </a>
+                <a href="{% url 'products:product-delete' slug=product.slug %}" class="btn btn-error">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  Sil
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
   
   <!-- Image Modal -->
   <dialog id="image-modal" class="modal">
-    <div class="modal-box">
+    <div class="modal-box max-w-2xl">
       <h3 class="font-bold text-lg mb-4">Ürün Görseli Ekle</h3>
-      <form method="post" action="{% url 'products:product-image-create' slug=product.slug %}" enctype="multipart/form-data" class="space-y-4">
+      <form method="post" action="{% url 'products:product-image-create' slug=product.slug %}" enctype="multipart/form-data" class="space-y-4"
+        id="imageUploadForm">
         {% csrf_token %}
-        {{ image_form|crispy }}
+        
+        <div class="form-control w-full">
+          <label class="label">
+            <span class="label-text font-medium">Görsel</span>
+            <span class="label-text-alt">Dosya yükleyin veya sürükleyin</span>
+          </label>
+          <div class="border-2 border-dashed border-base-300 rounded-lg p-6 text-center cursor-pointer hover:bg-base-200 transition-colors"
+            id="dropZone">
+            <input type="file" name="image" id="id_image" class="hidden" accept="image/*" required>
+            <div id="dropText">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-2 text-base-content/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <p class="text-base-content/60">Görsel yüklemek için tıklayın veya dosyayı buraya sürükleyin</p>
+              <p class="text-sm text-base-content/40 mt-1">PNG, JPG, WEBP, maksimum 5MB</p>
+            </div>
+            <div id="previewContainer" class="hidden mt-3">
+              <img id="imagePreview" class="max-h-60 mx-auto" src="" alt="Önizleme">
+              <p id="fileName" class="mt-2 text-sm"></p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-control w-full">
+          <label class="label">
+            <span class="label-text font-medium">Alternatif Metin</span>
+            <span class="label-text-alt">Görme engelliler için açıklama</span>
+          </label>
+          <input type="text" name="alt_text" id="id_alt_text" class="input input-bordered w-full" placeholder="Ürün görseli açıklaması">
+        </div>
+        
+        <div class="form-control">
+          <label class="label cursor-pointer justify-start">
+            <input type="checkbox" name="is_primary" id="id_is_primary" class="checkbox checkbox-primary mr-2">
+            <span class="label-text">Ana görsel olarak ayarla</span>
+          </label>
+        </div>
+        
         <div class="modal-action">
-          <button type="button" class="btn btn-ghost" onclick="document.getElementById('image-modal').close()">İptal</button>
+          <button type="button" class="btn btn-ghost" onclick="document.getElementById('image-modal').close(); resetImageForm();">İptal</button>
           <button type="submit" class="btn btn-primary">Kaydet</button>
         </div>
       </form>
@@ -367,11 +830,30 @@
   
   <!-- Attribute Modal -->
   <dialog id="attribute-modal" class="modal">
-    <div class="modal-box">
+    <div class="modal-box max-w-xl">
       <h3 class="font-bold text-lg mb-4">Ürün Özelliği Ekle</h3>
       <form method="post" action="{% url 'products:attribute-value-create' slug=product.slug %}" class="space-y-4">
         {% csrf_token %}
-        {{ attribute_value_form|crispy }}
+        
+        <div class="form-control w-full">
+          <label class="label">
+            <span class="label-text font-medium">Özellik</span>
+          </label>
+          <select name="attribute" id="id_attribute" class="select select-bordered w-full" required>
+            <option value="">Özellik Seçin</option>
+            {% for attribute in all_attributes %}
+              <option value="{{ attribute.id }}">{{ attribute.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        
+        <div class="form-control w-full">
+          <label class="label">
+            <span class="label-text font-medium">Değer</span>
+          </label>
+          <input type="text" name="value" id="id_value" class="input input-bordered w-full" required>
+        </div>
+        
         <div class="modal-action">
           <button type="button" class="btn btn-ghost" onclick="document.getElementById('attribute-modal').close()">İptal</button>
           <button type="submit" class="btn btn-primary">Kaydet</button>
@@ -379,24 +861,163 @@
       </form>
     </div>
   </dialog>
-  
-  <!-- Stock Movement Modal -->
-  <dialog id="stock-movement-modal" class="modal">
-    <div class="modal-box">
-      <h3 class="font-bold text-lg mb-4">Stok Hareketi Ekle</h3>
-      <form method="post" action="{% url 'products:movement-create' %}" class="space-y-4">
-        {% csrf_token %}
-        {{ stock_movement_form|crispy }}
-        <div class="modal-action">
-          <button type="button" class="btn btn-ghost" onclick="document.getElementById('stock-movement-modal').close()">İptal</button>
-          <button type="submit" class="btn btn-primary">Kaydet</button>
-        </div>
-      </form>
-    </div>
-  </dialog>
 </div>
 
+{% block extra_js %}
+<!-- Lightbox JS -->
+<script src="https://cdn.jsdelivr.net/npm/lightgallery@2.7.1/lightgallery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lightgallery@2.7.1/plugins/zoom/lg-zoom.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lightgallery@2.7.1/plugins/thumbnail/lg-thumbnail.min.js"></script>
+
 <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tabs
+    const tabLinks = document.querySelectorAll('.tab');
+    const tabPanes = document.querySelectorAll('.tab-pane');
+    const navLinks = document.querySelectorAll('.menu a');
+    
+    function showTab(tabId) {
+      // Hide all tab panes
+      tabPanes.forEach(pane => {
+        pane.classList.remove('active');
+      });
+      
+      // Show the selected tab pane
+      const selectedPane = document.getElementById(tabId);
+      if (selectedPane) {
+        selectedPane.classList.add('active');
+      }
+      
+      // Update active tab link
+      tabLinks.forEach(link => {
+        link.classList.remove('tab-active');
+        if (link.getAttribute('data-tab') === tabId) {
+          link.classList.add('tab-active');
+        }
+      });
+      
+      // Update sidebar navigation
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === '#' + tabId) {
+          link.classList.add('active');
+        }
+      });
+      
+      // Update URL hash
+      window.location.hash = tabId;
+    }
+    
+    // Handle tab clicks
+    tabLinks.forEach(link => {
+      link.addEventListener('click', function(event) {
+        event.preventDefault();
+        const tabId = this.getAttribute('data-tab');
+        showTab(tabId);
+      });
+    });
+    
+    // Handle sidebar navigation clicks
+    navLinks.forEach(link => {
+      link.addEventListener('click', function(event) {
+        event.preventDefault();
+        const tabId = this.getAttribute('href').substring(1);
+        showTab(tabId);
+      });
+    });
+    
+    // Check for hash in URL and activate that tab
+    if (window.location.hash) {
+      const tabId = window.location.hash.substring(1);
+      showTab(tabId);
+    }
+    
+    // Initialize lightGallery
+    if (document.getElementById('lightgallery')) {
+      lightGallery(document.getElementById('lightgallery'), {
+        selector: '.relative',
+        plugins: [lgZoom, lgThumbnail],
+        speed: 500,
+        download: false,
+        counter: true,
+        escKey: true,
+        zoomFromOrigin: true
+      });
+    }
+    
+    // Image upload functionality
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('id_image');
+    const previewContainer = document.getElementById('previewContainer');
+    const imagePreview = document.getElementById('imagePreview');
+    const fileName = document.getElementById('fileName');
+    const dropText = document.getElementById('dropText');
+    
+    if (dropZone) {
+      dropZone.addEventListener('click', () => {
+        fileInput.click();
+      });
+      
+      dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('border-primary');
+      });
+      
+      dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('border-primary');
+      });
+      
+      dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('border-primary');
+        
+        if (e.dataTransfer.files.length) {
+          fileInput.files = e.dataTransfer.files;
+          updateImagePreview();
+        }
+      });
+      
+      fileInput.addEventListener('change', updateImagePreview);
+      
+      function updateImagePreview() {
+        if (fileInput.files && fileInput.files[0]) {
+          const file = fileInput.files[0];
+          
+          // Check file size (5MB max)
+          if (file.size > 5 * 1024 * 1024) {
+            alert('Dosya boyutu çok büyük. Maksimum 5MB olmalıdır.');
+            fileInput.value = '';
+            return;
+          }
+          
+          // Check file type
+          if (!file.type.match('image/*')) {
+            alert('Lütfen bir görsel dosyası yükleyin.');
+            fileInput.value = '';
+            return;
+          }
+          
+          const reader = new FileReader();
+          
+          reader.onload = (e) => {
+            imagePreview.src = e.target.result;
+            fileName.textContent = file.name;
+            dropText.classList.add('hidden');
+            previewContainer.classList.remove('hidden');
+          };
+          
+          reader.readAsDataURL(file);
+        }
+      }
+      
+      window.resetImageForm = function() {
+        document.getElementById('imageUploadForm').reset();
+        dropText.classList.remove('hidden');
+        previewContainer.classList.add('hidden');
+      };
+    }
+  });
+  
   // Image functions
   function deleteImage(imageId) {
     if (confirm('Bu görseli silmek istediğinizden emin misiniz?')) {
@@ -416,6 +1037,24 @@
         }
       });
     }
+  }
+  
+  function setAsPrimary(imageId) {
+    fetch(`/products/images/${imageId}/set-primary/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        window.location.reload();
+      } else {
+        alert('Ana görsel ayarlanırken bir hata oluştu.');
+      }
+    });
   }
   
   // Attribute value functions
@@ -443,4 +1082,5 @@
     }
   }
 </script>
+{% endblock %}
 {% endblock %}

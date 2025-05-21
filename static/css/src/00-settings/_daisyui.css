@@ -1,0 +1,17 @@
+/**
+ * DaisyUI Component Classes
+ * Custom extensions and overrides
+ */
+
+/* DaisyUI is already loaded via Tailwind plugins */
+/* This file is for custom DaisyUI component modifications */
+
+/* Example: Custom button variant */
+.btn-viva {
+  @apply btn bg-gradient-to-r from-primary to-secondary text-white hover:shadow-lg;
+}
+
+/* Custom card variant */
+.card-viva {
+  @apply card shadow-xl hover:shadow-2xl transition-shadow duration-300;
+}

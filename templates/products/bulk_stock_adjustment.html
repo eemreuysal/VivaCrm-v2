@@ -3,41 +3,288 @@
 {% load crispy_forms_tags %}
 {% load i18n %}
 
-{% block title %}{% trans "Toplu Stok Ayarlama" %}{% endblock %}
+{% block title %}{{ page_title|default:_("Toplu Stok Ayarlama") }}{% endblock %}
 
 {% block content %}
 <div class="container mx-auto p-4">
-    <div class="flex justify-between items-center mb-4">
-        <h1 class="text-2xl font-bold">{% trans "Toplu Stok Ayarlama" %}</h1>
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
-            <a href="{% url 'products:movement-list' %}" class="btn btn-ghost">
-                <i class="fas fa-arrow-left mr-2"></i>{% trans "Listeye Dön" %}
+            <div class="flex items-center gap-2 mb-1">
+                <a href="{% url 'products:movement-list' %}" class="text-base-content/70 hover:text-primary transition-colors">
+                    {% trans "Stok Hareketleri" %}
+                </a>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-base-content/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+                <span class="text-base-content/90">{{ page_title|default:_("Toplu Stok Ayarlama") }}</span>
+            </div>
+            <h1 class="text-3xl font-bold text-primary">{{ page_title|default:_("Toplu Stok Ayarlama") }}</h1>
+            <p class="text-base-content/70 mt-1">
+                {% if is_import_view %}
+                    {% trans "Excel ile toplu stok yükleme veya manuel stok ayarlama" %}
+                {% else %}
+                    {% trans "Birden fazla ürünün stok miktarını aynı anda güncelleyin" %}
+                {% endif %}
+            </p>
+        </div>
+        <div>
+            <a href="{% url 'products:movement-list' %}" class="btn btn-ghost gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                </svg>
+                {% trans "Listeye Dön" %}
             </a>
         </div>
     </div>
     
-    <div class="card bg-base-100">
-        <div class="card-body">
-            <div class="alert alert-info mb-4">
-                <div class="flex items-center">
-                    <div class="mr-4">
-                        <i class="fas fa-info-circle text-2xl"></i>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Left Column - Form -->
+        <div class="lg:col-span-8">
+            <div class="card bg-base-100 shadow-xl overflow-hidden">
+                <div class="bg-primary text-primary-content py-4 px-6">
+                    <h2 class="text-xl font-bold">{% trans "Toplu Stok Ayarlama Formu" %}</h2>
+                </div>
+                <div class="card-body">
+                    {% if import_message %}
+                    <div class="alert alert-warning mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <div>
+                            <h3 class="font-bold">{% trans "Excel İle Toplu Stok Yükleme" %}</h3>
+                            <div class="text-sm">{{ import_message }}</div>
+                        </div>
                     </div>
-                    <div>
-                        <h3 class="font-bold">{% trans "Toplu Stok Ayarlama" %}</h3>
-                        <div class="text-sm">
-                            <p>{% trans "Bu form ile birden fazla ürünün stok miktarını aynı anda ayarlayabilirsiniz." %}</p>
-                            <ul class="list-disc list-inside mt-2">
-                                <li>{% trans "Kesin Değer: Ürünlerin stok miktarını belirtilen değere ayarlar." %}</li>
-                                <li>{% trans "Arttır: Ürünlerin mevcut stok miktarına belirtilen değeri ekler." %}</li>
-                                <li>{% trans "Azalt: Ürünlerin mevcut stok miktarından belirtilen değeri çıkarır. Stok 0'ın altına düşmez." %}</li>
+                    {% endif %}
+                    <form method="post" id="bulk-adjustment-form" class="space-y-6">
+                        {% csrf_token %}
+                        
+                        <!-- Product Selection -->
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-medium">{% trans "Ürünler" %}</span>
+                                <span class="label-text-alt text-error">*</span>
+                            </label>
+                            {{ form.products }}
+                            <label class="label">
+                                <span class="label-text-alt">{% trans "Stok ayarlaması yapılacak ürünleri seçin" %}</span>
+                                {% if form.products.errors %}
+                                <span class="label-text-alt text-error">{{ form.products.errors }}</span>
+                                {% endif %}
+                            </label>
+                        </div>
+                        
+                        <!-- Adjustment Type Selection -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <label class="adjustment-type-option cursor-pointer">
+                                <input type="radio" name="adjustment_type" value="absolute" class="hidden adjustment-type-radio" />
+                                <div class="border-2 border-base-300 hover:border-secondary rounded-box p-4 h-full transition-all duration-200">
+                                    <div class="flex flex-col items-center justify-center text-center h-full">
+                                        <div class="w-10 h-10 rounded-full bg-secondary/20 text-secondary flex items-center justify-center mb-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M10 3a1 1 0 01.707.293l3 3a1 1 0 01-1.414 1.414L10 5.414 7.707 7.707a1 1 0 01-1.414-1.414l3-3A1 1 0 0110 3zm-3.707 9.293a1 1 0 011.414 0L10 14.586l2.293-2.293a1 1 0 011.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                            </svg>
+                                        </div>
+                                        <span class="font-medium">{% trans "Kesin Değer" %}</span>
+                                        <span class="text-xs text-base-content/60 mt-1">{% trans "Stok miktarını belirtilen değere ayarlar" %}</span>
+                                    </div>
+                                </div>
+                            </label>
+                            
+                            <label class="adjustment-type-option cursor-pointer">
+                                <input type="radio" name="adjustment_type" value="increase" class="hidden adjustment-type-radio" checked />
+                                <div class="border-2 border-success bg-success/10 rounded-box p-4 h-full transition-all duration-200">
+                                    <div class="flex flex-col items-center justify-center text-center h-full">
+                                        <div class="w-10 h-10 rounded-full bg-success/20 text-success flex items-center justify-center mb-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd" />
+                                            </svg>
+                                        </div>
+                                        <span class="font-medium">{% trans "Arttır" %}</span>
+                                        <span class="text-xs text-base-content/60 mt-1">{% trans "Mevcut stok miktarına belirtilen değeri ekler" %}</span>
+                                    </div>
+                                </div>
+                            </label>
+                            
+                            <label class="adjustment-type-option cursor-pointer">
+                                <input type="radio" name="adjustment_type" value="decrease" class="hidden adjustment-type-radio" />
+                                <div class="border-2 border-base-300 hover:border-error rounded-box p-4 h-full transition-all duration-200">
+                                    <div class="flex flex-col items-center justify-center text-center h-full">
+                                        <div class="w-10 h-10 rounded-full bg-error/20 text-error flex items-center justify-center mb-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clip-rule="evenodd" />
+                                            </svg>
+                                        </div>
+                                        <span class="font-medium">{% trans "Azalt" %}</span>
+                                        <span class="text-xs text-base-content/60 mt-1">{% trans "Mevcut stok miktarından belirtilen değeri çıkarır" %}</span>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                        
+                        <!-- Hidden adjustment type field -->
+                        <div class="hidden">
+                            {{ form.adjustment_type }}
+                        </div>
+                        
+                        <!-- Quantity Field -->
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-medium">{% trans "Miktar" %}</span>
+                                <span class="label-text-alt text-error">*</span>
+                            </label>
+                            {{ form.quantity }}
+                            <label class="label">
+                                <span class="label-text-alt" id="quantity-helper-text">{% trans "Stok miktarını arttırmak için kullanılacak değer" %}</span>
+                                {% if form.quantity.errors %}
+                                <span class="label-text-alt text-error">{{ form.quantity.errors }}</span>
+                                {% endif %}
+                            </label>
+                        </div>
+                        
+                        <!-- Notes Field -->
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-medium">{% trans "Notlar" %}</span>
+                            </label>
+                            {{ form.notes }}
+                            <label class="label">
+                                <span class="label-text-alt">{% trans "Toplu stok ayarlaması ile ilgili açıklamalar" %}</span>
+                                {% if form.notes.errors %}
+                                <span class="label-text-alt text-error">{{ form.notes.errors }}</span>
+                                {% endif %}
+                            </label>
+                        </div>
+                        
+                        <!-- Form Actions -->
+                        <div class="form-control mt-8 flex flex-row justify-end gap-2">
+                            <a href="{% url 'products:movement-list' %}" class="btn btn-ghost">
+                                {% trans "İptal" %}
+                            </a>
+                            <button type="submit" class="btn btn-primary gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                </svg>
+                                {% trans "Stokları Güncelle" %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Column - Help & Information -->
+        <div class="lg:col-span-4">
+            <div class="card bg-base-100 shadow-xl overflow-hidden sticky top-4">
+                <div class="bg-accent text-accent-content py-4 px-6">
+                    <h2 class="text-xl font-bold">{% trans "Yardım ve Bilgi" %}</h2>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div>
+                            <h3 class="font-bold">{% trans "Dikkat!" %}</h3>
+                            <div class="text-sm">{% trans "Bu işlem, seçilen tüm ürünlerin stok seviyelerini değiştirecektir. İşlemi tamamlamadan önce seçimlerinizi kontrol edin." %}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="collapse collapse-arrow bg-base-200 mb-4">
+                        <input type="checkbox" class="peer" checked /> 
+                        <div class="collapse-title font-medium">
+                            {% trans "Ayarlama Türleri" %}
+                        </div>
+                        <div class="collapse-content text-sm"> 
+                            <ul class="space-y-3 mt-2">
+                                <li class="flex items-start gap-2">
+                                    <div class="w-6 h-6 rounded-full bg-secondary/20 text-secondary flex-shrink-0 flex items-center justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M10 3a1 1 0 01.707.293l3 3a1 1 0 01-1.414 1.414L10 5.414 7.707 7.707a1 1 0 01-1.414-1.414l3-3A1 1 0 0110 3zm-3.707 9.293a1 1 0 011.414 0L10 14.586l2.293-2.293a1 1 0 011.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">{% trans "Kesin Değer" %}</p>
+                                        <p class="text-xs opacity-70">{% trans "Bu seçenek, tüm seçilen ürünlerin stok miktarını girilen değere ayarlar. Örneğin, değer '10' ise, tüm ürünlerin stok miktarı 10 olarak ayarlanır. Envanter sayımından sonra kullanılması önerilir." %}</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <div class="w-6 h-6 rounded-full bg-success/20 text-success flex-shrink-0 flex items-center justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">{% trans "Arttır" %}</p>
+                                        <p class="text-xs opacity-70">{% trans "Bu seçenek, tüm seçilen ürünlerin mevcut stok miktarına girilen değeri ekler. Örneğin, bir ürünün mevcut stoku 5 ve girilen değer 3 ise, yeni stok miktarı 8 olur. Toplu ürün alımı için kullanılması önerilir." %}</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <div class="w-6 h-6 rounded-full bg-error/20 text-error flex-shrink-0 flex items-center justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">{% trans "Azalt" %}</p>
+                                        <p class="text-xs opacity-70">{% trans "Bu seçenek, tüm seçilen ürünlerin mevcut stok miktarından girilen değeri çıkarır. Örneğin, bir ürünün mevcut stoku 10 ve girilen değer 4 ise, yeni stok miktarı 6 olur. Toplu ürün çıkışı veya fire kaydı için kullanılması önerilir." %}</p>
+                                    </div>
+                                </li>
                             </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="collapse collapse-arrow bg-base-200 mb-4">
+                        <input type="checkbox" class="peer" /> 
+                        <div class="collapse-title font-medium">
+                            {% trans "Öneriler" %}
+                        </div>
+                        <div class="collapse-content text-sm"> 
+                            <ul class="space-y-2 mt-2 list-disc list-inside">
+                                <li>{% trans "Her zaman işlem öncesi bir liste görünümü kontrol edin." %}</li>
+                                <li>{% trans "Büyük ürün grupları için kategoriye göre filtreleyin." %}</li>
+                                <li>{% trans "İşlemin nedenini not alanına kaydedin, bu daha sonra faydalı olacaktır." %}</li>
+                                <li>{% trans "İşlem tamamlandıktan sonra stok hareketleri listesini kontrol edin." %}</li>
+                                <li>{% trans "Kritik ürünler için 'Kesin Değer' ayarlama türünü kullanın." %}</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="collapse collapse-arrow bg-base-200 mb-4">
+                        <input type="checkbox" class="peer" /> 
+                        <div class="collapse-title font-medium">
+                            {% trans "Sık Sorulan Sorular" %}
+                        </div>
+                        <div class="collapse-content text-sm"> 
+                            <div class="space-y-3 mt-2">
+                                <div>
+                                    <p class="font-medium">{% trans "Birden fazla ürün nasıl seçerim?" %}</p>
+                                    <p class="text-xs opacity-70">{% trans "Ürünler alanında, CTRL tuşunu (Mac'te CMD) basılı tutarak birden çok ürün seçebilirsiniz. Ayrıca, SHIFT tuşunu kullanarak bir aralıktaki tüm ürünleri seçebilirsiniz." %}</p>
+                                </div>
+                                <div>
+                                    <p class="font-medium">{% trans "İşlem geri alınabilir mi?" %}</p>
+                                    <p class="text-xs opacity-70">{% trans "Hayır, stok hareketleri geri alınamaz. Bu nedenle işlem öncesi dikkatli bir şekilde kontrol etmeniz önemlidir. Hata durumunda, tersi bir işlem yaparak düzeltebilirsiniz." %}</p>
+                                </div>
+                                <div>
+                                    <p class="font-medium">{% trans "Ürünleri daha kolay nasıl bulabilirim?" %}</p>
+                                    <p class="text-xs opacity-70">{% trans "Ürünler alanında arama yapabilirsiniz. Kodu, adı veya kategorisi ile arama yaparak istediğiniz ürünleri daha hızlı bulabilirsiniz." %}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-warning mt-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <div>
+                            <h3 class="font-bold">{% trans "Önemli Uyarı" %}</h3>
+                            <div class="text-sm">{% trans "Toplu stok hareketi, seçilen her ürün için ayrı bir stok hareketi kaydı oluşturur. Bu işlem geri alınamaz. Lütfen onaylamadan önce iki kez kontrol edin." %}</div>
                         </div>
                     </div>
                 </div>
             </div>
-            
-            {% crispy form %}
         </div>
     </div>
 </div>
@@ -47,10 +294,127 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Initialize select2 for product selection
-        $('.select2').select2({
-            placeholder: "{% trans 'Ürünleri seçin' %}",
-            allowClear: true
+        if ($.fn.select2) {
+            $('.select2').select2({
+                placeholder: "{% trans 'Ürünleri seçin' %}",
+                allowClear: true,
+                width: '100%'
+            });
+        }
+        
+        // Setup form elements with enhanced styling
+        const selectElements = document.querySelectorAll('select:not(.select2)');
+        selectElements.forEach(select => {
+            select.classList.add('select', 'select-bordered', 'w-full');
         });
+        
+        const inputElements = document.querySelectorAll('input[type="text"], input[type="number"]');
+        inputElements.forEach(input => {
+            input.classList.add('input', 'input-bordered', 'w-full');
+        });
+        
+        const textareaElements = document.querySelectorAll('textarea');
+        textareaElements.forEach(textarea => {
+            textarea.classList.add('textarea', 'textarea-bordered', 'w-full', 'min-h-[100px]');
+        });
+        
+        // Adjustment type selector functionality
+        const adjustmentTypeRadios = document.querySelectorAll('.adjustment-type-radio');
+        const formAdjustmentTypeSelect = document.getElementById('id_adjustment_type');
+        const quantityHelperText = document.getElementById('quantity-helper-text');
+        
+        // Adjustment type helper texts
+        const adjustmentTypeHelperTexts = {
+            'absolute': "{% trans 'Ürünlerin stok miktarını tam olarak bu değere ayarlar' %}",
+            'increase': "{% trans 'Stok miktarını arttırmak için kullanılacak değer' %}",
+            'decrease': "{% trans 'Stok miktarını azaltmak için kullanılacak değer' %}"
+        };
+        
+        // Update form based on adjustment type selection
+        function updateFormByAdjustmentType(adjustmentType) {
+            // Update form's hidden select
+            formAdjustmentTypeSelect.value = adjustmentType;
+            
+            // Update helper text
+            if (adjustmentTypeHelperTexts[adjustmentType]) {
+                quantityHelperText.textContent = adjustmentTypeHelperTexts[adjustmentType];
+            }
+            
+            // Update visual selected state
+            document.querySelectorAll('.adjustment-type-option').forEach(option => {
+                const radioInput = option.querySelector('input');
+                const card = option.querySelector('div');
+                
+                if (radioInput.value === adjustmentType) {
+                    // Set selected state
+                    radioInput.checked = true;
+                    
+                    // Apply border color based on adjustment type
+                    if (adjustmentType === 'absolute') {
+                        card.classList.remove('border-base-300');
+                        card.classList.add('border-secondary', 'bg-secondary/10');
+                    } else if (adjustmentType === 'increase') {
+                        card.classList.remove('border-base-300');
+                        card.classList.add('border-success', 'bg-success/10');
+                    } else if (adjustmentType === 'decrease') {
+                        card.classList.remove('border-base-300');
+                        card.classList.add('border-error', 'bg-error/10');
+                    }
+                } else {
+                    // Reset card styling
+                    card.classList.remove(
+                        'border-secondary', 'bg-secondary/10',
+                        'border-success', 'bg-success/10',
+                        'border-error', 'bg-error/10'
+                    );
+                    card.classList.add('border-base-300');
+                }
+            });
+        }
+        
+        // Set initial state based on form value or default to 'increase'
+        const initialAdjustmentType = formAdjustmentTypeSelect.value || 'increase';
+        updateFormByAdjustmentType(initialAdjustmentType);
+        
+        // Add event listeners to adjustment type options
+        adjustmentTypeRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                updateFormByAdjustmentType(this.value);
+            });
+        });
+        
+        // Also handle clicks on the cards
+        document.querySelectorAll('.adjustment-type-option').forEach(option => {
+            option.addEventListener('click', function() {
+                const radioInput = this.querySelector('input');
+                updateFormByAdjustmentType(radioInput.value);
+            });
+        });
+        
+        // Make selected products more visible in the UI
+        const productSelect = document.getElementById('id_products');
+        if (productSelect) {
+            productSelect.addEventListener('change', function() {
+                const selectedCount = this.selectedOptions.length;
+                const submitButton = document.querySelector('button[type="submit"]');
+                
+                if (selectedCount > 0) {
+                    submitButton.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                        </svg>
+                        {% trans "Güncelle" %} (${selectedCount} ürün)
+                    `;
+                } else {
+                    submitButton.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                        </svg>
+                        {% trans "Stokları Güncelle" %}
+                    `;
+                }
+            });
+        }
     });
 </script>
 {% endblock %}

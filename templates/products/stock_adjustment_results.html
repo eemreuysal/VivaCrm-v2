@@ -1,97 +1,306 @@
 {% extends 'base/base_dashboard.html' %}
-{% load static %}
+{% load i18n %}
 
-{% block title %}Stock Adjustment Results{% endblock %}
+{% block title %}Stok Ayarlamaları Sonuçları{% endblock %}
 
 {% block content %}
-<div class="p-4">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold">Stock Adjustment Results</h1>
+<div class="container mx-auto px-4 py-6">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
-            <a href="{% url 'products:stock_movement_list' %}" class="btn btn-outline">
-                <i class="fas fa-arrow-left mr-2"></i> Back to Stock Movements
-            </a>
+            <h1 class="text-2xl font-bold text-primary-content">Stok Ayarlamaları Sonuçları</h1>
+            <p class="text-base-content/70">Excel dosyasından içe aktarılan stok ayarlamalarının işlenme durumunu görüntüleyin</p>
         </div>
+        <a href="{% url 'products:movement-list' %}" class="btn btn-outline transition-all duration-300 hover:bg-base-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+            </svg>
+            Stok Hareketlerine Dön
+        </a>
     </div>
 
-    {% include 'components/card.html' with title="Import Summary" %}
-        <div class="p-6">
-            <div class="stats stats-vertical lg:stats-horizontal shadow w-full mb-6">
+    <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border-t-4 border-primary">
+        <div class="card-body">
+            <div class="stats shadow mb-6 w-full bg-base-200/50">
+                <div class="stat">
+                    <div class="stat-figure text-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                    </div>
+                    <div class="stat-title font-medium">Toplam</div>
+                    <div class="stat-value text-primary">{{ total }}</div>
+                    <div class="stat-desc">Toplam satır sayısı</div>
+                </div>
+                
                 <div class="stat">
                     <div class="stat-figure text-success">
-                        <i class="fas fa-check-circle text-3xl"></i>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     </div>
-                    <div class="stat-title">Successful</div>
+                    <div class="stat-title font-medium">Başarılı</div>
                     <div class="stat-value text-success">{{ success_count }}</div>
-                    <div class="stat-desc">Adjustments successfully processed</div>
+                    <div class="stat-desc">Başarıyla işlenen ayarlamalar</div>
                 </div>
                 
                 <div class="stat">
                     <div class="stat-figure text-error">
-                        <i class="fas fa-exclamation-circle text-3xl"></i>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     </div>
-                    <div class="stat-title">Errors</div>
+                    <div class="stat-title font-medium">Hata</div>
                     <div class="stat-value text-error">{{ error_count }}</div>
-                    <div class="stat-desc">Failed adjustments</div>
-                </div>
-                
-                <div class="stat">
-                    <div class="stat-figure text-primary">
-                        <i class="fas fa-table text-3xl"></i>
-                    </div>
-                    <div class="stat-title">Total</div>
-                    <div class="stat-value">{{ total }}</div>
-                    <div class="stat-desc">Total rows processed</div>
+                    <div class="stat-desc">Hata nedeniyle başarısız olanlar</div>
                 </div>
             </div>
             
+            <!-- Visual Progress -->
+            <div class="w-full bg-base-200 rounded-full h-4 mb-6 overflow-hidden shadow-inner">
+                <div class="flex h-full">
+                    {% if success_count > 0 %}
+                    <div class="bg-success h-full" style="width: {{ success_count|floatformat:0 }}%; transition: width 1s ease-in-out;"></div>
+                    {% endif %}
+                    {% if error_count > 0 %}
+                    <div class="bg-error h-full" style="width: {{ error_count|floatformat:0 }}%; transition: width 1s ease-in-out;"></div>
+                    {% endif %}
+                </div>
+            </div>
+
             {% if error_count > 0 %}
-                <div class="mt-6">
-                    <h3 class="text-lg font-semibold mb-2">Error Details</h3>
-                    <div class="overflow-x-auto">
-                        <table class="table table-zebra w-full">
-                            <thead>
-                                <tr>
-                                    <th>Row</th>
-                                    <th>Error Message</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for error in error_details %}
-                                <tr>
-                                    <td>{{ error|slice:":5" }}</td>
-                                    <td class="text-error">{{ error|slice:"5:" }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                <div class="card bg-base-200 shadow-md mb-6 overflow-hidden border border-error/20">
+                    <div class="card-body p-0">
+                        <div class="p-4 bg-error/10 border-b border-error/20 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-error" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            <h2 class="card-title text-error text-lg m-0">Hata Detayları</h2>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="table table-zebra w-full">
+                                <thead>
+                                    <tr>
+                                        <th class="bg-base-300/50">Satır</th>
+                                        <th class="bg-base-300/50">Hata Mesajı</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for error in error_details %}
+                                        <tr class="hover:bg-base-300/30 transition-colors duration-150">
+                                            <td class="font-mono font-bold">{{ error|slice:":5" }}</td>
+                                            <td class="text-error">{{ error|slice:"5:" }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="mt-6">
-                    <p class="mb-2">What would you like to do next?</p>
-                    <div class="flex space-x-2">
-                        <a href="{% url 'products:stock_adjustment_import' %}" class="btn btn-primary">
-                            <i class="fas fa-upload mr-2"></i> Try Another Import
-                        </a>
-                        <a href="{% url 'products:stock_movement_list' %}" class="btn btn-outline">
-                            <i class="fas fa-list mr-2"></i> Go to Stock Movements
-                        </a>
-                    </div>
+                <div class="flex flex-col sm:flex-row justify-end gap-3 mt-6">
+                    <a href="{% url 'products:stock-adjustment-import' %}" class="btn btn-primary gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+                        </svg>
+                        Başka Bir Dosya Dene
+                    </a>
+                    <a href="{% url 'products:movement-list' %}" class="btn btn-outline gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                        </svg>
+                        Stok Hareketlerine Dön
+                    </a>
                 </div>
             {% else %}
-                <div class="alert alert-success">
-                    <i class="fas fa-check-circle"></i>
-                    <span>All stock adjustments were processed successfully!</span>
+                <div class="alert alert-success bg-success/20 border border-success shadow-md flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <div>
+                        <h3 class="font-bold">Başarılı!</h3>
+                        <div class="text-sm">Tüm stok ayarlamaları başarıyla işlendi.</div>
+                    </div>
+                </div>
+                
+                <!-- Success Animation -->
+                <div class="flex justify-center my-10">
+                    <div class="success-checkmark">
+                        <div class="check-icon">
+                            <span class="icon-line line-tip"></span>
+                            <span class="icon-line line-long"></span>
+                            <div class="icon-circle"></div>
+                            <div class="icon-fix"></div>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="flex justify-end mt-6">
-                    <a href="{% url 'products:stock_movement_list' %}" class="btn btn-primary">
-                        <i class="fas fa-list mr-2"></i> Go to Stock Movements
+                    <a href="{% url 'products:movement-list' %}" class="btn btn-primary gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                        Stok Hareketlerine Dön
                     </a>
                 </div>
             {% endif %}
         </div>
-    {% include 'components/card_end.html' %}
+    </div>
 </div>
+
+<style>
+    /* Success Animation */
+    .success-checkmark {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto;
+    }
+    .success-checkmark .check-icon {
+        width: 80px;
+        height: 80px;
+        position: relative;
+        border-radius: 50%;
+        box-sizing: content-box;
+        border: 4px solid #4CAF50;
+    }
+    .success-checkmark .check-icon::before {
+        top: 3px;
+        left: -2px;
+        width: 30px;
+        transform-origin: 100% 50%;
+        border-radius: 100px 0 0 100px;
+    }
+    .success-checkmark .check-icon::after {
+        top: 0;
+        left: 30px;
+        width: 60px;
+        transform-origin: 0 50%;
+        border-radius: 0 100px 100px 0;
+        animation: rotate-circle 4.25s ease-in;
+    }
+    .success-checkmark .check-icon::before, .success-checkmark .check-icon::after {
+        content: '';
+        height: 100px;
+        position: absolute;
+        background: #FFFFFF;
+        transform: rotate(-45deg);
+    }
+    .success-checkmark .check-icon .icon-line {
+        height: 5px;
+        background-color: #4CAF50;
+        display: block;
+        border-radius: 2px;
+        position: absolute;
+        z-index: 10;
+    }
+    .success-checkmark .check-icon .icon-line.line-tip {
+        top: 46px;
+        left: 14px;
+        width: 25px;
+        transform: rotate(45deg);
+        animation: icon-line-tip 0.75s;
+    }
+    .success-checkmark .check-icon .icon-line.line-long {
+        top: 38px;
+        right: 8px;
+        width: 47px;
+        transform: rotate(-45deg);
+        animation: icon-line-long 0.75s;
+    }
+    .success-checkmark .check-icon .icon-circle {
+        top: -4px;
+        left: -4px;
+        z-index: 10;
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        position: absolute;
+        box-sizing: content-box;
+        border: 4px solid rgba(76, 175, 80, .5);
+    }
+    .success-checkmark .check-icon .icon-fix {
+        top: 8px;
+        width: 5px;
+        left: 26px;
+        z-index: 1;
+        height: 85px;
+        position: absolute;
+        transform: rotate(-45deg);
+        background-color: #FFFFFF;
+    }
+    @keyframes rotate-circle {
+        0% {
+            transform: rotate(-45deg);
+        }
+        5% {
+            transform: rotate(-45deg);
+        }
+        12% {
+            transform: rotate(-405deg);
+        }
+        100% {
+            transform: rotate(-405deg);
+        }
+    }
+    @keyframes icon-line-tip {
+        0% {
+            width: 0;
+            left: 1px;
+            top: 19px;
+        }
+        54% {
+            width: 0;
+            left: 1px;
+            top: 19px;
+        }
+        70% {
+            width: 50px;
+            left: -8px;
+            top: 37px;
+        }
+        84% {
+            width: 17px;
+            left: 21px;
+            top: 48px;
+        }
+        100% {
+            width: 25px;
+            left: 14px;
+            top: 45px;
+        }
+    }
+    @keyframes icon-line-long {
+        0% {
+            width: 0;
+            right: 46px;
+            top: 54px;
+        }
+        65% {
+            width: 0;
+            right: 46px;
+            top: 54px;
+        }
+        84% {
+            width: 55px;
+            right: 0px;
+            top: 35px;
+        }
+        100% {
+            width: 47px;
+            right: 8px;
+            top: 38px;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Make the percentages in the progress bar animate from 0
+        const successBar = document.querySelector('.bg-success');
+        const errorBar = document.querySelector('.bg-error');
+        
+        if (successBar) {
+            const successWidth = successBar.style.width;
+            successBar.style.width = '0%';
+            setTimeout(() => {
+                successBar.style.width = successWidth;
+            }, 200);
+        }
+        
+        if (errorBar) {
+            const errorWidth = errorBar.style.width;
+            errorBar.style.width = '0%';
+            setTimeout(() => {
+                errorBar.style.width = errorWidth;
+            }, 200);
+        }
+    });
+</script>
 {% endblock %}

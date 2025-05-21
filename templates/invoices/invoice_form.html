@@ -84,8 +84,8 @@
                                     <td>{{ forloop.counter }}</td>
                                     <td>{{ item.description }}</td>
                                     <td class="text-right">{{ item.quantity }}</td>
-                                    <td class="text-right">{{ item.unit_price|floatformat:2 }} ₺</td>
-                                    <td class="text-right">{{ item.total_with_tax|floatformat:2 }} ₺</td>
+                                    <td class="text-right">{{ item.unit_price|floatformat:2 }} $</td>
+                                    <td class="text-right">{{ item.total_with_tax|floatformat:2 }} $</td>
                                     <td>
                                         <div class="flex space-x-2">
                                             <a href="{% url 'invoices:invoice-item-update' item.pk %}" class="btn btn-sm btn-ghost">

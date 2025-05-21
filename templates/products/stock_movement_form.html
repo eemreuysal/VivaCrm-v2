@@ -7,39 +7,427 @@
 
 {% block content %}
 <div class="container mx-auto p-4">
-    <div class="flex justify-between items-center mb-4">
-        <h1 class="text-2xl font-bold">
-            {% if product %}
-                {% trans "Yeni Stok Hareketi" %}: {{ product.name }}
-            {% else %}
-                {% trans "Yeni Stok Hareketi" %}
-            {% endif %}
-        </h1>
-        <a href="{% url 'products:movement-list' %}" class="btn btn-ghost">
-            <i class="fas fa-arrow-left mr-2"></i>{% trans "Listeye Dön" %}
-        </a>
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <div>
+            <div class="flex items-center gap-2 mb-1">
+                <a href="{% url 'products:movement-list' %}" class="text-base-content/70 hover:text-primary transition-colors">
+                    {% trans "Stok Hareketleri" %}
+                </a>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-base-content/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+                <span class="text-base-content/90">{% trans "Yeni Hareket" %}</span>
+                {% if product %}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-base-content/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+                <span class="font-medium">{{ product.name }}</span>
+                {% endif %}
+            </div>
+            <h1 class="text-3xl font-bold text-primary">
+                {% if product %}
+                    {% trans "Yeni Stok Hareketi" %}: {{ product.name }}
+                {% else %}
+                    {% trans "Yeni Stok Hareketi" %}
+                {% endif %}
+            </h1>
+            <p class="text-base-content/70 mt-1">{% trans "Stok miktarını güncellemek için yeni bir stok hareketi oluşturun" %}</p>
+        </div>
+        <div>
+            <a href="{% url 'products:movement-list' %}" class="btn btn-ghost gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                </svg>
+                {% trans "Listeye Dön" %}
+            </a>
+        </div>
     </div>
     
-    <div class="card">
-        <div class="card-body">
-            {% if product %}
-                <div class="alert alert-info mb-4">
-                    <div class="flex items-center">
-                        <div class="mr-4">
-                            <i class="fas fa-info-circle text-2xl"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-bold">{{ product.name }}</h3>
-                            <div class="text-sm">
-                                <p><strong>{% trans "Kod" %}:</strong> {{ product.code }}</p>
-                                <p><strong>{% trans "Mevcut Stok" %}:</strong> {{ product.stock }} {% if product.is_physical and product.stock <= 10 %}<span class="badge badge-warning">{% trans "Düşük Stok" %}</span>{% endif %}</p>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Left Column - Form -->
+        <div class="lg:col-span-7">
+            <div class="card bg-base-100 shadow-xl overflow-hidden">
+                <div class="bg-primary text-primary-content py-4 px-6">
+                    <h2 class="text-xl font-bold">{% trans "Stok Hareketi Bilgileri" %}</h2>
+                </div>
+                <div class="card-body">
+                    {% if product %}
+                        <div class="alert alert-info mb-6 shadow-lg">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 mr-4">
+                                    {% if product.images.first %}
+                                        <div class="avatar">
+                                            <div class="w-16 h-16 rounded-box">
+                                                <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" />
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <div class="avatar placeholder">
+                                            <div class="bg-neutral-focus text-neutral-content rounded-box w-16 h-16">
+                                                <span class="text-2xl">{{ product.name|slice:":1" }}</span>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-lg">{{ product.name }}</h3>
+                                    <div class="grid grid-cols-2 gap-x-4 gap-y-1 mt-1">
+                                        <div class="text-sm"><span class="opacity-70">{% trans "Kod" %}:</span> {{ product.code }}</div>
+                                        <div class="text-sm"><span class="opacity-70">{% trans "Kategori" %}:</span> {{ product.category|default:"-" }}</div>
+                                        <div class="text-sm">
+                                            <span class="opacity-70">{% trans "Mevcut Stok" %}:</span> 
+                                            <span class="font-medium">{{ product.stock }}</span>
+                                            {% if product.is_physical and product.stock <= product.threshold_stock %}
+                                                <span class="badge badge-warning badge-xs">{% trans "Düşük Stok" %}</span>
+                                            {% endif %}
+                                            {% if product.is_physical and product.stock == 0 %}
+                                                <span class="badge badge-error badge-xs">{% trans "Stokta Yok" %}</span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="text-sm"><span class="opacity-70">{% trans "Fiyat" %}:</span> {{ product.price }} $</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+                    {% endif %}
+                    
+                    <!-- Movement Type Selector -->
+                    <div class="movement-type-selector mb-6">
+                        <label class="label">
+                            <span class="label-text font-medium">{% trans "Hareket Tipi" %}</span>
+                        </label>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            <label class="movement-type-option cursor-pointer" data-type="purchase">
+                                <input type="radio" name="movement_type" value="purchase" class="hidden movement-type-radio" />
+                                <div class="border-2 border-base-300 hover:border-info rounded-box p-4 h-full transition-all duration-200">
+                                    <div class="flex flex-col items-center justify-center text-center h-full">
+                                        <div class="w-10 h-10 rounded-full bg-info/20 text-info flex items-center justify-center mb-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM14 11a1 1 0 011 1v1h1a1 1 0 110 2h-1v1a1 1 0 11-2 0v-1h-1a1 1 0 110-2h1v-1a1 1 0 011-1z" />
+                                            </svg>
+                                        </div>
+                                        <span class="font-medium">{% trans "Satın Alma" %}</span>
+                                        <span class="text-xs text-base-content/60 mt-1">{% trans "Stok eklemek için" %}</span>
+                                    </div>
+                                </div>
+                            </label>
+                            
+                            <label class="movement-type-option cursor-pointer" data-type="sale">
+                                <input type="radio" name="movement_type" value="sale" class="hidden movement-type-radio" />
+                                <div class="border-2 border-base-300 hover:border-warning rounded-box p-4 h-full transition-all duration-200">
+                                    <div class="flex flex-col items-center justify-center text-center h-full">
+                                        <div class="w-10 h-10 rounded-full bg-warning/20 text-warning flex items-center justify-center mb-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
+                                            </svg>
+                                        </div>
+                                        <span class="font-medium">{% trans "Satış" %}</span>
+                                        <span class="text-xs text-base-content/60 mt-1">{% trans "Manuel satış kaydı" %}</span>
+                                    </div>
+                                </div>
+                            </label>
+                            
+                            <label class="movement-type-option cursor-pointer" data-type="return">
+                                <input type="radio" name="movement_type" value="return" class="hidden movement-type-radio" />
+                                <div class="border-2 border-base-300 hover:border-success rounded-box p-4 h-full transition-all duration-200">
+                                    <div class="flex flex-col items-center justify-center text-center h-full">
+                                        <div class="w-10 h-10 rounded-full bg-success/20 text-success flex items-center justify-center mb-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+                                            </svg>
+                                        </div>
+                                        <span class="font-medium">{% trans "İade" %}</span>
+                                        <span class="text-xs text-base-content/60 mt-1">{% trans "Ürün iadelerini kaydet" %}</span>
+                                    </div>
+                                </div>
+                            </label>
+                            
+                            <label class="movement-type-option cursor-pointer" data-type="adjustment">
+                                <input type="radio" name="movement_type" value="adjustment" class="hidden movement-type-radio" />
+                                <div class="border-2 border-base-300 hover:border-primary rounded-box p-4 h-full transition-all duration-200">
+                                    <div class="flex flex-col items-center justify-center text-center h-full">
+                                        <div class="w-10 h-10 rounded-full bg-primary/20 text-primary flex items-center justify-center mb-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                <path d="M5 4a1 1 0 00-2 0v7.268a2 2 0 000 3.464V16a1 1 0 102 0v-1.268a2 2 0 000-3.464V4zM11 4a1 1 0 10-2 0v1.268a2 2 0 000 3.464V16a1 1 0 102 0V8.732a2 2 0 000-3.464V4zM16 3a1 1 0 011 1v7.268a2 2 0 010 3.464V16a1 1 0 11-2 0v-1.268a2 2 0 010-3.464V4a1 1 0 011-1z" />
+                                            </svg>
+                                        </div>
+                                        <span class="font-medium">{% trans "Düzeltme" %}</span>
+                                        <span class="text-xs text-base-content/60 mt-1">{% trans "Stok düzeltme" %}</span>
+                                    </div>
+                                </div>
+                            </label>
+                            
+                            <label class="movement-type-option cursor-pointer" data-type="inventory">
+                                <input type="radio" name="movement_type" value="inventory" class="hidden movement-type-radio" />
+                                <div class="border-2 border-base-300 hover:border-secondary rounded-box p-4 h-full transition-all duration-200">
+                                    <div class="flex flex-col items-center justify-center text-center h-full">
+                                        <div class="w-10 h-10 rounded-full bg-secondary/20 text-secondary flex items-center justify-center mb-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
+                                            </svg>
+                                        </div>
+                                        <span class="font-medium">{% trans "Envanter" %}</span>
+                                        <span class="text-xs text-base-content/60 mt-1">{% trans "Sayım sonrası ayarlama" %}</span>
+                                    </div>
+                                </div>
+                            </label>
+                            
+                            <label class="movement-type-option cursor-pointer" data-type="waste">
+                                <input type="radio" name="movement_type" value="waste" class="hidden movement-type-radio" />
+                                <div class="border-2 border-base-300 hover:border-error rounded-box p-4 h-full transition-all duration-200">
+                                    <div class="flex flex-col items-center justify-center text-center h-full">
+                                        <div class="w-10 h-10 rounded-full bg-error/20 text-error flex items-center justify-center mb-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                            </svg>
+                                        </div>
+                                        <span class="font-medium">{% trans "Fire" %}</span>
+                                        <span class="text-xs text-base-content/60 mt-1">{% trans "Hasarlı/kayıp ürünler" %}</span>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Movement Type Information -->
+                    <div id="movement-type-info" class="mb-6"></div>
+                    
+                    <!-- Form -->
+                    <form method="post" id="movement-form" class="movement-form">
+                        {% csrf_token %}
+                        <div class="hidden">
+                            {{ form.movement_type }}
+                        </div>
+                        
+                        {% if not product %}
+                        <div class="form-control mb-4">
+                            <label class="label">
+                                <span class="label-text font-medium">{% trans "Ürün" %}</span>
+                                <span class="label-text-alt text-error">*</span>
+                            </label>
+                            {{ form.product }}
+                            {% if form.product.errors %}
+                            <label class="label">
+                                <span class="label-text-alt text-error">{{ form.product.errors }}</span>
+                            </label>
+                            {% endif %}
+                        </div>
+                        {% else %}
+                        <input type="hidden" name="product" value="{{ product.id }}" />
+                        {% endif %}
+                        
+                        <div class="form-control mb-4">
+                            <label class="label">
+                                <span class="label-text font-medium">{% trans "Miktar" %}</span>
+                                <span class="label-text-alt text-error">*</span>
+                            </label>
+                            {{ form.quantity }}
+                            <label class="label">
+                                <span class="label-text-alt">{% trans "Stok hareketinin miktarını girin" %}</span>
+                                {% if form.quantity.errors %}
+                                <span class="label-text-alt text-error">{{ form.quantity.errors }}</span>
+                                {% endif %}
+                            </label>
+                        </div>
+                        
+                        <div class="form-control mb-4" id="unit-cost-container" style="display:none;">
+                            <label class="label">
+                                <span class="label-text font-medium">{% trans "Birim Maliyet" %}</span>
+                            </label>
+                            {{ form.unit_cost }}
+                            <label class="label">
+                                <span class="label-text-alt">{% trans "Satın alma hareketi için ürünün birim maliyetini girin" %}</span>
+                                {% if form.unit_cost.errors %}
+                                <span class="label-text-alt text-error">{{ form.unit_cost.errors }}</span>
+                                {% endif %}
+                            </label>
+                        </div>
+                        
+                        <div class="form-control mb-4">
+                            <label class="label">
+                                <span class="label-text font-medium">{% trans "Referans" %}</span>
+                            </label>
+                            {{ form.reference }}
+                            <label class="label">
+                                <span class="label-text-alt">{% trans "İsteğe bağlı referans bilgisi (fatura/sipariş no vb.)" %}</span>
+                                {% if form.reference.errors %}
+                                <span class="label-text-alt text-error">{{ form.reference.errors }}</span>
+                                {% endif %}
+                            </label>
+                        </div>
+                        
+                        <div class="form-control mb-6">
+                            <label class="label">
+                                <span class="label-text font-medium">{% trans "Notlar" %}</span>
+                            </label>
+                            {{ form.notes }}
+                            <label class="label">
+                                <span class="label-text-alt">{% trans "Hareketle ilgili ek notlar" %}</span>
+                                {% if form.notes.errors %}
+                                <span class="label-text-alt text-error">{{ form.notes.errors }}</span>
+                                {% endif %}
+                            </label>
+                        </div>
+                        
+                        <div class="form-actions flex justify-end gap-2">
+                            <a href="{% url 'products:movement-list' %}" class="btn btn-ghost">
+                                {% trans "İptal" %}
+                            </a>
+                            <button type="submit" class="btn btn-primary gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                </svg>
+                                {% trans "Kaydet" %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Column - Help & Information -->
+        <div class="lg:col-span-5">
+            <div class="card bg-base-100 shadow-xl overflow-hidden sticky top-4">
+                <div class="bg-accent text-accent-content py-4 px-6">
+                    <h2 class="text-xl font-bold">{% trans "Yardım ve Bilgi" %}</h2>
+                </div>
+                <div class="card-body">
+                    <div class="collapse collapse-arrow bg-base-200 mb-4">
+                        <input type="checkbox" class="peer" /> 
+                        <div class="collapse-title font-medium">
+                            {% trans "Stok Hareketleri Nedir?" %}
+                        </div>
+                        <div class="collapse-content text-sm"> 
+                            <p class="mb-2">{% trans "Stok hareketleri, ürünlerin envanter seviyelerindeki değişiklikleri izlemek için kullanılır. Her hareket, bir ürünün stok miktarındaki artışı veya azalışı temsil eder." %}</p>
+                            <p>{% trans "Her stok hareketi kaydı, ürünün önceki stok seviyesi, hareket miktarı ve yeni stok seviyesi bilgilerini içerir." %}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="collapse collapse-arrow bg-base-200 mb-4">
+                        <input type="checkbox" class="peer" /> 
+                        <div class="collapse-title font-medium">
+                            {% trans "Hareket Tipleri" %}
+                        </div>
+                        <div class="collapse-content text-sm"> 
+                            <ul class="space-y-2">
+                                <li class="flex items-start gap-2">
+                                    <div class="w-6 h-6 rounded-full bg-info/20 text-info flex-shrink-0 flex items-center justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                            <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM14 11a1 1 0 011 1v1h1a1 1 0 110 2h-1v1a1 1 0 11-2 0v-1h-1a1 1 0 110-2h1v-1a1 1 0 011-1z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">{% trans "Satın Alma" %}</p>
+                                        <p class="text-xs opacity-70">{% trans "Yeni ürün alımları için kullanılır. Tedarikçiden alınan ürünler, stok miktarını arttırır. Birim maliyet bilgisi girilebilir." %}</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <div class="w-6 h-6 rounded-full bg-warning/20 text-warning flex-shrink-0 flex items-center justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                            <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">{% trans "Satış" %}</p>
+                                        <p class="text-xs opacity-70">{% trans "Manuel satış kaydı için kullanılır. Satılan ürünler, stok miktarını azaltır. Genellikle sipariş sistemi üzerinden otomatik olarak kaydedilir." %}</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <div class="w-6 h-6 rounded-full bg-success/20 text-success flex-shrink-0 flex items-center justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">{% trans "İade" %}</p>
+                                        <p class="text-xs opacity-70">{% trans "Müşteriden gelen iade ürünleri için kullanılır. İade edilen ürünler, stok miktarını arttırır." %}</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <div class="w-6 h-6 rounded-full bg-primary/20 text-primary flex-shrink-0 flex items-center justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                            <path d="M5 4a1 1 0 00-2 0v7.268a2 2 0 000 3.464V16a1 1 0 102 0v-1.268a2 2 0 000-3.464V4zM11 4a1 1 0 10-2 0v1.268a2 2 0 000 3.464V16a1 1 0 102 0V8.732a2 2 0 000-3.464V4zM16 3a1 1 0 011 1v7.268a2 2 0 010 3.464V16a1 1 0 11-2 0v-1.268a2 2 0 010-3.464V4a1 1 0 011-1z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">{% trans "Düzeltme" %}</p>
+                                        <p class="text-xs opacity-70">{% trans "Envanter sayımları sonrası düzeltmeler için kullanılır. Mevcut stok ile gerçek stok arasındaki farkları düzeltmek için kullanılır." %}</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <div class="w-6 h-6 rounded-full bg-secondary/20 text-secondary flex-shrink-0 flex items-center justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                            <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">{% trans "Envanter Sayımı" %}</p>
+                                        <p class="text-xs opacity-70">{% trans "Fiziksel envanter sayımı sonucu yapılan düzeltmeler için kullanılır. Stok miktarı belirli bir değere ayarlanır." %}</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <div class="w-6 h-6 rounded-full bg-error/20 text-error flex-shrink-0 flex items-center justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">{% trans "Fire" %}</p>
+                                        <p class="text-xs opacity-70">{% trans "Hasar görmüş, kullanılamaz durumdaki ürünlerin stoktan düşülmesi için kullanılır." %}</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="collapse collapse-arrow bg-base-200 mb-4">
+                        <input type="checkbox" class="peer" /> 
+                        <div class="collapse-title font-medium">
+                            {% trans "Stok Takibi İpuçları" %}
+                        </div>
+                        <div class="collapse-content text-sm"> 
+                            <ul class="space-y-2">
+                                <li class="flex items-start gap-2">
+                                    <div class="w-6 h-6 rounded-full bg-base-300 flex-shrink-0 flex items-center justify-center">1</div>
+                                    <p>{% trans "Tüm stok hareketleri için açıklayıcı bir referans ve not ekleyin." %}</p>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <div class="w-6 h-6 rounded-full bg-base-300 flex-shrink-0 flex items-center justify-center">2</div>
+                                    <p>{% trans "Düzenli olarak fiziksel envanter sayımı yapın ve stok düzeltmeleri için 'Envanter Sayımı' hareketini kullanın." %}</p>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <div class="w-6 h-6 rounded-full bg-base-300 flex-shrink-0 flex items-center justify-center">3</div>
+                                    <p>{% trans "Satın alma hareketlerinde doğru birim maliyetini girin. Bu, kâr marjı hesaplamalarını doğru şekilde yapılmasını sağlar." %}</p>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <div class="w-6 h-6 rounded-full bg-base-300 flex-shrink-0 flex items-center justify-center">4</div>
+                                    <p>{% trans "Fire kayıtları için nedenini not alanına ekleyin. Bu, envanter kayıplarının nedenlerini analiz etmenize yardımcı olur." %}</p>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info mt-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div>
+                            <h3 class="font-bold">{% trans "Dikkat!" %}</h3>
+                            <div class="text-sm">{% trans "Bir stok hareketi kaydedildikten sonra düzenlenemez ve silinemez. İşlemi tamamlamadan önce bilgilerin doğruluğunu kontrol edin." %}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="my-6 text-center">
+                        <a href="{% url 'products:bulk-stock-adjustment' %}" class="btn btn-secondary btn-outline gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                            </svg>
+                            {% trans "Toplu Stok Ayarlaması Yap" %}
+                        </a>
                     </div>
                 </div>
-            {% endif %}
-            
-            {% crispy form %}
+            </div>
         </div>
     </div>
 </div>
@@ -48,26 +436,179 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Show/hide fields based on movement type
-        const movementTypeField = document.querySelector('[name="movement_type"]');
-        const unitCostField = document.querySelector('[name="unit_cost"]').closest('.form-group');
+        // Setup all form elements with enhanced styling
+        const selectElements = document.querySelectorAll('select');
+        selectElements.forEach(select => {
+            select.classList.add('select', 'select-bordered', 'w-full');
+        });
         
-        function updateFields() {
-            const movementType = movementTypeField.value;
+        const inputElements = document.querySelectorAll('input[type="text"], input[type="number"]');
+        inputElements.forEach(input => {
+            input.classList.add('input', 'input-bordered', 'w-full');
+        });
+        
+        const textareaElements = document.querySelectorAll('textarea');
+        textareaElements.forEach(textarea => {
+            textarea.classList.add('textarea', 'textarea-bordered', 'w-full', 'min-h-[100px]');
+        });
+        
+        // Movement type selector functionality
+        const movementTypeRadios = document.querySelectorAll('.movement-type-radio');
+        const formMovementTypeSelect = document.getElementById('id_movement_type');
+        const unitCostContainer = document.getElementById('unit-cost-container');
+        const movementTypeInfo = document.getElementById('movement-type-info');
+        
+        // Movement type info content
+        const movementTypeInfoContent = {
+            'purchase': `
+                <div class="alert bg-info/20 text-info rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                        <h3 class="font-bold">{% trans "Satın Alma" %}</h3>
+                        <div class="text-sm">{% trans "Yeni ürün alımları için kullanılır. Birim maliyet girilebilir. Bu hareket stok miktarını arttırır." %}</div>
+                    </div>
+                </div>
+            `,
+            'sale': `
+                <div class="alert bg-warning/20 text-warning rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                        <h3 class="font-bold">{% trans "Satış" %}</h3>
+                        <div class="text-sm">{% trans "Manuel satış kaydı için kullanılır. Bu hareket stok miktarını azaltır. Genellikle sipariş sistemi üzerinden otomatik olarak kaydedilir." %}</div>
+                    </div>
+                </div>
+            `,
+            'return': `
+                <div class="alert bg-success/20 text-success rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                        <h3 class="font-bold">{% trans "İade" %}</h3>
+                        <div class="text-sm">{% trans "Müşteriden gelen iade ürünleri için kullanılır. Bu hareket stok miktarını arttırır." %}</div>
+                    </div>
+                </div>
+            `,
+            'adjustment': `
+                <div class="alert bg-primary/20 text-primary rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                        <h3 class="font-bold">{% trans "Stok Düzeltme" %}</h3>
+                        <div class="text-sm">{% trans "Envanter sayımları sonrası düzeltmeler için kullanılır. Pozitif değerler miktarı arttırır (ekleme), negatif değerler miktarı azaltır (çıkarma)." %}</div>
+                    </div>
+                </div>
+            `,
+            'inventory': `
+                <div class="alert bg-secondary/20 text-secondary rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                        <h3 class="font-bold">{% trans "Envanter Sayımı" %}</h3>
+                        <div class="text-sm">{% trans "Fiziksel envanter sayımı sonucu yapılan düzeltmeler için kullanılır. Bu hareket stok miktarını belirli bir değere ayarlar." %}</div>
+                    </div>
+                </div>
+            `,
+            'waste': `
+                <div class="alert bg-error/20 text-error rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                        <h3 class="font-bold">{% trans "Fire" %}</h3>
+                        <div class="text-sm">{% trans "Hasar görmüş, kullanılamaz durumdaki ürünlerin stoktan düşülmesi için kullanılır. Bu hareket stok miktarını azaltır." %}</div>
+                    </div>
+                </div>
+            `
+        };
+        
+        // Update form based on movement type selection
+        function updateFormByMovementType(movementType) {
+            // Update form's hidden select
+            formMovementTypeSelect.value = movementType;
             
-            // Show unit cost only for purchase movements
+            // Show/hide unit cost field based on movement type
             if (movementType === 'purchase') {
-                unitCostField.style.display = 'block';
+                unitCostContainer.style.display = 'block';
             } else {
-                unitCostField.style.display = 'none';
+                unitCostContainer.style.display = 'none';
             }
+            
+            // Update movement type info
+            if (movementTypeInfoContent[movementType]) {
+                movementTypeInfo.innerHTML = movementTypeInfoContent[movementType];
+            } else {
+                movementTypeInfo.innerHTML = '';
+            }
+            
+            // Update visual selected state
+            document.querySelectorAll('.movement-type-option').forEach(option => {
+                const optionType = option.getAttribute('data-type');
+                const card = option.querySelector('div');
+                
+                if (optionType === movementType) {
+                    // Set selected state
+                    option.querySelector('input').checked = true;
+                    
+                    // Apply border color based on movement type
+                    if (movementType === 'purchase') {
+                        card.classList.remove('border-base-300');
+                        card.classList.add('border-info', 'bg-info/10');
+                    } else if (movementType === 'sale') {
+                        card.classList.remove('border-base-300');
+                        card.classList.add('border-warning', 'bg-warning/10');
+                    } else if (movementType === 'return') {
+                        card.classList.remove('border-base-300');
+                        card.classList.add('border-success', 'bg-success/10');
+                    } else if (movementType === 'adjustment') {
+                        card.classList.remove('border-base-300');
+                        card.classList.add('border-primary', 'bg-primary/10');
+                    } else if (movementType === 'inventory') {
+                        card.classList.remove('border-base-300');
+                        card.classList.add('border-secondary', 'bg-secondary/10');
+                    } else if (movementType === 'waste') {
+                        card.classList.remove('border-base-300');
+                        card.classList.add('border-error', 'bg-error/10');
+                    }
+                } else {
+                    // Reset card styling
+                    card.classList.remove(
+                        'border-info', 'bg-info/10',
+                        'border-warning', 'bg-warning/10',
+                        'border-success', 'bg-success/10',
+                        'border-primary', 'bg-primary/10',
+                        'border-secondary', 'bg-secondary/10',
+                        'border-error', 'bg-error/10'
+                    );
+                    card.classList.add('border-base-300');
+                }
+            });
         }
         
-        // Initial update
-        updateFields();
+        // Set initial state based on form value or default to 'purchase'
+        const initialMovementType = formMovementTypeSelect.value || 'purchase';
+        updateFormByMovementType(initialMovementType);
         
-        // Update on change
-        movementTypeField.addEventListener('change', updateFields);
+        // Add event listeners to movement type options
+        movementTypeRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                updateFormByMovementType(this.value);
+            });
+        });
+        
+        // Also handle clicks on the cards
+        document.querySelectorAll('.movement-type-option').forEach(option => {
+            option.addEventListener('click', function() {
+                const movementType = this.getAttribute('data-type');
+                updateFormByMovementType(movementType);
+            });
+        });
     });
 </script>
 {% endblock %}

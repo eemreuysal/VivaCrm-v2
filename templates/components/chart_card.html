@@ -1,0 +1,13 @@
+{% comment %}
+Component: Chart Card
+Kullanım: {% component 'chart_card' title='Grafik Başlığı' chart_id='chartId' height='400' %}
+{% endcomment %}
+
+<div class="card card--chart bg-base-100 shadow-xl">
+    <div class="card-body">
+        <h2 class="card-title text-lg font-semibold mb-4">{{ title }}</h2>
+        <div class="relative chart-card-container" style="--chart-height: {{ height|default:'400' }}px;">
+            {{ content }}
+        </div>
+    </div>
+</div>

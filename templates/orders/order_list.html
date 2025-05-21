@@ -3,8 +3,12 @@
 
 {% block title %}Siparişler{% endblock %}
 
+{% block extra_css %}
+{% endblock %}
+
 {% block content %}
-<div>
+<div class="container mx-auto">
+  <!-- Header and Breadcrumbs -->
   <div class="flex justify-between items-center mb-6">
     <h1 class="text-2xl font-bold">Sipariş Listesi</h1>
     <div class="text-sm breadcrumbs">
@@ -15,208 +19,584 @@
     </div>
   </div>
   
-  <!-- Order Stats Cards -->
+  <!-- Stats Cards -->
   <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-    <div class="card bg-base-100 shadow-xl">
-      <div class="card-body">
-        <h2 class="card-title text-sm">Toplam Sipariş</h2>
-        <p class="text-3xl font-bold text-primary">{{ total_orders|default:0 }}</p>
-        <p class="text-sm text-base-content opacity-60">
-          <span class="text-success">+{{ new_orders|default:0 }}</span> bu ay
+    <div class="stats-card card bg-base-100 shadow-xl hover:shadow-2xl animate-fade-in" style="animation-delay: 0.1s;">
+      <div class="card-body pb-4">
+        <h2 class="card-title text-sm opacity-70">Toplam Sipariş</h2>
+        <div class="flex items-end justify-between">
+          <p class="text-3xl font-bold text-primary">{{ total_orders|default:0 }}</p>
+          <div class="stat-figure text-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+          </div>
+        </div>
+        <p class="text-sm text-base-content opacity-60 mt-1">
+          <span class="text-success font-medium">+{{ new_orders|default:0 }}</span> son 30 günde
         </p>
+        <div class="mt-4 h-1 w-full bg-base-200 rounded-full overflow-hidden">
+          <div class="h-full bg-gradient-to-r from-primary to-secondary" style="width: 75%;"></div>
+        </div>
       </div>
     </div>
     
-    <div class="card bg-base-100 shadow-xl">
-      <div class="card-body">
-        <h2 class="card-title text-sm">Toplam Gelir</h2>
-        <p class="text-3xl font-bold text-primary">{{ total_revenue|default:"0.00" }} ₺</p>
-        <p class="text-sm text-base-content opacity-60">
-          <span class="{% if revenue_change|default:0 > 0 %}text-success{% else %}text-error{% endif %}">
-            {% if revenue_change|default:0 > 0 %}+{% endif %}{{ revenue_change|default:0 }}%
-          </span> geçen aya göre
+    <div class="stats-card card bg-base-100 shadow-xl hover:shadow-2xl animate-fade-in" style="animation-delay: 0.2s;">
+      <div class="card-body pb-4">
+        <h2 class="card-title text-sm opacity-70">Bekleyen Siparişler</h2>
+        <div class="flex items-end justify-between">
+          <p class="text-3xl font-bold text-warning">{{ pending_orders|default:0 }}</p>
+          <div class="stat-figure text-warning">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+        </div>
+        <p class="text-sm text-base-content opacity-60 mt-1">
+          <span class="text-warning font-medium">{{ urgent_orders|default:0 }}</span> acil
         </p>
+        <div class="mt-4 h-1 w-full bg-base-200 rounded-full overflow-hidden">
+          <div class="h-full bg-warning" style="width: 40%;"></div>
+        </div>
       </div>
     </div>
     
-    <div class="card bg-base-100 shadow-xl">
-      <div class="card-body">
-        <h2 class="card-title text-sm">Bekleyen Siparişler</h2>
-        <p class="text-3xl font-bold text-warning">{{ pending_orders|default:0 }}</p>
-        <p class="text-sm text-base-content opacity-60">
-          Toplam siparişlerin {% widthratio pending_orders|default:1 total_orders|default:1 100 %}%'si
+    <div class="stats-card card bg-base-100 shadow-xl hover:shadow-2xl animate-fade-in" style="animation-delay: 0.3s;">
+      <div class="card-body pb-4">
+        <h2 class="card-title text-sm opacity-70">Tamamlanan</h2>
+        <div class="flex items-end justify-between">
+          <p class="text-3xl font-bold text-success">{{ completed_orders|default:0 }}</p>
+          <div class="stat-figure text-success">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+        </div>
+        <p class="text-sm text-base-content opacity-60 mt-1">
+          <span class="text-success font-medium">%{{ completion_rate|default:0 }}</span> tamamlanma
         </p>
+        <div class="mt-4 h-1 w-full bg-base-200 rounded-full overflow-hidden">
+          <div class="h-full bg-success" style="width: {{ completion_rate|default:0 }}%;"></div>
+        </div>
       </div>
     </div>
     
-    <div class="card bg-base-100 shadow-xl">
-      <div class="card-body">
-        <h2 class="card-title text-sm">Ortalama Sipariş Değeri</h2>
-        <p class="text-3xl font-bold text-primary">{{ avg_order_value|default:"0.00" }} ₺</p>
-        <p class="text-sm text-base-content opacity-60">
-          Sipariş başına
+    <div class="stats-card card bg-base-100 shadow-xl hover:shadow-2xl animate-fade-in" style="animation-delay: 0.4s;">
+      <div class="card-body pb-4">
+        <h2 class="card-title text-sm opacity-70">Toplam Değer</h2>
+        <div class="flex items-end justify-between">
+          <p class="text-3xl font-bold text-secondary">₺{{ total_value|default:0|floatformat:0 }}</p>
+          <div class="stat-figure text-secondary">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+        </div>
+        <p class="text-sm text-base-content opacity-60 mt-1">
+          <span class="text-info font-medium">₺{{ monthly_average|default:0|floatformat:0 }}</span> aylık ortalama
         </p>
+        <div class="mt-4 h-1 w-full bg-base-200 rounded-full overflow-hidden">
+          <div class="h-full bg-gradient-to-r from-secondary to-accent" style="width: 85%;"></div>
+        </div>
       </div>
     </div>
   </div>
   
+  <!-- Filters and Actions -->
   <div class="card bg-base-100 shadow-xl mb-6">
     <div class="card-body">
       <div class="flex justify-between items-center mb-4">
-        <h2 class="card-title">Sipariş Arama</h2>
-        <a href="{% url 'orders:order-create' %}" class="btn btn-primary">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-          </svg>
-          Yeni Sipariş
-        </a>
-      </div>
-      
-      <form method="get" hx-get="{% url 'orders:order-list' %}" hx-target="#orders-table" hx-swap="outerHTML" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text">Arama</span>
-          </label>
-          <input type="text" name="query" value="{{ form.query.value|default:'' }}" placeholder="Sipariş no, müşteri..." class="input input-bordered w-full" />
-        </div>
-        
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text">Sipariş Durumu</span>
-          </label>
-          <select name="status" class="select select-bordered w-full">
-            <option value="">Tüm Durumlar</option>
-            {% for key, value in form.fields.status.choices %}
-            {% if key %}
-            <option value="{{ key }}" {% if form.status.value == key %}selected{% endif %}>{{ value }}</option>
-            {% endif %}
-            {% endfor %}
-          </select>
-        </div>
-        
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text">Ödeme Durumu</span>
-          </label>
-          <select name="payment_status" class="select select-bordered w-full">
-            <option value="">Tüm Durumlar</option>
-            {% for key, value in form.fields.payment_status.choices %}
-            {% if key %}
-            <option value="{{ key }}" {% if form.payment_status.value == key %}selected{% endif %}>{{ value }}</option>
-            {% endif %}
-            {% endfor %}
-          </select>
-        </div>
-        
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text">Tarih Aralığı</span>
-          </label>
-          <div class="flex gap-2">
-            <input type="date" name="date_from" value="{{ form.date_from.value|default:'' }}" class="input input-bordered w-full" placeholder="Başlangıç" />
-            <input type="date" name="date_to" value="{{ form.date_to.value|default:'' }}" class="input input-bordered w-full" placeholder="Bitiş" />
-          </div>
-          
-          <button type="submit" class="btn btn-primary mt-3">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        <div class="flex items-center gap-4">
+          <h2 class="card-title">Filtreler ve İşlemler</h2>
+          <button 
+            id="filter-toggle" 
+            class="btn btn-sm btn-ghost btn-circle"
+            onclick="toggleFilters()"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
             </svg>
-            Ara
           </button>
         </div>
-      </form>
+        
+        <div class="flex gap-2">
+          <a href="{% url 'orders:order-create' %}" class="btn btn-primary btn-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Yeni Sipariş
+          </a>
+          
+          <div class="dropdown dropdown-end">
+            <label tabindex="0" class="btn btn-sm btn-outline">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+              Dışa Aktar
+            </label>
+            <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow-lg bg-base-100 rounded-box w-52">
+              <li><a href="{% url 'orders:export_orders' %}?format=excel&{{ request.GET.urlencode }}">Excel</a></li>
+              <li><a href="{% url 'orders:export_orders' %}?format=pdf&{{ request.GET.urlencode }}">PDF</a></li>
+            </ul>
+          </div>
+          
+          <a href="{% url 'orders:order-import' %}" class="btn btn-sm btn-outline">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            İçe Aktar
+          </a>
+        </div>
+      </div>
+      
+      <!-- Filter Form -->
+      <div id="filter-panel" class="filter-panel collapsed">
+        <form method="get" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Search -->
+          <div>
+            <label class="label">
+              <span class="label-text">Arama</span>
+            </label>
+            <input 
+              type="text" 
+              name="search" 
+              value="{{ request.GET.search }}"
+              placeholder="Sipariş numarası, müşteri adı..." 
+              class="input input-bordered input-sm w-full">
+          </div>
+          
+          <!-- Status Filter -->
+          <div>
+            <label class="label">
+              <span class="label-text">Durum</span>
+            </label>
+            <select name="status" class="select select-bordered select-sm w-full">
+              <option value="">Tüm Durumlar</option>
+              <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Beklemede</option>
+              <option value="processing" {% if request.GET.status == 'processing' %}selected{% endif %}>İşleniyor</option>
+              <option value="shipped" {% if request.GET.status == 'shipped' %}selected{% endif %}>Gönderildi</option>
+              <option value="completed" {% if request.GET.status == 'completed' %}selected{% endif %}>Tamamlandı</option>
+              <option value="cancelled" {% if request.GET.status == 'cancelled' %}selected{% endif %}>İptal</option>
+            </select>
+          </div>
+          
+          <!-- Date Range -->
+          <div>
+            <label class="label">
+              <span class="label-text">Tarih Aralığı</span>
+            </label>
+            <div class="flex gap-2">
+              <input 
+                type="date" 
+                name="date_from" 
+                value="{{ request.GET.date_from }}"
+                class="input input-bordered input-sm flex-1">
+              <input 
+                type="date" 
+                name="date_to" 
+                value="{{ request.GET.date_to }}"
+                class="input input-bordered input-sm flex-1">
+            </div>
+          </div>
+          
+          <!-- Customer Filter -->
+          <div>
+            <label class="label">
+              <span class="label-text">Müşteri</span>
+            </label>
+            <select name="customer" class="select select-bordered select-sm w-full">
+              <option value="">Tüm Müşteriler</option>
+              {% for customer in customers %}
+                <option value="{{ customer.id }}" {% if request.GET.customer == customer.id|slugify %}selected{% endif %}>
+                  {{ customer.name }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          
+          <!-- Filter Actions -->
+          <div class="md:col-span-2 lg:col-span-4 flex justify-end gap-2 mt-4">
+            <button type="submit" class="btn btn-primary btn-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+              Filtrele
+            </button>
+            <a href="{% url 'orders:order-list' %}" class="btn btn-ghost btn-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Sıfırla
+            </a>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
   
-  <div id="orders-table" class="card bg-base-100 shadow-xl overflow-hidden">
-    <div class="overflow-x-auto">
-      <table class="table table-zebra w-full">
-        <thead>
-          <tr>
-            <th>Sipariş No</th>
-            <th>Müşteri</th>
-            <th>Tarih</th>
-            <th>Tutar</th>
-            <th>Durum</th>
-            <th>Ödeme</th>
-            <th>İşlemler</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for order in orders %}
-          <tr>
-            <td class="font-medium">{{ order.order_number }}</td>
-            <td>
-              <div class="font-bold">{{ order.customer.name }}</div>
-              {% if order.customer.company_name %}
-              <div class="text-sm opacity-70">{{ order.customer.company_name }}</div>
-              {% endif %}
-            </td>
-            <td>{{ order.order_date|date:"d.m.Y" }}</td>
-            <td>{{ order.total_amount }} ₺</td>
-            <td>
-              <div class="badge {{ order.get_status_badge }} gap-2">{{ order.get_status_display }}</div>
-            </td>
-            <td>
-              <div class="badge {{ order.get_payment_status_badge }} gap-2">{{ order.get_payment_status_display }}</div>
-            </td>
-            <td>
-              <div class="flex space-x-2">
-                <a href="{% url 'orders:order-detail' pk=order.pk %}" class="btn btn-square btn-sm btn-ghost text-primary">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+  <!-- Orders Table -->
+  <div class="card bg-base-100 shadow-xl mb-6">
+    <div class="card-body p-0">
+      <div class="data-table-container max-h-[600px] overflow-auto">
+        <table id="orders-table" class="table w-full resizable-table">
+          <thead class="sticky top-0 z-10">
+            <tr>
+              <th class="sortable" data-sort-by="order_number">
+                <div class="flex items-center gap-2">
+                  Sipariş No
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
                   </svg>
-                </a>
-                
-                <a href="{% url 'orders:order-update' pk=order.pk %}" class="btn btn-square btn-sm btn-ghost text-secondary">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </div>
+                <div class="resizer"></div>
+              </th>
+              <th>
+                Müşteri
+                <div class="resizer"></div>
+              </th>
+              <th class="sortable" data-sort-by="date">
+                <div class="flex items-center gap-2">
+                  Tarih
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
                   </svg>
-                </a>
-                
-                <a href="{% url 'orders:order-delete' pk=order.pk %}" class="btn btn-square btn-sm btn-ghost text-error">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </div>
+                <div class="resizer"></div>
+              </th>
+              <th>
+                Durum
+                <div class="resizer"></div>
+              </th>
+              <th>
+                Ödeme
+                <div class="resizer"></div>
+              </th>
+              <th class="sortable" data-sort-by="total">
+                <div class="flex items-center gap-2">
+                  Tutar
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
                   </svg>
-                </a>
-              </div>
-            </td>
-          </tr>
-          {% empty %}
-          <tr>
-            <td colspan="7" class="text-center py-8">
-              <div class="flex flex-col items-center justify-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-base-content opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                </svg>
-                <p class="text-base-content opacity-60">Henüz sipariş kaydı bulunmamaktadır veya arama kriterleriyle eşleşen sipariş yok.</p>
-                <a href="{% url 'orders:order-create' %}" class="btn btn-primary btn-sm mt-2">Yeni Sipariş Oluştur</a>
-              </div>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    
-    {% if is_paginated %}
-    <div class="flex justify-center py-4 border-t border-base-300">
-      <div class="btn-group">
-        {% if page_obj.has_previous %}
-        <a href="?page=1{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.payment_status %}&payment_status={{ request.GET.payment_status }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}" class="btn btn-sm">«</a>
-        <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.payment_status %}&payment_status={{ request.GET.payment_status }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}" class="btn btn-sm">‹</a>
-        {% endif %}
-        
-        <button class="btn btn-sm">Sayfa {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</button>
-        
-        {% if page_obj.has_next %}
-        <a href="?page={{ page_obj.next_page_number }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.payment_status %}&payment_status={{ request.GET.payment_status }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}" class="btn btn-sm">›</a>
-        <a href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.payment_status %}&payment_status={{ request.GET.payment_status }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}" class="btn btn-sm">»</a>
-        {% endif %}
+                </div>
+                <div class="resizer"></div>
+              </th>
+              <th>
+                İşlemler
+                <div class="resizer"></div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for order in orders %}
+            <tr class="hover">
+              <td>
+                <div class="order-card">
+                  <div class="order-icon">
+                    {{ order.order_number|slice:":2"|upper }}
+                  </div>
+                  <div>
+                    <p class="font-medium">#{{ order.order_number }}</p>
+                    <p class="text-xs text-base-content opacity-70">{{ order.items.count }} ürün</p>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div class="flex items-center gap-2">
+                  <div class="avatar">
+                    <div class="w-8 rounded-full bg-primary text-primary-content">
+                      <span class="text-sm font-bold">{{ order.customer.name|slice:":1"|upper }}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <p class="font-medium">{{ order.customer.name }}</p>
+                    <p class="text-xs text-base-content opacity-70">{{ order.customer.email }}</p>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div>
+                  <p class="font-medium">{{ order.order_date|date:"d/m/Y" }}</p>
+                  <p class="text-xs text-base-content opacity-70">{{ order.order_date|date:"H:i" }}</p>
+                </div>
+              </td>
+              <td>
+                {% if order.status == 'pending' %}
+                  <span class="badge badge-warning">Beklemede</span>
+                {% elif order.status == 'processing' %}
+                  <span class="badge badge-info">İşleniyor</span>
+                {% elif order.status == 'shipped' %}
+                  <span class="badge badge-primary">Gönderildi</span>
+                {% elif order.status == 'completed' %}
+                  <span class="badge badge-success">Tamamlandı</span>
+                {% else %}
+                  <span class="badge badge-error">İptal</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if order.payment_status == 'paid' %}
+                  <span class="badge badge-success">Ödendi</span>
+                {% elif order.payment_status == 'partial' %}
+                  <span class="badge badge-warning">Kısmi</span>
+                {% else %}
+                  <span class="badge badge-error">Ödenmedi</span>
+                {% endif %}
+              </td>
+              <td>
+                <p class="font-bold text-lg">₺{{ order.total|floatformat:2 }}</p>
+                {% if order.discount %}
+                  <p class="text-xs text-success">-₺{{ order.discount|floatformat:2 }}</p>
+                {% endif %}
+              </td>
+              <td>
+                <div class="flex gap-1">
+                  <div class="tooltip-container">
+                    <a href="{% url 'orders:order-detail' order.id %}" 
+                       class="btn btn-ghost btn-sm btn-circle">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    </a>
+                    <span class="tooltip-text">Detay</span>
+                  </div>
+                  
+                  <div class="tooltip-container">
+                    <a href="{% url 'orders:order-update' order.id %}" 
+                       class="btn btn-ghost btn-sm btn-circle">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </a>
+                    <span class="tooltip-text">Düzenle</span>
+                  </div>
+                  
+                  <div class="tooltip-container">
+                    <button onclick="openCreateInvoiceModal('{{ order.id }}')" 
+                            class="btn btn-ghost btn-sm btn-circle">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </button>
+                    <span class="tooltip-text">Fatura</span>
+                  </div>
+                  
+                  <div class="tooltip-container">
+                    <button onclick="openDeleteModal('{{ order.id }}', '{{ order.order_number }}')" 
+                            class="btn btn-ghost btn-sm btn-circle text-error">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                    <span class="tooltip-text">Sil</span>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="7" class="text-center py-8">
+                <div class="flex flex-col items-center gap-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-base-content opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <p class="text-base-content opacity-70">Henüz sipariş bulunmuyor</p>
+                  <a href="{% url 'orders:order-create' %}" class="btn btn-primary btn-sm">Yeni Sipariş Oluştur</a>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
     </div>
-    {% endif %}
   </div>
+  
+  <!-- Pagination -->
+  {% if is_paginated %}
+  <div class="flex justify-center mb-6">
+    <div class="join">
+      {% if page_obj.has_previous %}
+        <a href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" 
+           class="join-item btn btn-sm">«</a>
+        <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" 
+           class="join-item btn btn-sm">‹</a>
+      {% endif %}
+      
+      {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+          <button class="join-item btn btn-sm btn-active">{{ num }}</button>
+        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+          <a href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" 
+             class="join-item btn btn-sm">{{ num }}</a>
+        {% endif %}
+      {% endfor %}
+      
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" 
+           class="join-item btn btn-sm">›</a>
+        <a href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" 
+           class="join-item btn btn-sm">»</a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
 </div>
+
+<!-- Delete Confirmation Modal -->
+<dialog id="deleteModal" class="modal">
+  <div class="modal-box">
+    <h3 class="font-bold text-lg">Siparişi Sil</h3>
+    <p class="py-4">
+      <span id="deleteOrderNumber" class="font-bold"></span> numaralı siparişi silmek istediğinizden emin misiniz?
+    </p>
+    <p class="text-warning text-sm">Bu işlem geri alınamaz!</p>
+    <div class="modal-action">
+      <form method="dialog">
+        <button class="btn btn-sm">İptal</button>
+      </form>
+      <form id="deleteForm" method="post" class="inline">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-error btn-sm">Sil</button>
+      </form>
+    </div>
+  </div>
+  <form method="dialog" class="modal-backdrop">
+    <button>close</button>
+  </form>
+</dialog>
+
+<!-- Create Invoice Modal -->
+<dialog id="createInvoiceModal" class="modal">
+  <div class="modal-box">
+    <h3 class="font-bold text-lg">Fatura Oluştur</h3>
+    <form id="createInvoiceForm" method="post" action="{% url 'invoices:invoice-create' %}">
+      {% csrf_token %}
+      <input type="hidden" name="order_id" id="invoiceOrderId">
+      
+      <div class="form-control mt-4">
+        <label class="label">
+          <span class="label-text">Fatura Numarası</span>
+        </label>
+        <input type="text" name="invoice_number" class="input input-bordered" required>
+      </div>
+      
+      <div class="form-control mt-4">
+        <label class="label">
+          <span class="label-text">Vade Tarihi</span>
+        </label>
+        <input type="date" name="due_date" class="input input-bordered" required>
+      </div>
+      
+      <div class="form-control mt-4">
+        <label class="label">
+          <span class="label-text">Notlar</span>
+        </label>
+        <textarea name="notes" class="textarea textarea-bordered" rows="3"></textarea>
+      </div>
+      
+      <div class="modal-action">
+        <button type="button" onclick="document.getElementById('createInvoiceModal').close()" class="btn btn-sm">İptal</button>
+        <button type="submit" class="btn btn-primary btn-sm">Oluştur</button>
+      </div>
+    </form>
+  </div>
+  <form method="dialog" class="modal-backdrop">
+    <button>close</button>
+  </form>
+</dialog>
+
+<script>
+// Toggle filter panel
+function toggleFilters() {
+  const filterPanel = document.getElementById('filter-panel');
+  const toggleBtn = document.getElementById('filter-toggle');
+  
+  filterPanel.classList.toggle('collapsed');
+  toggleBtn.classList.toggle('filter-toggle-active');
+}
+
+// Delete modal
+function openDeleteModal(orderId, orderNumber) {
+  const modal = document.getElementById('deleteModal');
+  const form = document.getElementById('deleteForm');
+  const orderNumberSpan = document.getElementById('deleteOrderNumber');
+  
+  form.action = `/orders/${orderId}/delete/`;
+  orderNumberSpan.textContent = orderNumber;
+  modal.showModal();
+}
+
+// Invoice modal
+function openCreateInvoiceModal(orderId) {
+  const modal = document.getElementById('createInvoiceModal');
+  const orderIdInput = document.getElementById('invoiceOrderId');
+  
+  orderIdInput.value = orderId;
+  modal.showModal();
+}
+
+// Table sorting
+document.querySelectorAll('.sortable').forEach(th => {
+  th.addEventListener('click', function() {
+    const sortBy = this.dataset.sortBy;
+    const currentUrl = new URL(window.location.href);
+    const currentSort = currentUrl.searchParams.get('sort');
+    
+    let newSort = sortBy;
+    if (currentSort === sortBy) {
+      newSort = `-${sortBy}`;
+    } else if (currentSort === `-${sortBy}`) {
+      newSort = sortBy;
+    }
+    
+    currentUrl.searchParams.set('sort', newSort);
+    window.location.href = currentUrl.toString();
+  });
+});
+
+// Column resizing
+let isResizing = false;
+let currentResizer = null;
+let currentTh = null;
+let startX = 0;
+let startWidth = 0;
+
+document.querySelectorAll('.resizer').forEach(resizer => {
+  resizer.addEventListener('mousedown', function(e) {
+    isResizing = true;
+    currentResizer = this;
+    currentTh = this.parentElement;
+    startX = e.pageX;
+    startWidth = currentTh.offsetWidth;
+    
+    currentResizer.classList.add('resizing');
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  });
+});
+
+document.addEventListener('mousemove', function(e) {
+  if (!isResizing) return;
+  
+  const diff = e.pageX - startX;
+  const newWidth = Math.max(50, startWidth + diff);
+  currentTh.style.width = newWidth + 'px';
+});
+
+document.addEventListener('mouseup', function() {
+  if (!isResizing) return;
+  
+  isResizing = false;
+  currentResizer.classList.remove('resizing');
+  currentResizer = null;
+  currentTh = null;
+  document.body.style.cursor = '';
+  document.body.style.userSelect = '';
+});
+
+// Initialize tooltips
+document.querySelectorAll('[data-tooltip]').forEach(element => {
+  element.setAttribute('title', element.dataset.tooltip);
+});
+</script>
 {% endblock %}

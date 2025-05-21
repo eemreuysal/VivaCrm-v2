@@ -32,9 +32,9 @@ class ImportHistory(models.Model):
     
     id = models.AutoField(primary_key=True)
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    file_name = models.CharField(max_length=255, verbose_name="Dosya Adı")
+    file_name = models.CharField(max_length=255, verbose_name="Dosya Adı", default="unknown_file")
     file_path = models.CharField(max_length=500, verbose_name="Dosya Yolu", blank=True)
-    module = models.CharField(max_length=50, choices=MODULE_CHOICES, verbose_name="Modül")
+    module = models.CharField(max_length=50, choices=MODULE_CHOICES, verbose_name="Modül", default="products")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', verbose_name="Durum")
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name="Oluşturan")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Oluşturulma Tarihi")

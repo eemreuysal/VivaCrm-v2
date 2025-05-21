@@ -1,0 +1,79 @@
+/**
+ * VivaCRM Theme Transition Utilities - Standardized
+ * Tema geçişlerini yönetmek için gerekli stiller
+ */
+
+/* Basic Theme Transitions */
+:root {
+  --theme-transition-props: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+  --theme-transition-duration: 300ms;
+  --theme-transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Apply transition to HTML/body for base theme changes */
+html,
+body {
+  transition-property: var(--theme-transition-props);
+  transition-duration: var(--theme-transition-duration);
+  transition-timing-function: var(--theme-transition-timing);
+}
+
+/* Prevent FOUC during initial page load - works with theme-manager.js */
+html.no-js {
+  visibility: hidden;
+}
+
+/* Added by JS during theme changes to ensure smooth transitions */
+html.theme-transition,
+html.theme-transition *,
+html.theme-transition *::before,
+html.theme-transition *::after {
+  transition-property: var(--theme-transition-props) !important;
+  transition-duration: var(--theme-transition-duration) !important;
+  transition-timing-function: var(--theme-transition-timing) !important;
+}
+
+/* Ensure the transition doesn't affect layout-changing properties */
+html.theme-transition * {
+  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow !important;
+  transition-duration: var(--theme-transition-duration) !important;
+  transition-timing-function: var(--theme-transition-timing) !important;
+  transition-delay: 0s !important;
+}
+
+/* Apply transitions to specific components */
+.card,
+.navbar,
+.sidebar,
+.dropdown-content,
+.modal-box,
+.alert,
+.btn,
+.menu-item,
+.tab,
+.input,
+.textarea,
+.select,
+.form-control,
+.table {
+  transition-property: var(--theme-transition-props);
+  transition-duration: var(--theme-transition-duration);
+  transition-timing-function: var(--theme-transition-timing);
+}
+
+/* Respect user preferences */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --theme-transition-duration: 0.01ms;
+  }
+  
+  html,
+  body,
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

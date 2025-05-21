@@ -1,0 +1,144 @@
+/**
+ * VivaCRM Dark Mode Utilities
+ * Merkezi dark mode yönetimi
+ */
+
+/* Dark Mode Theme Variables */
+[data-theme="vivacrmDark"] {
+  /* Base Colors */
+  --p: 142 71% 45%;
+  --pc: 0 0% 100%;
+  --s: 217 91% 60%;
+  --sc: 0 0% 100%;
+  --a: 37 92% 50%;
+  --ac: 0 0% 100%;
+  --n: 215 19% 19%;
+  --nc: 210 20% 98%;
+  --b1: 220 18% 14%;
+  --b2: 220 17% 11%;
+  --b3: 219 18% 8%;
+  --bc: 210 20% 98%;
+  
+  /* Custom Properties */
+  --viva-shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --viva-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --viva-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --viva-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  --viva-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+  --viva-shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+/* Dark Mode Component Overrides */
+[data-theme="vivacrmDark"] {
+  /* Text Colors */
+  body {
+    @apply text-gray-100;
+  }
+  
+  /* Menu Dark Mode */
+  .menu-link:not(.active):hover {
+    background-color: hsl(var(--b3, 219 18% 8%) / 0.5);
+  }
+  
+  .menu-item.has-active-child > .menu-link {
+    @apply bg-green-500/20;
+  }
+  
+  /* Navbar Dark Mode */
+  .navbar {
+    background-color: hsl(var(--b2, 220 17% 11%));
+    @apply border-gray-800;
+  }
+  
+  .navbar-dropdown-content {
+    background-color: hsl(var(--b2, 220 17% 11%));
+    @apply ring-white/10;
+  }
+  
+  /* Avatar Dark Mode */
+  .avatar-status {
+    @apply ring-gray-900;
+  }
+  
+  .avatar-group .avatar {
+    @apply border-gray-700;
+  }
+  
+  /* Cards & Modals */
+  .card {
+    background-color: hsl(var(--b2, 220 17% 11%));
+    @apply border-gray-800;
+  }
+  
+  .modal-box {
+    background-color: hsl(var(--b2, 220 17% 11%));
+  }
+  
+  /* Forms */
+  .input, .textarea, .select {
+    background-color: hsl(var(--b2, 220 17% 11%));
+    @apply border-gray-700;
+  }
+  
+  .input:focus, .textarea:focus, .select:focus {
+    @apply border-green-500/60;
+  }
+  
+  /* Tables */
+  .table {
+    @apply border-gray-700;
+  }
+  
+  .table thead {
+    background-color: hsl(var(--b3, 219 18% 8%));
+  }
+  
+  .table tbody tr:hover {
+    background-color: hsl(var(--b3, 219 18% 8%) / 0.5);
+  }
+  
+  /* Dropdowns */
+  .dropdown-content {
+    background-color: hsl(var(--b2, 220 17% 11%));
+    @apply border-gray-700 shadow-xl;
+  }
+  
+  /* Tabs */
+  .tabs-boxed {
+    background-color: hsl(var(--b3, 219 18% 8%));
+  }
+  
+  .tab {
+    @apply text-gray-400;
+  }
+  
+  .tab.tab-active {
+    background-color: hsl(var(--b1, 220 18% 14%));
+    @apply text-green-500;
+  }
+  
+  /* Links */
+  a {
+    @apply text-blue-400 hover:text-blue-300;
+  }
+  
+  /* Code blocks */
+  code {
+    @apply bg-gray-800 text-gray-300;
+  }
+  
+  pre {
+    @apply bg-gray-800 text-gray-300;
+  }
+  
+  /* Tooltips */
+  .tooltip {
+    background-color: hsl(var(--b3, 219 18% 8%));
+    @apply text-gray-100;
+  }
+  
+  /* Modals */
+  .modal {
+    background-color: rgba(0, 0, 0, 0.8);
+  }
+}

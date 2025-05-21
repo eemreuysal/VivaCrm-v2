@@ -1,10 +1,270 @@
 {% extends "base/base_dashboard.html" %}
 {% load crispy_forms_tags %}
+{% load math_filters %}
 
 {% block title %}Ürün Kategorileri{% endblock %}
 
+{% block extra_css %}
+<style>
+  /* Modern data table styling */
+  .data-table-container {
+    position: relative;
+    transition: all 0.3s ease;
+  }
+  
+  .resizable-table thead th {
+    background-color: var(--fallback-b1, oklch(var(--b1)));
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    transition: background-color 0.2s;
+  }
+  
+  .resizable-table tbody tr {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  
+  .resizable-table tbody tr:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 0;
+  }
+  
+  /* Category card in table */
+  .category-card {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+  }
+  
+  .category-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--fallback-b3, oklch(var(--b3)));
+  }
+  
+  /* Filter panel animation */
+  .filter-panel {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-in-out;
+    opacity: 0;
+    transition: all 0.4s ease-in-out;
+  }
+  
+  .filter-panel.show {
+    max-height: 800px;
+    opacity: 1;
+    margin-top: 1rem;
+  }
+  
+  /* Stats cards */
+  .stats-card {
+    transition: all 0.3s ease;
+    overflow: hidden;
+  }
+  
+  .stats-card:hover {
+    transform: translateY(-5px);
+  }
+  
+  /* Loading skeleton */
+  @keyframes skeleton-loading {
+    0% { background-color: hsl(var(--b3)); }
+    100% { background-color: hsl(var(--b1)); }
+  }
+  
+  .skeleton {
+    animation: skeleton-loading 1s linear infinite alternate;
+  }
+  
+  /* Sortable columns */
+  .sortable {
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s;
+  }
+  
+  .sortable:hover {
+    background-color: var(--fallback-b2, oklch(var(--b2)));
+  }
+  
+  .sortable a {
+    color: inherit;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    width: 100%;
+  }
+  
+  /* Empty state animation */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease forwards;
+  }
+  
+  /* Resizer for columns */
+  .resizer {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 5px;
+    cursor: col-resize;
+    user-select: none;
+    height: 100%;
+    background-color: transparent;
+    transition: background-color 0.3s;
+  }
+  
+  .resizer:hover,
+  .resizing {
+    background-color: rgba(var(--p), 0.2);
+  }
+  
+  /* Progress bars */
+  .progress-bar {
+    height: 4px;
+    background-color: var(--fallback-b3, oklch(var(--b3)));
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .progress-bar-fill {
+    height: 100%;
+    background-color: var(--fallback-p, oklch(var(--p)));
+    transition: width 0.6s ease;
+  }
+  
+  /* Active filter badge */
+  #active-filters-count {
+    animation: bounce 0.5s;
+    background-color: rgba(var(--p), 0.2);
+    color: hsl(var(--p));
+  }
+  
+  /* Filter toggle button */
+  #filter-toggle-btn {
+    transition: all 0.3s ease-in-out;
+  }
+  
+  #filter-toggle-btn.active {
+    background-color: rgba(var(--p), 0.2);
+    color: hsl(var(--p));
+    transform: rotate(180deg);
+  }
+  
+  #filter-toggle {
+    transition: all 0.3s ease-in-out;
+  }
+  
+  /* Category tree styles */
+  .category-tree {
+    --indent-width: 1.5rem;
+  }
+  
+  .category-tree ul {
+    list-style: none;
+    padding-left: 0;
+  }
+  
+  .category-tree li {
+    position: relative;
+  }
+  
+  .category-tree .tree-item {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    transition: background-color 0.2s;
+    margin: 0.25rem 0;
+    gap: 0.5rem;
+  }
+  
+  .category-tree .tree-item:hover {
+    background-color: var(--fallback-b2, oklch(var(--b2)));
+  }
+  
+  .category-tree .tree-item .badge {
+    margin-left: 0.5rem;
+  }
+  
+  .category-tree .tree-item.active {
+    background-color: var(--fallback-p, oklch(var(--p)));
+    color: var(--fallback-pc, oklch(var(--pc)));
+  }
+  
+  .category-tree .has-children > .tree-toggle {
+    width: 1.5rem;
+    height: 1.5rem;
+    background-color: var(--fallback-b2, oklch(var(--b2)));
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin-right: 0.5rem;
+    flex-shrink: 0;
+  }
+  
+  .category-tree .level-0 {
+    font-weight: 600;
+  }
+  
+  .category-tree .level-1 {
+    padding-left: var(--indent-width);
+  }
+  
+  .category-tree .level-2 {
+    padding-left: calc(var(--indent-width) * 2);
+  }
+  
+  /* Tooltip styles */
+  .tooltip-container {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .tooltip-text {
+    visibility: hidden;
+    background-color: var(--fallback-b3, oklch(var(--b3)));
+    color: var(--fallback-bc, oklch(var(--bc)));
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 10px;
+    position: absolute;
+    z-index: 100;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    white-space: nowrap;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    font-size: 0.75rem;
+  }
+  
+  .tooltip-container:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container mx-auto">
+  <!-- Header and Breadcrumbs -->
   <div class="flex justify-between items-center mb-6">
     <h1 class="text-2xl font-bold">Ürün Kategorileri</h1>
     <div class="text-sm breadcrumbs">
@@ -16,36 +276,293 @@
     </div>
   </div>
   
-  <div class="card bg-base-100 shadow-xl mb-6">
-    <div class="card-body">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="card-title">Kategoriler</h2>
-        <a href="{% url 'products:category-create' %}" class="btn btn-primary">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-          </svg>
-          Yeni Kategori
-        </a>
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="stats-card card bg-base-100 shadow-xl hover:shadow-2xl animate-fade-in" style="animation-delay: 0.1s;">
+      <div class="card-body pb-4">
+        <h2 class="card-title text-sm opacity-70">Toplam Kategori</h2>
+        <div class="flex items-end justify-between">
+          <p class="text-3xl font-bold text-primary">{{ total_categories|default:"0" }}</p>
+          <div class="stat-figure text-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+            </svg>
+          </div>
+        </div>
+        <p class="text-sm text-base-content opacity-60 mt-1">
+          <span class="text-success font-medium">{{ active_category_count }}</span> aktif, 
+          <span class="text-error font-medium">{{ inactive_category_count }}</span> pasif kategori
+        </p>
+        <div class="mt-4 progress-bar">
+          <div class="progress-bar-fill" style="width: {{ active_category_percentage|floatformat:0 }}%"></div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="stats-card card bg-base-100 shadow-xl hover:shadow-2xl animate-fade-in" style="animation-delay: 0.2s;">
+      <div class="card-body pb-4">
+        <h2 class="card-title text-sm opacity-70">Kategorili Ürünler</h2>
+        <div class="flex items-end justify-between">
+          <p class="text-3xl font-bold text-secondary">{{ products_with_category|default:"0" }}</p>
+          <div class="stat-figure text-secondary">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+            </svg>
+          </div>
+        </div>
+        <p class="text-sm text-base-content opacity-60 mt-1">
+          Toplam {{ total_products }} ürünün %{{ categorization_percentage|floatformat:0 }}'si
+        </p>
+        <div class="mt-4 progress-bar">
+          <div class="progress-bar-fill bg-secondary" style="width: {{ categorization_percentage|default:0 }}%"></div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="stats-card card bg-base-100 shadow-xl hover:shadow-2xl animate-fade-in" style="animation-delay: 0.3s;">
+      <div class="card-body pb-4">
+        <h2 class="card-title text-sm opacity-70">En Büyük Kategori</h2>
+        {% if largest_category %}
+        <div class="flex items-end justify-between">
+          <p class="text-3xl font-bold text-success truncate" title="{{ largest_category.name }}">
+            {{ largest_category.name|truncatechars:15 }}
+          </p>
+          <div class="stat-figure text-success">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </div>
+        </div>
+        <p class="text-sm text-base-content opacity-60 mt-1">
+          <a href="{% url 'products:category-detail' slug=largest_category.slug %}" class="link link-hover">
+            {{ largest_category.product_count }} ürün, tüm ürünlerin %{{ largest_category_percentage|floatformat:0 }}'i
+          </a>
+        </p>
+        <div class="mt-4 progress-bar">
+          <div class="progress-bar-fill bg-success" style="width: {{ largest_category_percentage|default:0 }}%"></div>
+        </div>
+        {% else %}
+        <div class="flex items-end justify-between">
+          <p class="text-3xl font-bold text-success">-</p>
+          <div class="stat-figure text-success">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </div>
+        </div>
+        <p class="text-sm text-base-content opacity-60 mt-1">
+          Henüz kategori bulunmamaktadır
+        </p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  
+  <!-- Action Bar and Filter Panel -->
+  <div class="card bg-base-100 shadow-xl mb-6 overflow-visible">
+    <div class="card-body p-4">
+      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <div class="flex items-center gap-2">
+          <h2 class="card-title">Kategoriler</h2>
+          <button id="filter-toggle-btn" class="btn btn-sm btn-ghost btn-circle" title="Filtreleri Göster/Gizle" type="button" onclick="toggleFilterPanel(event)">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+          </button>
+          <span class="badge badge-primary" id="active-filters-count" style="display: none;">0</span>
+        </div>
+        
+        <div class="flex flex-wrap gap-2">
+          <div class="dropdown dropdown-end" style="position: relative; z-index: 50;">
+            <label tabindex="0" class="btn btn-outline btn-sm btn-success">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+              Dışa Aktar
+            </label>
+            <ul tabindex="0" class="dropdown-content z-[1] menu shadow bg-base-100 rounded-box w-52">
+              <li><a href="{% url 'products:export_categories' %}?{{ request.GET.urlencode }}">Excel'e Aktar (.xlsx)</a></li>
+              <li><a href="{% url 'products:export_categories' %}?format=csv&{{ request.GET.urlencode }}">CSV'ye Aktar (.csv)</a></li>
+            </ul>
+          </div>
+          
+          <a href="{% url 'products:category-create' %}" class="btn btn-sm btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Yeni Kategori
+          </a>
+        </div>
       </div>
       
-      {% if categories %}
-      <div class="overflow-x-auto">
-        <table class="table table-zebra w-full">
+      <!-- Filters Panel -->
+      <div id="filter-panel" class="filter-panel">
+        <form method="get" action="{% url 'products:category-list' %}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="category-search-form">
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Hızlı Arama</span>
+            </label>
+            <input type="text" name="query" value="{{ form.query.value|default:'' }}" placeholder="Kategori adı veya açıklama..." class="input input-bordered w-full" />
+          </div>
+          
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Üst Kategori</span>
+            </label>
+            <select name="parent" class="select select-bordered w-full">
+              <option value="">Tüm Kategoriler</option>
+              {% for category in form.fields.parent.queryset %}
+              <option value="{{ category.id }}" {% if form.parent.value|stringformat:'s' == category.id|stringformat:'s' %}selected{% endif %}>{{ category }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Durum</span>
+            </label>
+            <select name="status" class="select select-bordered w-full">
+              {% for key, value in form.fields.status.choices %}
+              <option value="{{ key }}" {% if form.status.value == key %}selected{% endif %}>{{ value }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Ürün Durumu</span>
+            </label>
+            <select name="has_products" class="select select-bordered w-full">
+              {% for key, value in form.fields.has_products.choices %}
+              <option value="{{ key }}" {% if form.has_products.value == key %}selected{% endif %}>{{ value }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Sıralama</span>
+            </label>
+            <select name="sort_by" class="select select-bordered w-full">
+              {% for key, value in form.fields.sort_by.choices %}
+              <option value="{{ key }}" {% if form.sort_by.value == key %}selected{% endif %}>{{ value }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          
+          <div class="col-span-full flex justify-between items-center mt-2">
+            <button type="button" id="clear-filters" class="btn btn-outline btn-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              Filtreleri Temizle
+            </button>
+            
+            <button type="submit" class="btn btn-primary">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              Ara
+            </button>
+          </div>
+        </form>
+      </div>
+      
+      <!-- Active Filters Display -->
+      <div id="active-filters" class="flex flex-wrap gap-2 mt-4" style="display: none;">
+        <!-- Active filters will be displayed here dynamically -->
+      </div>
+    </div>
+  </div>
+  
+  <!-- Categories Table -->
+  <div id="categories-table" class="card bg-base-100 shadow-xl overflow-visible animate-fade-in" style="animation-delay: 0.4s;">
+    <div class="card-body p-0">
+      <div class="overflow-x-auto" style="overflow: visible;">
+        <table class="table table-zebra w-full resizable-table">
           <thead>
             <tr>
-              <th>Kategori</th>
-              <th>Üst Kategori</th>
-              <th>Açıklama</th>
-              <th>Durum</th>
-              <th>İşlemler</th>
+              <th class="sortable" data-sort-field="name" {% if current_sort == 'name' or current_sort == '-name' %}data-sort-dir="{{ current_sort|first }}"{% endif %}>
+                <div class="flex items-center">
+                  <a href="{{ sort_urls.name }}" class="flex-1">Kategori</a>
+                  {% if current_sort == 'name' or current_sort == '-name' %}
+                    <span class="text-primary ml-1">{{ current_sort|first|yesno:"↑,↓" }}</span>
+                  {% endif %}
+                </div>
+                <div class="resizer" data-column="0"></div>
+              </th>
+              <th>
+                <div class="flex items-center">
+                  Üst Kategori
+                </div>
+                <div class="resizer" data-column="1"></div>
+              </th>
+              <th class="sortable" data-sort-field="product_count" {% if current_sort == 'product_count' or current_sort == '-product_count' %}data-sort-dir="{{ current_sort|first }}"{% endif %}>
+                <div class="flex items-center">
+                  <a href="{{ sort_urls.product_count }}" class="flex-1">Ürün Sayısı</a>
+                  {% if current_sort == 'product_count' or current_sort == '-product_count' %}
+                    <span class="text-primary ml-1">{{ current_sort|first|yesno:"↑,↓" }}</span>
+                  {% endif %}
+                </div>
+                <div class="resizer" data-column="2"></div>
+              </th>
+              <th>
+                <div class="flex items-center">
+                  Durum
+                </div>
+                <div class="resizer" data-column="3"></div>
+              </th>
+              <th class="sortable" data-sort-field="created_at" {% if current_sort == 'created_at' or current_sort == '-created_at' %}data-sort-dir="{{ current_sort|first }}"{% endif %}>
+                <div class="flex items-center">
+                  <a href="{{ sort_urls.created_at }}" class="flex-1">Eklenme</a>
+                  {% if current_sort == 'created_at' or current_sort == '-created_at' %}
+                    <span class="text-primary ml-1">{{ current_sort|first|yesno:"↑,↓" }}</span>
+                  {% endif %}
+                </div>
+                <div class="resizer" data-column="4"></div>
+              </th>
+              <th>
+                <div class="flex justify-center">İşlemler</div>
+                <div class="resizer" data-column="5"></div>
+              </th>
             </tr>
           </thead>
           <tbody>
             {% for category in categories %}
             <tr>
-              <td>{{ category.name }}</td>
-              <td>{{ category.parent|default:"-" }}</td>
-              <td>{{ category.description|truncatechars:50|default:"-" }}</td>
+              <td>
+                <div class="category-card">
+                  <div class="category-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="font-bold hover:text-primary transition-colors">
+                      <a href="{% url 'products:category-detail' slug=category.slug %}" class="hover:underline">{{ category.name }}</a>
+                    </div>
+                    <div class="text-xs opacity-70">{{ category.description|truncatechars:30|default:"-" }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                {% if category.parent %}
+                  <a href="{% url 'products:category-detail' slug=category.parent.slug %}" class="link link-hover link-primary">
+                    {{ category.parent.name }}
+                  </a>
+                {% else %}
+                  <span class="text-base-content/40">Ana Kategori</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if category.product_count > 0 %}
+                  <a href="{% url 'products:category-detail' slug=category.slug %}" class="link link-hover">
+                    {{ category.product_count }}
+                  </a>
+                {% else %}
+                  <span class="badge badge-outline">Boş</span>
+                {% endif %}
+              </td>
               <td>
                 {% if category.is_active %}
                 <div class="badge badge-success gap-2">Aktif</div>
@@ -54,25 +571,46 @@
                 {% endif %}
               </td>
               <td>
-                <div class="flex space-x-2">
-                  <a href="{% url 'products:category-detail' slug=category.slug %}" class="btn btn-square btn-sm btn-ghost">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div class="text-sm opacity-70">
+                  {{ category.created_at|date:"d.m.Y" }}
+                </div>
+              </td>
+              <td>
+                <div class="flex justify-center space-x-1">
+                  <a href="{% url 'products:category-detail' slug=category.slug %}" class="btn btn-circle btn-sm btn-ghost text-primary tooltip-container">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                     </svg>
+                    <span class="tooltip-text">Görüntüle</span>
                   </a>
                   
-                  <a href="{% url 'products:category-update' slug=category.slug %}" class="btn btn-square btn-sm btn-ghost">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <a href="{% url 'products:category-update' slug=category.slug %}" class="btn btn-circle btn-sm btn-ghost text-secondary tooltip-container">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                     </svg>
+                    <span class="tooltip-text">Düzenle</span>
                   </a>
                   
-                  <a href="{% url 'products:category-delete' slug=category.slug %}" class="btn btn-square btn-sm btn-ghost">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <a href="{% url 'products:category-delete' slug=category.slug %}" class="btn btn-circle btn-sm btn-ghost text-error tooltip-container">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
+                    <span class="tooltip-text">Sil</span>
                   </a>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="6" class="text-center py-8">
+                <div class="alert alert-info flex flex-col items-center py-8">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
+                  <p class="text-lg font-semibold">Henüz kategori bulunmamaktadır.</p>
+                  <p class="text-base-content/60 text-center max-w-md mb-4">Ürünlerinizi daha iyi organize etmek için kategoriler oluşturun.</p>
+                  <a href="{% url 'products:category-create' %}" class="btn btn-primary">Yeni Kategori Oluştur</a>
                 </div>
               </td>
             </tr>
@@ -80,71 +618,314 @@
           </tbody>
         </table>
       </div>
-      {% else %}
-      <div class="alert alert-info">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-        <span>Henüz kategori bulunmamaktadır.</span>
+      
+      <!-- Pagination -->
+      {% if is_paginated %}
+      <div class="flex justify-center p-4">
+        <div class="btn-group">
+          {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}" class="btn btn-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+          </a>
+          {% endif %}
+          
+          {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+              <button class="btn btn-sm btn-active">{{ num }}</button>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+              <a href="?page={{ num }}&{{ request.GET.urlencode }}" class="btn btn-sm">{{ num }}</a>
+            {% endif %}
+          {% endfor %}
+          
+          {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}" class="btn btn-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
+          {% endif %}
+        </div>
       </div>
       {% endif %}
     </div>
   </div>
   
-  <!-- Category Hierarchy -->
-  <div class="card bg-base-100 shadow-xl">
-    <div class="card-body">
-      <h2 class="card-title mb-4">Kategori Hiyerarşisi</h2>
-      
-      <div class="overflow-x-auto">
-        {% if categories %}
-        <ul class="menu bg-base-200 rounded-box w-full">
-          {% for category in categories %}
-          {% if not category.parent %}
-          <li>
-            <a href="{% url 'products:category-detail' slug=category.slug %}">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+  <!-- Category Hierarchy (Optional) -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
+    <div class="lg:col-span-12 card bg-base-100 shadow-xl animate-fade-in" style="animation-delay: 0.5s;">
+      <div class="card-body">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="card-title">Kategori Hiyerarşisi</h2>
+          <div class="flex items-center">
+            <button class="btn btn-sm btn-ghost" id="expand-all">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" />
               </svg>
-              {{ category.name }}
-              {% if not category.is_active %}<span class="badge badge-error ml-2">Pasif</span>{% endif %}
-            </a>
-            
-            {% if category.children.exists %}
+              Tümünü Genişlet
+            </button>
+            <button class="btn btn-sm btn-ghost ml-2" id="collapse-all">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 16l-5-5 5-5M12 16l-5-5 5-5M19 16l-5-5 5-5" />
+              </svg>
+              Daralt
+            </button>
+          </div>
+        </div>
+        
+        <div class="bg-base-200 rounded-lg p-4">
+          {% if categories %}
+          <div class="category-tree" id="category-hierarchy">
             <ul>
-              {% for child in category.children.all %}
-              <li>
-                <a href="{% url 'products:category-detail' slug=child.slug %}">
-                  {{ child.name }}
-                  {% if not child.is_active %}<span class="badge badge-error ml-2">Pasif</span>{% endif %}
-                </a>
-                
-                {% if child.children.exists %}
-                <ul>
-                  {% for grandchild in child.children.all %}
-                  <li>
-                    <a href="{% url 'products:category-detail' slug=grandchild.slug %}">
-                      {{ grandchild.name }}
-                      {% if not grandchild.is_active %}<span class="badge badge-error ml-2">Pasif</span>{% endif %}
+              {% for category in categories %}
+                {% if not category.parent %}
+                <li class="has-children" data-category-id="{{ category.id }}">
+                  <div class="tree-item level-0">
+                    <button class="tree-toggle" onclick="toggleChildren(this, {{ category.id }})">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                    <a href="{% url 'products:category-detail' slug=category.slug %}" class="flex-1">
+                      {{ category.name }}
                     </a>
-                  </li>
-                  {% endfor %}
-                </ul>
+                    <span class="badge badge-primary">{{ category.product_count }}</span>
+                  </div>
+                  <ul class="hidden">
+                    {% for subcategory in categories %}
+                      {% if subcategory.parent_id == category.id %}
+                      <li>
+                        <div class="tree-item level-1">
+                          <a href="{% url 'products:category-detail' slug=subcategory.slug %}" class="flex-1">
+                            {{ subcategory.name }}
+                          </a>
+                          <span class="badge badge-primary">{{ subcategory.product_count }}</span>
+                        </div>
+                      </li>
+                      {% endif %}
+                    {% endfor %}
+                  </ul>
+                </li>
                 {% endif %}
-              </li>
               {% endfor %}
             </ul>
-            {% endif %}
-          </li>
+          </div>
+          {% else %}
+          <p class="text-center text-base-content/60">Henüz kategori bulunmamaktadır.</p>
           {% endif %}
-          {% endfor %}
-        </ul>
-        {% else %}
-        <div class="alert alert-info">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-          <span>Henüz kategori bulunmamaktadır.</span>
         </div>
-        {% endif %}
       </div>
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Column resizing functionality
+let resizingColumn = null;
+let startX = 0;
+let startWidth = 0;
+
+document.querySelectorAll('.resizer').forEach(resizer => {
+  resizer.addEventListener('mousedown', function(e) {
+    resizingColumn = this.parentElement;
+    startX = e.clientX;
+    startWidth = resizingColumn.offsetWidth;
+    document.addEventListener('mousemove', resizeColumn);
+    document.addEventListener('mouseup', stopResizing);
+    resizer.classList.add('resizing');
+    e.preventDefault();
+  });
+});
+
+function resizeColumn(e) {
+  if (!resizingColumn) return;
+  const width = startWidth + e.clientX - startX;
+  resizingColumn.style.width = width + 'px';
+}
+
+function stopResizing() {
+  if (!resizingColumn) return;
+  document.removeEventListener('mousemove', resizeColumn);
+  document.removeEventListener('mouseup', stopResizing);
+  document.querySelector('.resizing')?.classList.remove('resizing');
+  resizingColumn = null;
+  
+  // Save column widths
+  saveColumnWidths();
+}
+
+// Filter panel toggle
+function toggleFilterPanel(event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+  const panel = document.getElementById('filter-panel');
+  const button = document.getElementById('filter-toggle-btn');
+  
+  if (panel.classList.contains('show')) {
+    panel.classList.remove('show');
+    button.classList.remove('active');
+    localStorage.setItem('categoryFilterPanelOpen', 'false');
+  } else {
+    panel.classList.add('show');
+    button.classList.add('active');
+    localStorage.setItem('categoryFilterPanelOpen', 'true');
+  }
+}
+
+// Active filters display
+function displayActiveFilters() {
+  const form = document.getElementById('category-search-form');
+  const activeFiltersDiv = document.getElementById('active-filters');
+  const activeFiltersCount = document.getElementById('active-filters-count');
+  let activeFilters = [];
+  
+  // Check each form field
+  const fields = form.querySelectorAll('input, select');
+  fields.forEach(field => {
+    const value = field.value.trim();
+    const name = field.name;
+    
+    if (value && name !== 'sort_by') {
+      let label = field.previousElementSibling?.textContent || name;
+      let displayValue = value;
+      
+      // For select fields, get the selected option text
+      if (field.tagName === 'SELECT') {
+        const selectedOption = field.options[field.selectedIndex];
+        if (selectedOption && selectedOption.value) {
+          displayValue = selectedOption.textContent;
+        }
+      }
+      
+      if (displayValue && displayValue !== 'Tümü' && displayValue !== 'Tüm Kategoriler') {
+        activeFilters.push({
+          name: name,
+          label: label,
+          value: displayValue
+        });
+      }
+    }
+  });
+  
+  // Display active filters
+  if (activeFilters.length > 0) {
+    activeFiltersDiv.style.display = 'flex';
+    activeFiltersCount.style.display = 'inline-flex';
+    activeFiltersCount.textContent = activeFilters.length;
+    
+    activeFiltersDiv.innerHTML = activeFilters.map(filter => `
+      <div class="badge badge-outline gap-2">
+        <span>${filter.label}: ${filter.value}</span>
+        <button type="button" onclick="clearFilter('${filter.name}')" class="text-error">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    `).join('');
+  } else {
+    activeFiltersDiv.style.display = 'none';
+    activeFiltersCount.style.display = 'none';
+  }
+}
+
+// Clear specific filter
+function clearFilter(fieldName) {
+  const field = document.querySelector(`[name="${fieldName}"]`);
+  if (field) {
+    field.value = '';
+    document.getElementById('category-search-form').submit();
+  }
+}
+
+// Clear all filters
+document.getElementById('clear-filters')?.addEventListener('click', function() {
+  const form = document.getElementById('category-search-form');
+  form.querySelectorAll('input, select').forEach(field => {
+    if (field.name !== 'sort_by') {
+      field.value = '';
+    }
+  });
+  form.submit();
+});
+
+// Save UI state
+function saveColumnWidths() {
+  const columns = document.querySelectorAll('.resizable-table thead th');
+  const widths = Array.from(columns).map(col => col.offsetWidth);
+  localStorage.setItem('categoryTableColumnWidths', JSON.stringify(widths));
+}
+
+// Load UI state
+function loadUIState() {
+  // Load filter panel state
+  const filterPanelOpen = localStorage.getItem('categoryFilterPanelOpen');
+  if (filterPanelOpen === 'true') {
+    toggleFilterPanel();
+  }
+  
+  // Load column widths
+  const savedWidths = localStorage.getItem('categoryTableColumnWidths');
+  if (savedWidths) {
+    try {
+      const widths = JSON.parse(savedWidths);
+      const columns = document.querySelectorAll('.resizable-table thead th');
+      columns.forEach((col, index) => {
+        if (widths[index]) {
+          col.style.width = widths[index] + 'px';
+        }
+      });
+    } catch (e) {
+      console.error('Error loading column widths:', e);
+    }
+  }
+}
+
+// Category tree toggle
+function toggleChildren(button, categoryId) {
+  const listItem = button.closest('li');
+  const childrenList = listItem.querySelector('ul');
+  
+  if (childrenList.classList.contains('hidden')) {
+    childrenList.classList.remove('hidden');
+    button.querySelector('svg').style.transform = 'rotate(90deg)';
+  } else {
+    childrenList.classList.add('hidden');
+    button.querySelector('svg').style.transform = 'rotate(0deg)';
+  }
+}
+
+// Expand all categories
+document.getElementById('expand-all')?.addEventListener('click', function() {
+  document.querySelectorAll('.category-tree ul').forEach(ul => {
+    ul.classList.remove('hidden');
+  });
+  document.querySelectorAll('.tree-toggle svg').forEach(svg => {
+    svg.style.transform = 'rotate(90deg)';
+  });
+});
+
+// Collapse all categories
+document.getElementById('collapse-all')?.addEventListener('click', function() {
+  document.querySelectorAll('.category-tree ul').forEach(ul => {
+    if (ul.parentElement.tagName === 'LI') {
+      ul.classList.add('hidden');
+    }
+  });
+  document.querySelectorAll('.tree-toggle svg').forEach(svg => {
+    svg.style.transform = 'rotate(0deg)';
+  });
+});
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+  loadUIState();
+  displayActiveFilters();
+});
+</script>
 {% endblock %}

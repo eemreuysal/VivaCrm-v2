@@ -1,0 +1,90 @@
+/**
+ * VivaCRM Avatar Component Styles
+ * Tüm avatar stilleri merkezi olarak yönetilir
+ */
+
+/* Base Avatar Styles */
+.avatar {
+  @apply relative inline-flex items-center justify-center rounded-full overflow-hidden;
+}
+
+/* Avatar Sizes */
+.avatar-xs {
+  @apply w-6 h-6 text-xs;
+}
+
+.avatar-sm {
+  @apply w-8 h-8 text-sm;
+}
+
+.avatar-md {
+  @apply w-10 h-10 text-base;
+}
+
+.avatar-lg {
+  @apply w-12 h-12 text-lg;
+}
+
+.avatar-xl {
+  @apply w-16 h-16 text-xl;
+}
+
+/* Avatar Image */
+.avatar-img {
+  @apply w-full h-full object-cover;
+}
+
+/* Avatar Placeholder */
+.avatar-placeholder {
+  @apply flex items-center justify-center w-full h-full bg-green-500 text-white font-medium;
+}
+
+/* Avatar Status Indicator */
+.avatar-status {
+  @apply absolute bottom-0 right-0 block h-3 w-3 rounded-full ring-2 ring-white;
+}
+
+.avatar-status-online {
+  @apply bg-green-500;
+}
+
+.avatar-status-offline {
+  @apply bg-gray-300;
+}
+
+.avatar-status-busy {
+  @apply bg-amber-500;
+}
+
+.avatar-status-away {
+  @apply bg-amber-500;
+}
+
+/* Avatar Group */
+.avatar-group {
+  @apply flex -space-x-3;
+}
+
+.avatar-group .avatar {
+  @apply border-2 border-white;
+}
+
+/* Avatar with Badge */
+.avatar-badge {
+  @apply absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center;
+}
+
+/* Dark Mode Adjustments - dark-mode.css dosyasına taşındı */
+
+/* Navbar Avatar - Specific Overrides */
+.navbar-avatar {
+  @apply relative inline-flex items-center justify-center rounded-full overflow-hidden w-10 h-10;
+}
+
+.navbar-avatar-img {
+  @apply w-full h-full object-cover;
+}
+
+.navbar-avatar-placeholder {
+  @apply flex items-center justify-center w-full h-full bg-green-500 text-white font-medium;
+}

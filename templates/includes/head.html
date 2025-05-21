@@ -1,0 +1,58 @@
+{% load static %}
+{% comment %}
+    Head bölümü include dosyası
+    Kullanımı: {% include 'includes/head.html' with title="Sayfa Başlığı" description="Sayfa açıklaması" %}
+{% endcomment %}
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="description" content="{{ description|default:'VivaCRM - Müşteri İlişkileri Yönetim Sistemi' }}">
+<meta name="author" content="VivaCRM Team">
+
+<!-- ApexCharts kütüphanesi (Grafikler için) -->
+<script src="{% static 'js/vendor/apexcharts.min.js' %}"></script>
+
+<title>{% if title %}{{ title }} - VivaCRM{% else %}{% block title %}VivaCRM{% endblock %}{% endif %}</title>
+
+<!-- Favicon -->
+<link rel="icon" type="image/x-icon" href="{% static 'img/favicon.ico' %}">
+
+<!-- Alpine.js Theme Store Hazırlık -->
+<script>
+// Alpine.js store için globalleri hazırla
+window.VivaCRM = window.VivaCRM || {};
+window.VivaCRM.themePreference = localStorage.getItem('vivacrm-theme') === 'dark' ? 'dark' : 'light';
+window.VivaCRM.systemPreference = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+
+// ThemeManager FOUC (Flash of Unstyled Content) Önleme
+// sayfa yüklenmeden önce doğru temayı uygulamak için
+(function() {
+  const theme = localStorage.getItem('vivacrm-theme') || 
+                (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  
+  if (theme === 'dark') {
+    document.documentElement.classList.add('dark');
+    document.documentElement.setAttribute('data-theme', 'vivacrmDark');
+  } else {
+    document.documentElement.classList.remove('dark');
+    document.documentElement.setAttribute('data-theme', 'vivacrm');
+  }
+})();
+</script>
+
+<!-- CSS Includes -->
+{% if 'login' in request.path or 'register' in request.path %}
+    <!-- Auth pages always use direct CSS includes -->
+    {% include 'includes/css_includes.html' with use_critical_css=use_critical_css|default:False %}
+{% elif use_vite|default:True %}
+    <!-- Vite will handle CSS via JS entry point -->
+{% else %}
+    {% include 'includes/css_includes.html' with use_critical_css=use_critical_css|default:False %}
+{% endif %}
+
+<!-- Extra CSS -->
+{% block extra_css %}{% endblock %}
+
+<!-- Django CSRF Token for JavaScript use -->
+{% csrf_token %}

@@ -3,10 +3,233 @@
 
 {% block title %}{% if object %}{{ object.name }} Düzenle{% else %}Yeni Ürün{% endif %}{% endblock %}
 
+{% block extra_css %}
+<style>
+  .form-navigator {
+    position: sticky;
+    top: 20px;
+    transition: all 0.3s ease;
+  }
+  
+  .form-navigator .menu-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .form-navigator .menu-item.active {
+    background-color: var(--p);
+    color: var(--pc);
+  }
+  
+  .form-navigator .menu-item:hover:not(.active) {
+    background-color: var(--b2);
+  }
+  
+  .form-navigator .menu-item .icon {
+    margin-right: 10px;
+  }
+  
+  .form-section {
+    scroll-margin-top: 20px;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--b3);
+    margin-bottom: 1.5rem;
+  }
+  
+  .form-section:last-child {
+    border-bottom: none;
+  }
+  
+  .form-section h3 {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+  }
+  
+  .form-section h3 .icon {
+    margin-right: 8px;
+    color: var(--p);
+  }
+  
+  .sticky-bottom-bar {
+    position: sticky;
+    bottom: 0;
+    background-color: var(--b1);
+    padding: 1rem;
+    border-top: 1px solid var(--b3);
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+    margin: 2rem -1.5rem -1.5rem -1.5rem;
+    border-radius: 0 0 var(--rounded-box) var(--rounded-box);
+    z-index: 10;
+  }
+  
+  /* Tooltip styles */
+  .tooltip-container {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .tooltip-icon {
+    cursor: help;
+    color: var(--bc);
+    opacity: 0.6;
+    margin-left: 5px;
+  }
+  
+  .tooltip-content {
+    visibility: hidden;
+    position: absolute;
+    width: 200px;
+    background-color: var(--b3);
+    color: var(--bc);
+    text-align: center;
+    padding: 8px;
+    border-radius: var(--rounded-box);
+    z-index: 11;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -100px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+  
+  .tooltip-container:hover .tooltip-content {
+    visibility: visible;
+    opacity: 1;
+  }
+  
+  /* Progress indicator styles */
+  .form-progress {
+    margin-bottom: 2rem;
+  }
+  
+  .progress-bar {
+    width: 100%;
+    height: 4px;
+    background-color: var(--b3);
+    border-radius: 2px;
+    margin-top: 0.5rem;
+  }
+  
+  .progress-value {
+    height: 100%;
+    background-color: var(--p);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+  }
+  
+  /* Image upload area */
+  .image-upload-area {
+    border: 2px dashed var(--b3);
+    border-radius: var(--rounded-box);
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+  }
+  
+  .image-upload-area.drag-over {
+    border-color: var(--p);
+    background-color: var(--p-light, rgba(var(--p), 0.1));
+  }
+  
+  .image-preview {
+    position: relative;
+    margin: 0.5rem;
+    border-radius: var(--rounded-box);
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  .image-preview img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+  }
+  
+  .image-preview .remove-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background-color: var(--er);
+    color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0.9;
+  }
+  
+  .image-preview .primary-badge {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    background-color: var(--p);
+    color: white;
+    border-radius: 8px;
+    padding: 2px 6px;
+    font-size: 0.7rem;
+  }
+  
+  .attributes-container {
+    margin-top: 1rem;
+    border: 1px solid var(--b3);
+    border-radius: var(--rounded-box);
+    padding: 1rem;
+  }
+  
+  .attribute-row {
+    display: flex;
+    margin-bottom: 0.5rem;
+    gap: 0.5rem;
+  }
+  
+  /* Field group styling */
+  .field-group {
+    background-color: var(--b2);
+    border-radius: var(--rounded-box);
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .field-group .field-group-title {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+  }
+  
+  .field-group .field-group-title .icon {
+    margin-right: 0.5rem;
+  }
+  
+  /* Form enrichment */
+  .required-field label::after {
+    content: " *";
+    color: var(--er);
+  }
+  
+  .optional-field label::after {
+    content: " (opsiyonel)";
+    font-size: 0.8rem;
+    opacity: 0.7;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container mx-auto">
+<div class="container mx-auto px-4">
   <div class="flex justify-between items-center mb-6">
-    <h1 class="text-2xl font-bold">{% if object %}Ürün Düzenle{% else %}Yeni Ürün{% endif %}</h1>
+    <h1 class="text-2xl font-bold">{% if object %}{{ object.name }} Düzenle{% else %}Yeni Ürün{% endif %}</h1>
     <div class="text-sm breadcrumbs">
       <ul>
         <li><a href="{% url 'dashboard:dashboard' %}">VivaCRM</a></li>
@@ -16,34 +239,1011 @@
     </div>
   </div>
   
-  <div class="card bg-base-100 shadow-xl">
-    <div class="card-body">
-      <form method="post" hx-boost="true">
-        {% csrf_token %}
-        {% crispy form %}
-      </form>
+  <!-- Form İlerleme Göstergesi -->
+  <div class="form-progress">
+    <div class="flex justify-between items-center">
+      <span class="text-sm font-medium">Form Tamamlanma Durumu</span>
+      <span class="text-sm" id="completion-text">0%</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-value" id="progress-value" style="width: 0%"></div>
+    </div>
+  </div>
+  
+  <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <!-- Sol Menü - Form Navigasyonu -->
+    <div class="lg:col-span-1">
+      <div class="card bg-base-100 shadow-xl form-navigator">
+        <div class="card-body p-4">
+          <h2 class="card-title text-base mb-4">Ürün Bilgileri</h2>
+          
+          <div class="menu-items">
+            <div class="menu-item active" data-target="basic-info">
+              <span class="icon">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </span>
+              <span>Temel Bilgiler</span>
+            </div>
+            
+            <div class="menu-item" data-target="pricing">
+              <span class="icon">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </span>
+              <span>Fiyat ve Vergi</span>
+            </div>
+            
+            <div class="menu-item" data-target="inventory">
+              <span class="icon">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                </svg>
+              </span>
+              <span>Stok Bilgileri</span>
+            </div>
+            
+            <div class="menu-item" data-target="attributes">
+              <span class="icon">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                </svg>
+              </span>
+              <span>Ürün Özellikleri</span>
+            </div>
+            
+            <div class="menu-item" data-target="images">
+              <span class="icon">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </span>
+              <span>Görseller</span>
+            </div>
+            
+            <div class="menu-item" data-target="status">
+              <span class="icon">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </span>
+              <span>Durum</span>
+            </div>
+          </div>
+          
+          <div class="divider"></div>
+          
+          <div class="mt-2 flex items-center justify-between">
+            <button type="button" id="prev-section" class="btn btn-outline btn-sm btn-circle" disabled>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            
+            <span class="text-sm" id="section-counter">1/6</span>
+            
+            <button type="button" id="next-section" class="btn btn-outline btn-sm btn-circle">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+          
+          <div class="mt-4">
+            <button type="button" id="preview-button" class="btn btn-outline btn-block btn-sm mb-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              Önizleme
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Ana Form Alanı -->
+    <div class="lg:col-span-3">
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+          <form method="post" id="product-form" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <!-- Temel Bilgiler Bölümü -->
+            <section id="basic-info" class="form-section">
+              <h3>
+                <span class="icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </span>
+                Temel Bilgiler
+              </h3>
+              
+              <div class="field-group">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div class="form-control required-field">
+                    <label for="id_code" class="label">
+                      <span class="label-text">Ürün Kodu</span>
+                      <div class="tooltip-container">
+                        <span class="tooltip-icon">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </span>
+                        <span class="tooltip-content">Benzersiz ürün kodunuzu girin. Bu kod stok takibi ve sipariş işlemlerinde kullanılacaktır.</span>
+                      </div>
+                    </label>
+                    <input type="text" id="id_code" name="code" class="input input-bordered" {% if form.code.value %}value="{{ form.code.value }}"{% endif %} required placeholder="Örn: P-1001" />
+                  </div>
+                  
+                  <div class="form-control required-field md:col-span-2">
+                    <label for="id_name" class="label">
+                      <span class="label-text">Ürün Adı</span>
+                    </label>
+                    <input type="text" id="id_name" name="name" class="input input-bordered" {% if form.name.value %}value="{{ form.name.value }}"{% endif %} required placeholder="Ürün adını girin" />
+                  </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div class="form-control">
+                    <label for="id_category" class="label">
+                      <span class="label-text">Kategori</span>
+                    </label>
+                    <div class="flex gap-2">
+                      <select id="id_category" name="category" class="select select-bordered w-full">
+                        <option value="">Kategori Seçin</option>
+                        {% for category in form.fields.category.queryset %}
+                          <option value="{{ category.id }}" {% if form.category.value|stringformat:"s" == category.id|stringformat:"s" %}selected{% endif %}>{{ category }}</option>
+                        {% endfor %}
+                      </select>
+                      <button type="button" class="btn btn-square btn-sm" id="add-category-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div class="form-control">
+                    <label for="id_family" class="label">
+                      <span class="label-text">Ürün Ailesi</span>
+                    </label>
+                    <div class="flex gap-2">
+                      <select id="id_family" name="family" class="select select-bordered w-full">
+                        <option value="">Ürün Ailesi Seçin</option>
+                        {% for family in form.fields.family.queryset %}
+                          <option value="{{ family.id }}" {% if form.family.value|stringformat:"s" == family.id|stringformat:"s" %}selected{% endif %}>{{ family }}</option>
+                        {% endfor %}
+                      </select>
+                      <button type="button" class="btn btn-square btn-sm" id="add-family-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="form-control mt-4">
+                  <label for="id_description" class="label">
+                    <span class="label-text">Ürün Açıklaması</span>
+                  </label>
+                  <textarea id="id_description" name="description" class="textarea textarea-bordered h-24" placeholder="Ürün açıklamasını buraya girin...">{% if form.description.value %}{{ form.description.value }}{% endif %}</textarea>
+                </div>
+              </div>
+            </section>
+            
+            <!-- Fiyat ve Vergi Bölümü -->
+            <section id="pricing" class="form-section" style="display: none;">
+              <h3>
+                <span class="icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </span>
+                Fiyat ve Vergi
+              </h3>
+              
+              <div class="field-group">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div class="form-control required-field">
+                    <label for="id_price" class="label">
+                      <span class="label-text">Satış Fiyatı</span>
+                    </label>
+                    <input type="number" step="0.01" id="id_price" name="price" class="input input-bordered" {% if form.price.value %}value="{{ form.price.value }}"{% endif %} required />
+                  </div>
+                  
+                  <div class="form-control optional-field">
+                    <label for="id_cost" class="label">
+                      <span class="label-text">Maliyet</span>
+                    </label>
+                    <input type="number" step="0.01" id="id_cost" name="cost" class="input input-bordered" {% if form.cost.value %}value="{{ form.cost.value }}"{% endif %} />
+                  </div>
+                  
+                  <div class="form-control">
+                    <label for="id_tax_rate" class="label">
+                      <span class="label-text">KDV Oranı</span>
+                    </label>
+                    <select id="id_tax_rate" name="tax_rate" class="select select-bordered">
+                      {% for key, value in form.fields.tax_rate.choices %}
+                        <option value="{{ key }}" {% if form.tax_rate.value == key %}selected{% endif %}>{{ value }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  
+                  <div class="form-control optional-field">
+                    <label for="id_discount_price" class="label">
+                      <span class="label-text">İndirimli Fiyat</span>
+                    </label>
+                    <input type="number" step="0.01" id="id_discount_price" name="discount_price" class="input input-bordered" {% if form.discount_price.value %}value="{{ form.discount_price.value }}"{% endif %} />
+                  </div>
+                </div>
+                
+                <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div class="stats shadow">
+                    <div class="stat">
+                      <div class="stat-title">KDV Tutarı</div>
+                      <div class="stat-value text-lg" id="tax-amount">0.00 ₺</div>
+                      <div class="stat-desc">Seçilen KDV oranına göre</div>
+                    </div>
+                  </div>
+                  
+                  <div class="stats shadow">
+                    <div class="stat">
+                      <div class="stat-title">KDV Dahil Fiyat</div>
+                      <div class="stat-value text-lg" id="price-with-tax">0.00 ₺</div>
+                      <div class="stat-desc">Son tüketici fiyatı</div>
+                    </div>
+                  </div>
+                  
+                  <div class="stats shadow">
+                    <div class="stat">
+                      <div class="stat-title">Kar Marjı</div>
+                      <div class="stat-value text-lg" id="profit-margin">0%</div>
+                      <div class="stat-desc">Satış fiyatı / maliyet farkı</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+            
+            <!-- Stok Bilgileri Bölümü -->
+            <section id="inventory" class="form-section" style="display: none;">
+              <h3>
+                <span class="icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                  </svg>
+                </span>
+                Stok Bilgileri
+              </h3>
+              
+              <div class="field-group">
+                <div class="form-control mb-4">
+                  <label for="id_is_physical" class="label cursor-pointer justify-start">
+                    <input type="checkbox" id="id_is_physical" name="is_physical" class="checkbox mr-2" {% if form.is_physical.value %}checked{% endif %} />
+                    <span class="label-text">Fiziksel Ürün</span>
+                    <div class="tooltip-container ml-2">
+                      <span class="tooltip-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </span>
+                      <span class="tooltip-content">Fiziksel bir ürünse işaretleyin. Bu seçenek dijital içerik veya hizmetler için kapatılabilir.</span>
+                    </div>
+                  </label>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div class="form-control">
+                    <label for="id_stock" class="label">
+                      <span class="label-text">Stok Miktarı</span>
+                    </label>
+                    <input type="number" id="id_stock" name="stock" class="input input-bordered" {% if form.stock.value %}value="{{ form.stock.value }}"{% endif %} value="0" min="0" />
+                  </div>
+                  
+                  <div class="form-control">
+                    <label for="id_threshold_stock" class="label">
+                      <span class="label-text">Kritik Stok Seviyesi</span>
+                      <div class="tooltip-container">
+                        <span class="tooltip-icon">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </span>
+                        <span class="tooltip-content">Stok bu seviyenin altına düştüğünde uyarı alacaksınız.</span>
+                      </div>
+                    </label>
+                    <input type="number" id="id_threshold_stock" name="threshold_stock" class="input input-bordered" {% if form.threshold_stock.value %}value="{{ form.threshold_stock.value }}"{% endif %} value="5" min="0" />
+                  </div>
+                </div>
+                
+                <!-- Fiziksel ürün alanları -->
+                <div id="physical-fields">
+                  <div class="divider">Fiziksel Özellikler</div>
+                  
+                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="form-control optional-field">
+                      <label for="id_weight" class="label">
+                        <span class="label-text">Ağırlık (kg)</span>
+                      </label>
+                      <input type="number" step="0.01" id="id_weight" name="weight" class="input input-bordered" {% if form.weight.value %}value="{{ form.weight.value }}"{% endif %} />
+                    </div>
+                    
+                    <div class="form-control optional-field">
+                      <label for="id_dimensions" class="label">
+                        <span class="label-text">Boyutlar (U x G x Y)</span>
+                      </label>
+                      <input type="text" id="id_dimensions" name="dimensions" class="input input-bordered" {% if form.dimensions.value %}value="{{ form.dimensions.value }}"{% endif %} placeholder="12x5x8 cm" />
+                    </div>
+                    
+                    <div class="form-control optional-field">
+                      <label for="id_sku" class="label">
+                        <span class="label-text">SKU</span>
+                      </label>
+                      <input type="text" id="id_sku" name="sku" class="input input-bordered" {% if form.sku.value %}value="{{ form.sku.value }}"{% endif %} />
+                    </div>
+                    
+                    <div class="form-control optional-field">
+                      <label for="id_barcode" class="label">
+                        <span class="label-text">Barkod</span>
+                      </label>
+                      <input type="text" id="id_barcode" name="barcode" class="input input-bordered" {% if form.barcode.value %}value="{{ form.barcode.value }}"{% endif %} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+            
+            <!-- Ürün Özellikleri Bölümü -->
+            <section id="attributes" class="form-section" style="display: none;">
+              <h3>
+                <span class="icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
+                </span>
+                Ürün Özellikleri
+              </h3>
+              
+              <div class="alert alert-info mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <span>Renk, boyut, marka gibi ürün özelliklerini buradan ekleyebilirsiniz. Bu özellikler ürün filtrelemesinde kullanılacaktır.</span>
+              </div>
+              
+              <div class="field-group">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div class="form-control">
+                    <label for="id_color" class="label">
+                      <span class="label-text">Renk</span>
+                    </label>
+                    <input type="text" id="id_color" name="color" class="input input-bordered" {% if form.color.value %}value="{{ form.color.value }}"{% endif %} />
+                  </div>
+                  
+                  <div class="form-control">
+                    <label for="id_size" class="label">
+                      <span class="label-text">Boyut</span>
+                    </label>
+                    <input type="text" id="id_size" name="size" class="input input-bordered" {% if form.size.value %}value="{{ form.size.value }}"{% endif %} />
+                  </div>
+                  
+                  <div class="form-control">
+                    <label for="id_material" class="label">
+                      <span class="label-text">Materyal</span>
+                    </label>
+                    <input type="text" id="id_material" name="material" class="input input-bordered" {% if form.material.value %}value="{{ form.material.value }}"{% endif %} />
+                  </div>
+                  
+                  <div class="form-control">
+                    <label for="id_brand" class="label">
+                      <span class="label-text">Marka</span>
+                    </label>
+                    <input type="text" id="id_brand" name="brand" class="input input-bordered" {% if form.brand.value %}value="{{ form.brand.value }}"{% endif %} />
+                  </div>
+                </div>
+                
+                <div class="divider">Özel Özellikler</div>
+                
+                <div id="custom-attributes">
+                  <!-- Özel özellikler burada dinamik olarak oluşturulacak -->
+                </div>
+                
+                <button type="button" id="add-attribute-btn" class="btn btn-outline btn-sm mt-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                  Özellik Ekle
+                </button>
+              </div>
+            </section>
+            
+            <!-- Ürün Görselleri Bölümü -->
+            <section id="images" class="form-section" style="display: none;">
+              <h3>
+                <span class="icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </span>
+                Ürün Görselleri
+              </h3>
+              
+              <div class="field-group">
+                <div class="image-upload-area" id="image-drop-area">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-2 text-base-content opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                  <p class="text-base-content opacity-60 mb-4">Ürün görsellerini sürükleyip bırakın veya seçin</p>
+                  <label for="image-upload" class="btn btn-sm btn-primary">Görsel Seç</label>
+                  <input type="file" id="image-upload" name="images" multiple accept="image/*" class="hidden" />
+                </div>
+                
+                <div class="image-preview-container grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-6" id="image-preview-container">
+                  <!-- Yüklenen görseller için önizlemeler burada gösterilecek -->
+                  {% if object %}
+                    {% for image in object.images.all %}
+                    <div class="image-preview" data-id="{{ image.id }}">
+                      <img src="{{ image.image.url }}" alt="{{ image.alt_text }}">
+                      <span class="remove-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </span>
+                      {% if image.is_primary %}
+                      <span class="primary-badge">Ana Görsel</span>
+                      {% endif %}
+                    </div>
+                    {% endfor %}
+                  {% endif %}
+                </div>
+                
+                <div class="alert alert-warning mt-4" id="no-images-warning" style="{% if object and object.images.exists %}display:none;{% endif %}">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                  <span>Henüz hiç görsel yüklenmedi. Ürünleriniz için en az bir görsel eklemeniz önerilir.</span>
+                </div>
+              </div>
+            </section>
+            
+            <!-- Durum Bölümü -->
+            <section id="status" class="form-section" style="display: none;">
+              <h3>
+                <span class="icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </span>
+                Durum ve Görünürlük
+              </h3>
+              
+              <div class="field-group">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div class="form-control">
+                    <label for="id_status" class="label">
+                      <span class="label-text">Ürün Durumu</span>
+                    </label>
+                    <select id="id_status" name="status" class="select select-bordered">
+                      {% for key, value in form.fields.status.choices %}
+                        <option value="{{ key }}" {% if form.status.value == key %}selected{% endif %}>{{ value }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  
+                  <div class="form-control">
+                    <label for="id_is_featured" class="label cursor-pointer justify-start">
+                      <input type="checkbox" id="id_is_featured" name="is_featured" class="checkbox mr-2" {% if form.is_featured.value %}checked{% endif %} />
+                      <span class="label-text">Öne Çıkan Ürün</span>
+                      <div class="tooltip-container ml-2">
+                        <span class="tooltip-icon">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </span>
+                        <span class="tooltip-content">Ana sayfada ve kategori listelerinde öne çıkarılır.</span>
+                      </div>
+                    </label>
+                  </div>
+                  
+                  <div class="form-control">
+                    <label for="id_is_active" class="label cursor-pointer justify-start">
+                      <input type="checkbox" id="id_is_active" name="is_active" class="checkbox mr-2" {% if form.is_active.value %}checked{% endif %} {% if not object %}checked{% endif %} />
+                      <span class="label-text">Aktif</span>
+                      <div class="tooltip-container ml-2">
+                        <span class="tooltip-icon">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </span>
+                        <span class="tooltip-content">Devre dışı bırakırsanız, bu ürün müşteriler tarafından görüntülenemez.</span>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+                
+                <div class="alert alert-success mt-6">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  <span>Tüm gerekli bilgileri doldurdunuz! Ürünü kaydetmek için 'Kaydet' düğmesine tıklayın.</span>
+                </div>
+              </div>
+            </section>
+            
+            <!-- Sabit Alt Butonlar -->
+            <div class="sticky-bottom-bar">
+              <div class="flex justify-between items-center">
+                <a href="{% url 'products:product-list' %}" class="btn btn-ghost">İptal</a>
+                
+                <div class="flex gap-2">
+                  <button type="submit" name="save_and_add" class="btn btn-outline">Kaydet ve Yeni Ekle</button>
+                  <button type="submit" class="btn btn-primary">Kaydet</button>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Kategori Ekleme Modalı -->
+<div class="modal" id="add-category-modal">
+  <div class="modal-box">
+    <h3 class="font-bold text-lg">Yeni Kategori Ekle</h3>
+    <div class="form-control mt-4">
+      <label class="label">
+        <span class="label-text">Kategori Adı</span>
+      </label>
+      <input type="text" id="new-category-name" class="input input-bordered" placeholder="Kategori adını girin" />
+    </div>
+    
+    <div class="form-control mt-4">
+      <label class="label">
+        <span class="label-text">Üst Kategori (Opsiyonel)</span>
+      </label>
+      <select id="new-category-parent" class="select select-bordered">
+        <option value="">Ana Kategori</option>
+        {% for category in form.fields.category.queryset %}
+          <option value="{{ category.id }}">{{ category }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    
+    <div class="modal-action">
+      <button type="button" class="btn btn-ghost" onclick="closeModal('add-category-modal')">İptal</button>
+      <button type="button" class="btn btn-primary" id="save-category-btn">Ekle</button>
+    </div>
+  </div>
+</div>
+
+<!-- Ürün Ailesi Ekleme Modalı -->
+<div class="modal" id="add-family-modal">
+  <div class="modal-box">
+    <h3 class="font-bold text-lg">Yeni Ürün Ailesi Ekle</h3>
+    <div class="form-control mt-4">
+      <label class="label">
+        <span class="label-text">Ürün Ailesi Adı</span>
+      </label>
+      <input type="text" id="new-family-name" class="input input-bordered" placeholder="Ürün ailesi adını girin" />
+    </div>
+    
+    <div class="form-control mt-4">
+      <label class="label">
+        <span class="label-text">Açıklama (Opsiyonel)</span>
+      </label>
+      <textarea id="new-family-description" class="textarea textarea-bordered" placeholder="Açıklama..."></textarea>
+    </div>
+    
+    <div class="modal-action">
+      <button type="button" class="btn btn-ghost" onclick="closeModal('add-family-modal')">İptal</button>
+      <button type="button" class="btn btn-primary" id="save-family-btn">Ekle</button>
+    </div>
+  </div>
+</div>
+
+<!-- Ürün Önizleme Modalı -->
+<div class="modal" id="product-preview-modal">
+  <div class="modal-box max-w-4xl">
+    <h3 class="font-bold text-lg">Ürün Önizleme</h3>
+    <div class="divider"></div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Ürün Görseli -->
+      <div class="carousel w-full rounded-lg overflow-hidden bg-base-200">
+        <div id="preview-image-placeholder" class="flex items-center justify-center h-64 w-full">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-base-content opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        </div>
+      </div>
+      
+      <!-- Ürün Bilgileri -->
+      <div>
+        <h2 class="text-2xl font-bold" id="preview-name">Ürün Adı</h2>
+        <p class="text-sm opacity-70" id="preview-code">KOD: P-1001</p>
+        
+        <div class="flex items-baseline mt-4">
+          <span class="text-2xl font-bold text-primary mr-2" id="preview-price">0.00 ₺</span>
+          <span class="text-sm line-through opacity-60" id="preview-discount-price"></span>
+        </div>
+        
+        <div class="divider"></div>
+        
+        <div class="grid grid-cols-2 gap-2 text-sm">
+          <div>
+            <span class="font-semibold">Kategori:</span>
+            <span id="preview-category">-</span>
+          </div>
+          
+          <div>
+            <span class="font-semibold">Ürün Ailesi:</span>
+            <span id="preview-family">-</span>
+          </div>
+          
+          <div>
+            <span class="font-semibold">Stok:</span>
+            <span id="preview-stock">0</span>
+          </div>
+          
+          <div>
+            <span class="font-semibold">Durum:</span>
+            <span id="preview-status" class="badge badge-primary">Satışta</span>
+          </div>
+        </div>
+        
+        <div class="mt-4">
+          <h3 class="font-semibold mb-2">Ürün Özellikleri</h3>
+          <div class="grid grid-cols-2 gap-2 text-sm" id="preview-attributes">
+            <!-- Ürün özellikleri burada gösterilecek -->
+          </div>
+        </div>
+        
+        <div class="mt-4">
+          <h3 class="font-semibold mb-2">Açıklama</h3>
+          <p class="text-sm" id="preview-description">Ürün açıklaması burada görünecek.</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-action">
+      <button type="button" class="btn" onclick="closeModal('product-preview-modal')">Kapat</button>
     </div>
   </div>
 </div>
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
+    // Form bölümleri ve navigasyon
+    const sections = document.querySelectorAll('.form-section');
+    const menuItems = document.querySelectorAll('.menu-item');
+    const prevButton = document.getElementById('prev-section');
+    const nextButton = document.getElementById('next-section');
+    const sectionCounter = document.getElementById('section-counter');
+    const progressValue = document.getElementById('progress-value');
+    const completionText = document.getElementById('completion-text');
+    
+    let currentSectionIndex = 0;
+    const totalSections = sections.length;
+    
+    // Sekme değiştirme fonksiyonu
+    function showSection(index) {
+      // Mevcut sekmeyi gizle
+      sections.forEach(section => section.style.display = 'none');
+      
+      // Menü öğelerinden active sınıfını kaldır
+      menuItems.forEach(item => item.classList.remove('active'));
+      
+      // İlgili sekmeyi göster
+      sections[index].style.display = 'block';
+      
+      // İlgili menü öğesini aktif yap
+      menuItems[index].classList.add('active');
+      
+      // İlerleme çubuğunu güncelle
+      const progress = ((index + 1) / totalSections) * 100;
+      progressValue.style.width = `${progress}%`;
+      completionText.textContent = `${Math.round(progress)}%`;
+      
+      // İlerleme sayacını güncelle
+      sectionCounter.textContent = `${index + 1}/${totalSections}`;
+      
+      // Önceki/sonraki butonlarını güncelle
+      prevButton.disabled = index === 0;
+      nextButton.disabled = index === totalSections - 1;
+      
+      // Mevcut indeksi güncelle
+      currentSectionIndex = index;
+      
+      // Görünür alana kaydır
+      sections[index].scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    
+    // Menü öğelerine tıklama olayı
+    menuItems.forEach((item, index) => {
+      item.addEventListener('click', () => {
+        showSection(index);
+      });
+    });
+    
+    // Önceki/sonraki butonları
+    prevButton.addEventListener('click', () => {
+      if (currentSectionIndex > 0) {
+        showSection(currentSectionIndex - 1);
+      }
+    });
+    
+    nextButton.addEventListener('click', () => {
+      if (currentSectionIndex < totalSections - 1) {
+        showSection(currentSectionIndex + 1);
+      }
+    });
+    
+    // Fiziksel ürün alanları göster/gizle
     const isPhysicalField = document.querySelector('#id_is_physical');
-    const physicalFieldsDiv = document.querySelector('.physical-fields');
+    const physicalFieldsDiv = document.querySelector('#physical-fields');
     
     function togglePhysicalFields() {
-      if (isPhysicalField.checked) {
-        physicalFieldsDiv.style.display = 'block';
+      physicalFieldsDiv.style.display = isPhysicalField.checked ? 'block' : 'none';
+    }
+    
+    // İlk yükleme için
+    togglePhysicalFields();
+    
+    // Değişiklik olduğunda
+    isPhysicalField.addEventListener('change', togglePhysicalFields);
+    
+    // Görsel yükleme işlemleri
+    const imageDropArea = document.getElementById('image-drop-area');
+    const imageUpload = document.getElementById('image-upload');
+    const imagePreviewContainer = document.getElementById('image-preview-container');
+    const noImagesWarning = document.getElementById('no-images-warning');
+    
+    // Sürükle bırak olayları
+    imageDropArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      imageDropArea.classList.add('drag-over');
+    });
+    
+    imageDropArea.addEventListener('dragleave', () => {
+      imageDropArea.classList.remove('drag-over');
+    });
+    
+    imageDropArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      imageDropArea.classList.remove('drag-over');
+      
+      if (e.dataTransfer.files.length) {
+        handleFiles(e.dataTransfer.files);
+      }
+    });
+    
+    // Dosya seçme olayı
+    imageUpload.addEventListener('change', () => {
+      if (imageUpload.files.length) {
+        handleFiles(imageUpload.files);
+      }
+    });
+    
+    // Dosyaları işle ve önizleme göster
+    function handleFiles(files) {
+      Array.from(files).forEach((file, index) => {
+        if (!file.type.match('image.*')) return;
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const previewDiv = document.createElement('div');
+          previewDiv.className = 'image-preview';
+          previewDiv.innerHTML = `
+            <img src="${e.target.result}" alt="Ürün görseli">
+            <span class="remove-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </span>
+            ${index === 0 ? '<span class="primary-badge">Ana Görsel</span>' : ''}
+          `;
+          
+          // Silme butonu olayı
+          const removeBtn = previewDiv.querySelector('.remove-btn');
+          removeBtn.addEventListener('click', () => {
+            previewDiv.remove();
+            updateImageWarning();
+          });
+          
+          imagePreviewContainer.appendChild(previewDiv);
+          updateImageWarning();
+        };
+        
+        reader.readAsDataURL(file);
+      });
+    }
+    
+    // Görsel uyarısını güncelle
+    function updateImageWarning() {
+      if (imagePreviewContainer.children.length > 0) {
+        noImagesWarning.style.display = 'none';
       } else {
-        physicalFieldsDiv.style.display = 'none';
+        noImagesWarning.style.display = 'flex';
       }
     }
     
-    // Initial state
-    togglePhysicalFields();
+    // Fiyat hesaplamaları
+    const priceInput = document.getElementById('id_price');
+    const costInput = document.getElementById('id_cost');
+    const taxRateSelect = document.getElementById('id_tax_rate');
+    const discountPriceInput = document.getElementById('id_discount_price');
     
-    // Listen for changes
-    isPhysicalField.addEventListener('change', togglePhysicalFields);
+    const taxAmountDisplay = document.getElementById('tax-amount');
+    const priceWithTaxDisplay = document.getElementById('price-with-tax');
+    const profitMarginDisplay = document.getElementById('profit-margin');
+    
+    function updatePriceCalculations() {
+      const price = parseFloat(priceInput.value) || 0;
+      const cost = parseFloat(costInput.value) || 0;
+      const taxRate = parseFloat(taxRateSelect.value) || 0;
+      const discountPrice = parseFloat(discountPriceInput.value) || 0;
+      
+      // Aktif fiyat (indirimli varsa onu kullan)
+      const activePrice = discountPrice > 0 ? discountPrice : price;
+      
+      // KDV tutarı hesapla
+      const taxAmount = activePrice * (taxRate / 100);
+      taxAmountDisplay.textContent = `${taxAmount.toFixed(2)} ₺`;
+      
+      // KDV dahil fiyat
+      const priceWithTax = activePrice + taxAmount;
+      priceWithTaxDisplay.textContent = `${priceWithTax.toFixed(2)} ₺`;
+      
+      // Kar marjı hesapla
+      if (cost > 0) {
+        const profitMargin = ((activePrice - cost) / cost) * 100;
+        profitMarginDisplay.textContent = `${profitMargin.toFixed(2)}%`;
+        
+        // Kar marjına göre renk
+        if (profitMargin < 0) {
+          profitMarginDisplay.classList.add('text-error');
+          profitMarginDisplay.classList.remove('text-success');
+        } else {
+          profitMarginDisplay.classList.add('text-success');
+          profitMarginDisplay.classList.remove('text-error');
+        }
+      } else {
+        profitMarginDisplay.textContent = 'Maliyet girilmemiş';
+      }
+    }
+    
+    // Fiyat alanlarında değişiklik olunca hesapla
+    priceInput.addEventListener('input', updatePriceCalculations);
+    costInput.addEventListener('input', updatePriceCalculations);
+    taxRateSelect.addEventListener('change', updatePriceCalculations);
+    discountPriceInput.addEventListener('input', updatePriceCalculations);
+    
+    // Sayfa yüklendiğinde hesapla
+    updatePriceCalculations();
+    
+    // Özel nitelik ekle
+    const addAttributeBtn = document.getElementById('add-attribute-btn');
+    const customAttributesContainer = document.getElementById('custom-attributes');
+    let attributeCount = 0;
+    
+    addAttributeBtn.addEventListener('click', () => {
+      const attributeId = `custom-attr-${attributeCount}`;
+      
+      const attributeRow = document.createElement('div');
+      attributeRow.className = 'attribute-row';
+      attributeRow.innerHTML = `
+        <div class="flex-1">
+          <input type="text" name="custom_attr_name_${attributeCount}" class="input input-bordered w-full" placeholder="Özellik adı">
+        </div>
+        <div class="flex-1">
+          <input type="text" name="custom_attr_value_${attributeCount}" class="input input-bordered w-full" placeholder="Değer">
+        </div>
+        <button type="button" class="btn btn-square btn-sm btn-error remove-attribute-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      `;
+      
+      const removeBtn = attributeRow.querySelector('.remove-attribute-btn');
+      removeBtn.addEventListener('click', () => {
+        attributeRow.remove();
+      });
+      
+      customAttributesContainer.appendChild(attributeRow);
+      attributeCount++;
+    });
+    
+    // Modal kontrolleri
+    const addCategoryBtn = document.getElementById('add-category-btn');
+    const addFamilyBtn = document.getElementById('add-family-btn');
+    const previewBtn = document.getElementById('preview-button');
+    
+    addCategoryBtn.addEventListener('click', () => {
+      document.getElementById('add-category-modal').classList.add('modal-open');
+    });
+    
+    addFamilyBtn.addEventListener('click', () => {
+      document.getElementById('add-family-modal').classList.add('modal-open');
+    });
+    
+    previewBtn.addEventListener('click', () => {
+      updateProductPreview();
+      document.getElementById('product-preview-modal').classList.add('modal-open');
+    });
+    
+    // Modal kapatma
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.remove('modal-open');
+    }
+    window.closeModal = closeModal;
+    
+    // Ürün önizlemesini güncelle
+    function updateProductPreview() {
+      const name = document.getElementById('id_name').value || 'Ürün Adı';
+      const code = document.getElementById('id_code').value || 'N/A';
+      const price = parseFloat(document.getElementById('id_price').value) || 0;
+      const discount = parseFloat(document.getElementById('id_discount_price').value) || 0;
+      const category = document.getElementById('id_category');
+      const family = document.getElementById('id_family');
+      const stock = parseInt(document.getElementById('id_stock').value) || 0;
+      const status = document.getElementById('id_status');
+      const description = document.getElementById('id_description').value || 'Ürün açıklaması bulunmuyor.';
+      
+      // Değerleri ayarla
+      document.getElementById('preview-name').textContent = name;
+      document.getElementById('preview-code').textContent = `KOD: ${code}`;
+      document.getElementById('preview-price').textContent = `${price.toFixed(2)} ₺`;
+      
+      if (discount > 0) {
+        document.getElementById('preview-discount-price').textContent = `${price.toFixed(2)} ₺`;
+        document.getElementById('preview-price').textContent = `${discount.toFixed(2)} ₺`;
+      } else {
+        document.getElementById('preview-discount-price').textContent = '';
+      }
+      
+      document.getElementById('preview-category').textContent = category.options[category.selectedIndex]?.text || '-';
+      document.getElementById('preview-family').textContent = family.options[family.selectedIndex]?.text || '-';
+      document.getElementById('preview-stock').textContent = stock;
+      document.getElementById('preview-status').textContent = status.options[status.selectedIndex]?.text || 'Satışta';
+      document.getElementById('preview-description').textContent = description;
+      
+      // Öznitelikleri ayarla
+      const attributesContainer = document.getElementById('preview-attributes');
+      attributesContainer.innerHTML = '';
+      
+      // Temel öznitelikler
+      const attributes = [
+        { name: 'Renk', value: document.getElementById('id_color').value },
+        { name: 'Boyut', value: document.getElementById('id_size').value },
+        { name: 'Materyal', value: document.getElementById('id_material').value },
+        { name: 'Marka', value: document.getElementById('id_brand').value }
+      ];
+      
+      // Öznitelikleri ekle
+      attributes.forEach(attr => {
+        if (attr.value) {
+          const attrDiv = document.createElement('div');
+          attrDiv.innerHTML = `<span class="font-semibold">${attr.name}:</span> ${attr.value}`;
+          attributesContainer.appendChild(attrDiv);
+        }
+      });
+      
+      // Görsel önizlemeleri
+      const previewImagePlaceholder = document.getElementById('preview-image-placeholder');
+      const firstImage = document.querySelector('.image-preview img');
+      
+      if (firstImage) {
+        previewImagePlaceholder.innerHTML = `<img src="${firstImage.src}" alt="${name}" class="w-full h-64 object-contain">`;
+      } else {
+        previewImagePlaceholder.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-base-content opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        `;
+      }
+    }
   });
 </script>
 {% endblock %}

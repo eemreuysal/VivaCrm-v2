@@ -1,0 +1,69 @@
+{# Reusable data table component #}
+{# Parameters: title, headers, rows, row_actions, pagination #}
+
+<div class="card bg-base-100 shadow-lg">
+  <div class="card-body">
+    {% if title %}
+    <h3 class="card-title mb-4">{{ title }}</h3>
+    {% endif %}
+    
+    <div class="overflow-x-auto">
+      <table class="table table-zebra">
+        <thead>
+          <tr>
+            {% for header in headers %}
+            <th>{{ header }}</th>
+            {% endfor %}
+            {% if row_actions %}
+            <th>İşlemler</th>
+            {% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr class="hover">
+            {% for cell in row %}
+            <td>{{ cell }}</td>
+            {% endfor %}
+            {% if row_actions %}
+            <td>
+              <div class="dropdown dropdown-end">
+                <label tabindex="0" class="btn btn-ghost btn-xs">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
+                  </svg>
+                </label>
+                <ul tabindex="0" class="dropdown-content menu shadow bg-base-100 rounded-box w-48">
+                  {% for action in row_actions %}
+                  <li><a href="{{ action.url }}" class="{{ action.class|default:'' }}">{{ action.label }}</a></li>
+                  {% endfor %}
+                </ul>
+              </div>
+            </td>
+            {% endif %}
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="{% if row_actions %}{{ headers|length|add:1 }}{% else %}{{ headers|length }}{% endif %}" class="text-center text-base-content/60">
+              Veri bulunamadı
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    
+    {% if pagination %}
+    <div class="flex justify-between items-center mt-4">
+      <span class="text-sm text-base-content/70">
+        {{ pagination.from }}-{{ pagination.to }} / {{ pagination.total }} kayıt
+      </span>
+      <div class="join">
+        <button class="join-item btn btn-sm {% if not pagination.has_previous %}btn-disabled{% endif %}">«</button>
+        <button class="join-item btn btn-sm">{{ pagination.current_page }}</button>
+        <button class="join-item btn btn-sm {% if not pagination.has_next %}btn-disabled{% endif %}">»</button>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>

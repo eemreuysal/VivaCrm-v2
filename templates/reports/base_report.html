@@ -1,0 +1,127 @@
+{% extends "base/base_dashboard.html" %}
+{% load static %}
+
+{% block title %}{% block report_title %}Raporlar{% endblock %} - VivaCRM{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <!-- Rapor Başlığı ve Filtreler -->
+    <div class="card bg-base-100 shadow-lg mb-6">
+        <div class="card-body">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h2 class="card-title text-2xl">{% block report_header %}Rapor Başlığı{% endblock %}</h2>
+                    <p class="text-base-content/70">{% block report_description %}Rapor açıklaması{% endblock %}</p>
+                </div>
+                
+                <!-- Aksiyon Butonları -->
+                <div class="flex gap-2">
+                    {% block report_actions %}
+                    <button class="btn btn-primary btn-sm" onclick="window.print()">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2z" />
+                        </svg>
+                        Yazdır
+                    </button>
+                    <div class="dropdown dropdown-end">
+                        <label tabindex="0" class="btn btn-success btn-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            İndir
+                        </label>
+                        <ul tabindex="0" class="dropdown-content z-50 menu p-2 shadow bg-base-100 rounded-box w-52">
+                            <li><a href="#" onclick="exportReport('pdf')">PDF olarak indir</a></li>
+                            <li><a href="#" onclick="exportReport('excel')">Excel olarak indir</a></li>
+                            <li><a href="#" onclick="exportReport('csv')">CSV olarak indir</a></li>
+                        </ul>
+                    </div>
+                    {% endblock %}
+                </div>
+            </div>
+            
+            <!-- Filtre Bölümü -->
+            {% block report_filters %}
+            <div class="divider"></div>
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">Başlangıç Tarihi</span>
+                    </label>
+                    <input type="date" class="input input-bordered" name="start_date" value="{{ filters.start_date }}">
+                </div>
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">Bitiş Tarihi</span>
+                    </label>
+                    <input type="date" class="input input-bordered" name="end_date" value="{{ filters.end_date }}">
+                </div>
+                {% block additional_filters %}{% endblock %}
+                <div class="form-control">
+                    <label class="label invisible">
+                        <span class="label-text">Filtrele</span>
+                    </label>
+                    <button class="btn btn-primary" onclick="applyFilters()">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                        </svg>
+                        Filtrele
+                    </button>
+                </div>
+            </div>
+            {% endblock %}
+        </div>
+    </div>
+    
+    <!-- Özet Kartları -->
+    {% block report_summary %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {% block summary_cards %}{% endblock %}
+    </div>
+    {% endblock %}
+    
+    <!-- Ana Rapor İçeriği -->
+    <div class="space-y-6">
+        {% block report_content %}
+        <!-- Varsayılan rapor içeriği -->
+        <div class="card bg-base-100 shadow-lg">
+            <div class="card-body">
+                <p class="text-center text-base-content/70">Rapor içeriği burada gösterilecek</p>
+            </div>
+        </div>
+        {% endblock %}
+    </div>
+</div>
+
+<!-- Rapor Export JavaScript -->
+<script>
+function applyFilters() {
+    const form = document.createElement('form');
+    form.method = 'GET';
+    
+    document.querySelectorAll('[name]').forEach(input => {
+        if (input.value) {
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = input.name;
+            hiddenInput.value = input.value;
+            form.appendChild(hiddenInput);
+        }
+    });
+    
+    document.body.appendChild(form);
+    form.submit();
+}
+
+function exportReport(format) {
+    const url = new URL(window.location);
+    url.searchParams.append('export', format);
+    window.location.href = url.toString();
+}
+</script>
+
+{% block extra_js %}
+<!-- Load ApexCharts library -->
+<script src="{% static 'js/vendor/apexcharts.min.js' %}"></script>
+{% endblock %}
+{% endblock %}

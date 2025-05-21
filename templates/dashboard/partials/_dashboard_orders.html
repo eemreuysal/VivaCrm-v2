@@ -1,0 +1,132 @@
+<!-- Recent Orders -->
+<div class="table-card card bg-base-100 shadow-xl hover-lift animate-fade-in" style="animation-delay: 0.6s;">
+    <div class="card-body p-4">
+        <div class="flex justify-between items-center mb-4">
+            <div class="flex items-center space-x-2">
+                <div class="btn-icon w-8 h-8 bg-primary/10 text-primary rounded-full flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                </div>
+                <h3 class="card-title text-lg font-semibold">Son Siparişler</h3>
+            </div>
+            
+            <a href="/orders/" class="btn btn-modern btn-sm btn-ghost hover:bg-primary/10">
+                Tümünü Gör
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </a>
+        </div>
+        
+        <!-- Orders Loading State -->
+        <div x-show="loading" class="loading-container w-full py-10">
+            <span class="loading loading-spinner loading-md text-primary"></span>
+            <span class="loading-text">Siparişler yükleniyor...</span>
+        </div>
+        
+        <!-- Desktop Table -->
+        <div x-show="!loading" class="table-responsive hidden md:block">
+            <table class="table table-zebra w-full">
+                <thead>
+                    <tr class="bg-base-200/50">
+                        <th class="rounded-tl-lg">Sipariş No</th>
+                        <th>Müşteri</th>
+                        <th>Tarih</th>
+                        <th>Toplam</th>
+                        <th class="rounded-tr-lg">Durum</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in recent_orders %}
+                    <tr class="table-row-hover">
+                        <td>
+                            <a href="{% url 'orders:order-detail' order.id %}" class="font-medium text-primary hover:underline">
+                                {{ order.order_number }}
+                            </a>
+                        </td>
+                        <td>{{ order.customer.name }}</td>
+                        <td>{{ order.created_at|date:"d.m.Y" }}</td>
+                        <td class="font-medium">{{ order.total_amount|floatformat:2 }} ₺</td>
+                        <td>
+                            <span class="badge 
+                                {% if order.status == 'pending' %}badge-warning{% endif %}
+                                {% if order.status == 'processing' %}badge-info{% endif %}
+                                {% if order.status == 'shipped' %}badge-secondary{% endif %}
+                                {% if order.status == 'delivered' %}badge-success{% endif %}
+                                {% if order.status == 'cancelled' %}badge-error{% endif %}
+                                {% if order.status == 'completed' %}badge-primary{% endif %}">
+                                {{ order.get_status_display }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5">
+                            <div class="empty-state py-6">
+                                <div class="empty-state-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                                    </svg>
+                                </div>
+                                <p>Henüz sipariş bulunmuyor</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Mobile Card View -->
+        <div x-show="!loading" class="block md:hidden space-y-4">
+            {% for order in recent_orders %}
+            <div class="card bg-base-200/20 p-3 rounded-xl hover:bg-base-200/50 transition-all duration-200">
+                <div class="flex justify-between items-start mb-2">
+                    <a href="{% url 'orders:order-detail' order.id %}" class="font-semibold text-primary hover:underline">
+                        {{ order.order_number }}
+                    </a>
+                    <span class="badge 
+                        {% if order.status == 'pending' %}badge-warning{% endif %}
+                        {% if order.status == 'processing' %}badge-info{% endif %}
+                        {% if order.status == 'shipped' %}badge-secondary{% endif %}
+                        {% if order.status == 'delivered' %}badge-success{% endif %}
+                        {% if order.status == 'cancelled' %}badge-error{% endif %}
+                        {% if order.status == 'completed' %}badge-primary{% endif %}">
+                        {{ order.get_status_display }}
+                    </span>
+                </div>
+                <div class="flex items-center text-sm text-base-content/70 mb-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-base-content/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    {{ order.customer.name }}
+                </div>
+                <div class="flex justify-between mt-2">
+                    <div class="flex items-center text-xs text-base-content/50">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        {{ order.created_at|date:"d.m.Y" }}
+                    </div>
+                    <div class="flex items-center font-semibold text-success">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-success/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        {{ order.total_amount|floatformat:2 }} ₺
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state py-8">
+                <div class="empty-state-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                    </svg>
+                </div>
+                <p>Henüz sipariş bulunmuyor</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>

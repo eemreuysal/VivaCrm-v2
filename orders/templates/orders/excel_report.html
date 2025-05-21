@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% trans "Sipariş Raporu Oluştur" %}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h1 class="card-title text-2xl mb-6">{% trans "Sipariş Raporu Oluştur" %}</h1>
+            
+            <div class="alert alert-info mb-5">
+                <div class="flex">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>{% trans "Sipariş verilerini Excel formatında raporlayabilirsiniz. Filtreleri kullanarak istediğiniz raporu oluşturabilirsiniz." %}</span>
+                </div>
+            </div>
+            
+            {% crispy form %}
+            
+            <div class="divider my-8">{% trans "Rapor Tipleri Hakkında" %}</div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="card bg-base-200">
+                    <div class="card-body">
+                        <h2 class="card-title">{% trans "Özet Rapor" %}</h2>
+                        <p>{% trans "Siparişlerin genel özeti. Her sipariş için tek satır bilgi içerir: sipariş numarası, tarih, müşteri, tutar, durum vb." %}</p>
+                    </div>
+                </div>
+                
+                <div class="card bg-base-200">
+                    <div class="card-body">
+                        <h2 class="card-title">{% trans "Detaylı Rapor" %}</h2>
+                        <p>{% trans "Siparişlerin detaylı dökümü. Her sipariş kalemi için ayrı satır içerir: ürün bilgileri, birim fiyat, miktar, satır tutarı vb." %}</p>
+                    </div>
+                </div>
+                
+                <div class="card bg-base-200">
+                    <div class="card-body">
+                        <h2 class="card-title">{% trans "Ürün Bazlı Rapor" %}</h2>
+                        <p>{% trans "Ürünlerin satış performansı analizi. Her ürün için toplam sipariş sayısı, satış miktarı, toplam tutar ve diğer metrikler." %}</p>
+                    </div>
+                </div>
+                
+                <div class="card bg-base-200">
+                    <div class="card-body">
+                        <h2 class="card-title">{% trans "Müşteri Bazlı Rapor" %}</h2>
+                        <p>{% trans "Müşteri bazında satış analizi. Her müşteri için toplam sipariş sayısı, toplam tutar, ortalama sipariş tutarı ve diğer metrikler." %}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Tarih filtre yardımcısı
+        const startDateField = document.getElementById('id_start_date');
+        const endDateField = document.getElementById('id_end_date');
+        
+        if (startDateField && endDateField) {
+            startDateField.addEventListener('change', function() {
+                if (endDateField.value && new Date(startDateField.value) > new Date(endDateField.value)) {
+                    endDateField.value = startDateField.value;
+                }
+            });
+            
+            endDateField.addEventListener('change', function() {
+                if (startDateField.value && new Date(endDateField.value) < new Date(startDateField.value)) {
+                    startDateField.value = endDateField.value;
+                }
+            });
+        }
+        
+        // Rapor tipi değiştikçe açıklama göster
+        const reportTypeField = document.getElementById('id_report_type');
+        const reportDescriptions = {
+            'summary': '{% trans "Siparişlerin genel özeti. Her sipariş için tek satır bilgi içerir." %}',
+            'detailed': '{% trans "Siparişlerin detaylı dökümü. Her sipariş kalemi için ayrı satır içerir." %}',
+            'products': '{% trans "Ürünlerin satış performansı analizi. Her ürün için toplam sipariş sayısı, satış miktarı vb." %}',
+            'customers': '{% trans "Müşteri bazında satış analizi. Her müşteri için toplam sipariş sayısı, toplam tutar vb." %}'
+        };
+        
+        if (reportTypeField) {
+            reportTypeField.addEventListener('change', function() {
+                const selectedValue = this.value || 'summary';
+                const description = reportDescriptions[selectedValue] || '';
+                
+                // Açıklama alanını güncelle
+                let descriptionEl = document.getElementById('report-type-description');
+                if (!descriptionEl) {
+                    descriptionEl = document.createElement('div');
+                    descriptionEl.id = 'report-type-description';
+                    descriptionEl.className = 'text-sm mt-1 text-info';
+                    this.parentNode.appendChild(descriptionEl);
+                }
+                
+                descriptionEl.textContent = description;
+            });
+            
+            // Sayfa yüklendiğinde açıklamayı göster
+            reportTypeField.dispatchEvent(new Event('change'));
+        }
+    });
+</script>
+{% endblock %}

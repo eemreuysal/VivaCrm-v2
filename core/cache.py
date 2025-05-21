@@ -114,6 +114,25 @@ def cache_method(timeout: int = 3600, key_prefix: Optional[str] = None):
     return decorator
 
 
+def cache_key_function(func):
+    """
+    Decorator to mark a function as a cache key generator.
+    
+    This is a simple decorator that doesn't modify the function's behavior
+    but signals that the function is used for generating cache keys.
+    
+    Args:
+        func: The function to decorate
+        
+    Returns:
+        callable: The original function, unmodified
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        return func(*args, **kwargs)
+    return wrapper
+
+
 def cache_function(timeout: int = 3600, key_prefix: Optional[str] = None):
     """
     Cache the result of a function.
@@ -306,13 +325,14 @@ def invalidate_cache_prefix(prefix: str):
     Args:
         prefix: The prefix of the cache keys to invalidate
     """
+    from django.conf import settings
+    
     if not settings.CACHES['default']['BACKEND'].endswith('.RedisCache'):
         logger.warning("Cannot invalidate keys by prefix with non-Redis backend")
         return
     
     # Import here to avoid requiring redis as a dependency for the module
     import redis
-    from django.conf import settings
     
     # Parse the Redis location from the settings
     location = settings.CACHES['default'].get('LOCATION', 'redis://localhost:6379/1')

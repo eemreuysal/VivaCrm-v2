@@ -1,6 +1,12 @@
 from rest_framework import serializers
 from products.models import Category, Product, ProductImage, ProductAttribute, ProductAttributeValue, StockMovement
 from django.contrib.auth import get_user_model
+try:
+    from core.api_optimizations import DynamicFieldsMixin, OptimizedModelSerializer
+except ImportError:
+    # Fallback if optimization not available
+    DynamicFieldsMixin = object
+    OptimizedModelSerializer = serializers.ModelSerializer
 
 User = get_user_model()
 
@@ -110,8 +116,8 @@ class StockMovementSerializer(serializers.ModelSerializer):
         return obj.get_movement_type_display()
 
 
-class ProductSerializer(serializers.ModelSerializer):
-    """Serializer for products."""
+class ProductSerializer(OptimizedModelSerializer):
+    """Serializer for products with dynamic field selection."""
     category_name = serializers.SerializerMethodField()
     tax_amount = serializers.ReadOnlyField()
     price_with_tax = serializers.ReadOnlyField()
@@ -133,6 +139,10 @@ class ProductSerializer(serializers.ModelSerializer):
         return obj.category.name if obj.category else None
     
     def get_primary_image(self, obj):
+        # Only fetch primary image if specifically requested
+        if 'primary_image' not in self.fields:
+            return None
+            
         primary_image = obj.images.filter(is_primary=True).first()
         if primary_image:
             return ProductImageSerializer(primary_image).data

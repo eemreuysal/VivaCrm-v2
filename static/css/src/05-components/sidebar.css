@@ -1,0 +1,122 @@
+/* Sidebar Bileşeni Stilleri */
+
+.drawer-side aside {
+  @apply bg-base-200 w-64 min-h-screen glass-effect shadow-2xl;
+}
+
+.sidebar-brand {
+  @apply p-4 bg-gradient-to-r from-primary to-primary-focus;
+}
+
+.sidebar-logo {
+  @apply w-10 h-10 rounded-full bg-white/20 flex items-center justify-center backdrop-blur;
+}
+
+.sidebar-logo-text {
+  @apply text-white font-bold text-xl;
+}
+
+.sidebar-title {
+  @apply text-xl font-bold text-white;
+}
+
+.sidebar-subtitle {
+  @apply text-xs text-white/80;
+}
+
+/* Menu Items */
+.menu-title > span {
+  @apply text-xs uppercase;
+}
+
+/* Active Menu Item */
+.menu li > a.active {
+  @apply bg-primary text-primary-content;
+}
+
+/* Has Active Child */
+.has-active-child > details > summary {
+  @apply font-semibold;
+}
+
+/* Theme Toggle */
+.theme-toggle-container {
+  @apply p-4 mt-auto;
+}
+
+.theme-toggle-box {
+  @apply form-control bg-base-300 rounded-box p-3;
+}
+
+/* Hover Effect */
+.hover-lift {
+  @apply transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-md;
+}
+
+/* Glass Effect */
+.glass-effect {
+  @apply backdrop-blur-sm bg-opacity-80 border border-base-300/50;
+}
+
+/* Admin Sidebar Collapsed State */
+.admin-sidebar {
+  width: 280px;
+  min-height: 100vh;
+  transition: all 0.3s ease;
+}
+
+.admin-sidebar.collapsed {
+  width: 80px;
+}
+
+.admin-content {
+  width: calc(100% - 280px);
+  transition: all 0.3s ease;
+}
+
+.admin-content.expanded {
+  width: calc(100% - 80px);
+}
+
+@media (max-width: 1024px) {
+  .admin-sidebar {
+    width: 0;
+    position: fixed;
+    z-index: 40;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    transform: translateX(-100%);
+  }
+  
+  .admin-content {
+    width: 100%;
+  }
+  
+  .admin-sidebar.open {
+    width: 280px;
+    transform: translateX(0);
+  }
+}
+
+.sidebar-link {
+  @apply flex items-center gap-2 p-3 rounded-lg transition-all duration-200 relative;
+}
+
+.sidebar-link:hover {
+  @apply bg-primary/10;
+}
+
+.sidebar-link.active {
+  @apply bg-primary/10 text-primary font-medium;
+}
+
+.sidebar-link.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background-color: theme('colors.primary.DEFAULT');
+  border-top-right-radius: theme('borderRadius.lg');
+  border-bottom-right-radius: theme('borderRadius.lg');
+}

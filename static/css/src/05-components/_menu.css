@@ -1,0 +1,55 @@
+/**
+ * VivaCRM Menu Component Styles
+ * Tailwind utility classes ile uyumlu çalışacak şekilde düzenlendi
+ */
+
+/* Menu Base Styles */
+.menu {
+  @apply space-y-0.5;
+}
+
+/* Menu Item Base */
+.menu-item {
+  @apply relative;
+}
+
+/* Menu Link Base */
+.menu-link {
+  @apply flex items-center gap-3 px-3 py-2 rounded-lg transition-colors duration-200;
+}
+
+/* Menu Active State - !important kullanmadan */
+.menu-link.active {
+  @apply bg-green-500 text-white;
+}
+
+.menu-link:not(.active):hover {
+  @apply bg-gray-200/80;
+}
+
+/* Sub-menu Styles */
+.menu-submenu {
+  @apply ml-3 mt-1 space-y-0.5;
+}
+
+.menu-submenu .menu-link {
+  @apply text-sm;
+}
+
+/* Parent Item with Active Child */
+.menu-item.has-active-child > .menu-link {
+  @apply bg-green-500/10 text-green-500;
+}
+
+/* Dark Mode Support - dark-mode.css dosyasına taşındı */
+
+/* Mobile Menu Adjustments */
+@media (max-width: 1023px) {
+  .menu-link {
+    @apply px-4 py-3;
+  }
+  
+  .menu-submenu {
+    @apply ml-0 border-l-2 border-gray-200 pl-4;
+  }
+}

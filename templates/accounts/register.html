@@ -1,43 +1,428 @@
 {% extends "base/base_auth.html" %}
-{% load crispy_forms_tags %}
 {% load static %}
 
-{% block title %}Kayıt Ol - VivaCRM{% endblock %}
+{% block extra_css %}
+<!-- Ensure Tailwind CSS is loaded -->
+<link rel="stylesheet" href="{% static 'css/dist/main.css' %}">
+{{ block.super }}
+{% endblock %}
+
+{% block title %}Kayıt Ol{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center">
-  <div class="max-w-md w-full">
-    <div class="card bg-base-100 shadow-xl">
+<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 auth-page-background">
+  <div class="max-w-md w-full space-y-8 auth-animation">
+    <!-- Logo ve Başlık -->
+    <div class="text-center">
+      <img src="{% static 'img/vivacrm-logo-transparent.png' %}" alt="VivaCRM" class="h-20 mx-auto">
+      <h2 class="mt-6 text-3xl font-extrabold text-base-content">
+        VivaCRM'e Kaydolun
+      </h2>
+      <p class="mt-2 text-sm text-base-content/70">
+        Hesap oluşturarak VivaCRM'i kullanmaya başlayın
+      </p>
+    </div>
+    
+    <!-- Kayıt Formu -->
+    <div class="card bg-base-100 shadow-xl auth-card">
       <div class="card-body">
-        <div class="text-center mb-6">
-          <img src="{% static 'img/vivacrm-logo.png' %}" alt="VivaCRM" class="h-12 mx-auto" />
-          <h2 class="text-2xl font-bold mt-4">VivaCRM'e Kayıt Ol</h2>
-          <p class="text-base-content opacity-70 text-sm mt-1">Yeni bir hesap oluşturun</p>
-        </div>
-        
-        <form method="post" hx-boost="false">
-          {% csrf_token %}
-          {{ form|crispy }}
+        <!-- Alpine.js ile form yönetimi - Inline bileşen kullanımı -->
+        <form 
+          x-data="{
+            formData: {
+              username: '',
+              email: '',
+              first_name: '',
+              last_name: '',
+              password1: '',
+              password2: '',
+              terms_accepted: false
+            },
+            showPassword1: false,
+            showPassword2: false,
+            isSubmitting: false,
+            errorMessage: '',
+            errors: {},
+            
+            init() {
+              // Varsa URL'den hata parametrelerini analiz et
+              const urlParams = new URLSearchParams(window.location.search);
+              if (urlParams.has('error')) {
+                this.errorMessage = decodeURIComponent(urlParams.get('error'));
+              }
+            },
+            
+            // Form gönderme işlemi
+            submitForm() {
+              if (!this.validateForm()) {
+                return;
+              }
+              
+              this.isSubmitting = true;
+              this.errorMessage = '';
+              this.errors = {};
+              
+              // Form verilerini hazırla
+              const form = new FormData();
+              for (const key in this.formData) {
+                if (key === 'terms_accepted' && this.formData[key]) {
+                  form.append(key, 'on');
+                } else {
+                  form.append(key, this.formData[key]);
+                }
+              }
+              form.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+              
+              // Fetch API ile form gönder
+              fetch(window.location.href, {
+                method: 'POST',
+                body: form,
+                headers: {
+                  'X-Requested-With': 'XMLHttpRequest'
+                }
+              })
+              .then(response => {
+                if (response.redirected) {
+                  // Başarılı kayıt, yönlendirme URL'sine git
+                  window.location.href = response.url;
+                  return;
+                }
+                
+                if (response.headers.get('content-type')?.includes('application/json')) {
+                  // JSON yanıtını parse et
+                  return response.json().then(data => {
+                    // Hata durumunda
+                    if (data.errors) {
+                      this.errors = data.errors;
+                    }
+                    
+                    if (data.error) {
+                      this.errorMessage = data.error;
+                    } else if (data.__all__) {
+                      // Django form genel hataları
+                      this.errorMessage = Array.isArray(data.__all__) ? data.__all__[0] : data.__all__;
+                    }
+                    
+                    // İşlem tamamlandı
+                    this.isSubmitting = false;
+                  });
+                }
+                
+                // HTML yanıtı - normal form gönderimi
+                // Form başarısız oldu, sayfa yeniden yüklenecek
+                document.querySelector('form').submit();
+              })
+              .catch(error => {
+                console.error('Registration error:', error);
+                this.errorMessage = 'Kayıt sırasında bir hata oluştu. Lütfen tekrar deneyin.';
+                this.isSubmitting = false;
+              });
+            },
+            
+            // Form doğrulama
+            validateForm() {
+              this.errors = {};
+              let isValid = true;
+              
+              // Kullanıcı adı doğrulama
+              if (!this.formData.username.trim()) {
+                this.errors.username = 'Kullanıcı adı gereklidir';
+                isValid = false;
+              } else if (this.formData.username.length < 3) {
+                this.errors.username = 'Kullanıcı adı en az 3 karakter olmalıdır';
+                isValid = false;
+              }
+              
+              // Email doğrulama
+              const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+              if (!this.formData.email.trim()) {
+                this.errors.email = 'E-posta adresi gereklidir';
+                isValid = false;
+              } else if (!emailRegex.test(this.formData.email)) {
+                this.errors.email = 'Geçerli bir e-posta adresi giriniz';
+                isValid = false;
+              }
+              
+              // Ad ve soyad doğrulama (opsiyonel)
+              if (this.formData.first_name.trim() && this.formData.first_name.length < 2) {
+                this.errors.first_name = 'Ad en az 2 karakter olmalıdır';
+                isValid = false;
+              }
+              
+              if (this.formData.last_name.trim() && this.formData.last_name.length < 2) {
+                this.errors.last_name = 'Soyad en az 2 karakter olmalıdır';
+                isValid = false;
+              }
+              
+              // Şifre doğrulama
+              if (!this.formData.password1) {
+                this.errors.password1 = 'Şifre gereklidir';
+                isValid = false;
+              } else if (this.formData.password1.length < 8) {
+                this.errors.password1 = 'Şifre en az 8 karakter olmalıdır';
+                isValid = false;
+              }
+              
+              // Şifre eşleştirme doğrulama
+              if (!this.formData.password2) {
+                this.errors.password2 = 'Şifre onayı gereklidir';
+                isValid = false;
+              } else if (this.formData.password1 !== this.formData.password2) {
+                this.errors.password2 = 'Şifreler eşleşmiyor';
+                isValid = false;
+              }
+              
+              // Şartlar ve koşullar onayı
+              if (!this.formData.terms_accepted) {
+                this.errors.terms_accepted = 'Şartları ve koşulları kabul etmelisiniz';
+                isValid = false;
+              }
+              
+              return isValid;
+            },
+            
+            // Şifre görünürlüğünü değiştir
+            togglePassword1Visibility() {
+              this.showPassword1 = !this.showPassword1;
+            },
+            
+            // Şifre onayı görünürlüğünü değiştir
+            togglePassword2Visibility() {
+              this.showPassword2 = !this.showPassword2;
+            }
+          }"
+          x-init="init"
+          @submit.prevent="submitForm"
+          method="post" 
+          class="space-y-6">
           
-          <div class="form-control mt-6">
-            <button type="submit" class="btn btn-primary w-full">KAYIT OL</button>
+          {% csrf_token %}
+          
+          <!-- Hata Mesajı Alanı -->
+          <div 
+            x-show="errorMessage" 
+            x-transition 
+            class="alert alert-error shadow-lg">
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <span x-text="errorMessage"></span>
+            </div>
           </div>
           
-          <div class="divider text-xs text-base-content opacity-50 my-4">VEYA</div>
+          <!-- Kullanıcı Adı -->
+          <div class="form-control">
+            <label for="id_username" class="label">
+              <span class="label-text">Kullanıcı Adı <span class="text-error">*</span></span>
+            </label>
+            <input 
+              type="text" 
+              id="id_username" 
+              name="username" 
+              x-model="formData.username"
+              autocomplete="username"
+              required 
+              class="input input-bordered w-full"
+              :class="{'input-error': errors.username}">
+            <label class="label" x-show="errors.username">
+              <span class="label-text-alt text-error" x-text="errors.username"></span>
+            </label>
+          </div>
           
-          <div class="text-sm text-center">
-            Zaten hesabınız var mı?
-            <a href="{% url 'accounts:login' %}" class="text-primary hover:underline">
-              Giriş Yap
+          <!-- E-posta -->
+          <div class="form-control">
+            <label for="id_email" class="label">
+              <span class="label-text">E-posta <span class="text-error">*</span></span>
+            </label>
+            <input 
+              type="email" 
+              id="id_email" 
+              name="email" 
+              x-model="formData.email"
+              autocomplete="email"
+              required 
+              class="input input-bordered w-full"
+              :class="{'input-error': errors.email}">
+            <label class="label" x-show="errors.email">
+              <span class="label-text-alt text-error" x-text="errors.email"></span>
+            </label>
+          </div>
+          
+          <!-- İsim ve Soyisim - Yan yana -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- İsim -->
+            <div class="form-control">
+              <label for="id_first_name" class="label">
+                <span class="label-text">Adı</span>
+              </label>
+              <input 
+                type="text" 
+                id="id_first_name" 
+                name="first_name" 
+                x-model="formData.first_name"
+                autocomplete="given-name"
+                class="input input-bordered w-full"
+                :class="{'input-error': errors.first_name}">
+              <label class="label" x-show="errors.first_name">
+                <span class="label-text-alt text-error" x-text="errors.first_name"></span>
+              </label>
+            </div>
+            
+            <!-- Soyisim -->
+            <div class="form-control">
+              <label for="id_last_name" class="label">
+                <span class="label-text">Soyadı</span>
+              </label>
+              <input 
+                type="text" 
+                id="id_last_name" 
+                name="last_name" 
+                x-model="formData.last_name"
+                autocomplete="family-name"
+                class="input input-bordered w-full"
+                :class="{'input-error': errors.last_name}">
+              <label class="label" x-show="errors.last_name">
+                <span class="label-text-alt text-error" x-text="errors.last_name"></span>
+              </label>
+            </div>
+          </div>
+          
+          <!-- Şifre -->
+          <div class="form-control">
+            <label for="id_password1" class="label">
+              <span class="label-text">Şifre <span class="text-error">*</span></span>
+            </label>
+            <div class="relative">
+              <input 
+                :type="showPassword1 ? 'text' : 'password'" 
+                id="id_password1" 
+                name="password1"
+                x-model="formData.password1"
+                autocomplete="new-password"
+                required 
+                class="input input-bordered w-full pr-10"
+                :class="{'input-error': errors.password1}">
+              <button 
+                type="button" 
+                @click="togglePassword1Visibility()" 
+                class="absolute inset-y-0 right-0 pr-3 flex items-center text-base-content/50 hover:text-base-content">
+                <svg x-show="!showPassword1" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                <svg x-show="showPassword1" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                </svg>
+              </button>
+            </div>
+            <label class="label" x-show="errors.password1">
+              <span class="label-text-alt text-error" x-text="errors.password1"></span>
+            </label>
+            <p class="text-xs text-base-content/70 mt-1">
+              En az 8 karakter uzunluğunda olmalı ve rakam, harf karışık içermelidir.
+            </p>
+          </div>
+          
+          <!-- Şifre Tekrarı -->
+          <div class="form-control">
+            <label for="id_password2" class="label">
+              <span class="label-text">Şifre (Tekrar) <span class="text-error">*</span></span>
+            </label>
+            <div class="relative">
+              <input 
+                :type="showPassword2 ? 'text' : 'password'" 
+                id="id_password2" 
+                name="password2"
+                x-model="formData.password2"
+                autocomplete="new-password"
+                required 
+                class="input input-bordered w-full pr-10"
+                :class="{'input-error': errors.password2}">
+              <button 
+                type="button" 
+                @click="togglePassword2Visibility()" 
+                class="absolute inset-y-0 right-0 pr-3 flex items-center text-base-content/50 hover:text-base-content">
+                <svg x-show="!showPassword2" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                <svg x-show="showPassword2" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                </svg>
+              </button>
+            </div>
+            <label class="label" x-show="errors.password2">
+              <span class="label-text-alt text-error" x-text="errors.password2"></span>
+            </label>
+          </div>
+          
+          <!-- Şartlar ve Koşullar Onayı -->
+          <div class="form-control mt-4">
+            <label class="flex items-start gap-2 cursor-pointer">
+              <input 
+                type="checkbox"
+                id="id_terms_accepted"
+                name="terms_accepted" 
+                x-model="formData.terms_accepted"
+                class="checkbox checkbox-primary mt-1" 
+                :class="{'checkbox-error': errors.terms_accepted}">
+              <span class="label-text">
+                <a href="#" class="link link-primary">Şartlar ve Koşullar</a>'ı okudum ve kabul ediyorum.
+                <span class="text-error">*</span>
+              </span>
+            </label>
+            <label class="label" x-show="errors.terms_accepted">
+              <span class="label-text-alt text-error" x-text="errors.terms_accepted"></span>
+            </label>
+          </div>
+          
+          <!-- Kayıt Butonu -->
+          <div class="form-control mt-6">
+            <button 
+              type="submit" 
+              class="btn btn-primary w-full" 
+              :disabled="isSubmitting">
+              <span x-show="isSubmitting" class="loading loading-spinner mr-2"></span>
+              KAYIT OL
+            </button>
+          </div>
+          
+          <!-- Giriş Sayfasına Yönlendirme -->
+          <div class="text-center mt-4">
+            <span class="text-sm text-base-content/70">Zaten hesabınız var mı?</span>
+            <a href="{% url 'accounts:login' %}" class="text-sm link link-primary ml-1">
+              Giriş Yapın
             </a>
           </div>
         </form>
       </div>
     </div>
     
-    <div class="text-center mt-6 text-xs text-base-content opacity-60">
-      © 2025 VivaCRM | <a href="#" class="hover:underline">Koşullar</a> | <a href="#" class="hover:underline">Gizlilik</a>
+    <!-- Alt Bilgi -->
+    <div class="text-center mt-6">
+      <p class="text-xs text-base-content/60">
+        &copy; {% now "Y" %} VivaCRM | 
+        <a href="#" class="link link-hover">Koşullar</a> | 
+        <a href="#" class="link link-hover">Gizlilik</a>
+      </p>
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Kayıt sayfası için temayı ayarla - light temayı tercih et
+  document.addEventListener('DOMContentLoaded', function() {
+    if (typeof Alpine !== 'undefined' && Alpine.store && Alpine.store('theme')) {
+      // Açık temaya zorla ve temayı uygula
+      Alpine.store('theme').applyTheme('light');
+      
+      // Tema geçiş butonlarını gizle
+      const themeToggles = document.querySelectorAll('.theme-toggle-btn');
+      themeToggles.forEach(toggle => {
+        toggle.style.display = 'none';
+      });
+    }
+  });
+</script>
 {% endblock %}

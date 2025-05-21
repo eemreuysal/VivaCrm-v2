@@ -1,97 +1,84 @@
 {% extends 'base/base_dashboard.html' %}
-{% load static %}
+{% load i18n %}
 
-{% block title %}Import Results{% endblock %}
+{% block title %}Ürün İçe Aktarma Sonuçları{% endblock %}
 
 {% block content %}
-<div class="p-4">
+<div class="container mx-auto px-4 py-6">
     <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold">Product Import Results</h1>
-        <div>
-            <a href="{% url 'products:product_list' %}" class="btn btn-outline">
-                <i class="fas fa-arrow-left mr-2"></i> Back to Products
-            </a>
-        </div>
+        <h1 class="text-2xl font-bold">Ürün İçe Aktarma Sonuçları</h1>
+        <a href="{% url 'products:product-list' %}" class="btn btn-outline">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+            </svg>
+            Ürünlere Dön
+        </a>
     </div>
 
-    {% include 'components/card.html' with title="Import Summary" %}
-        <div class="p-6">
-            <div class="stats stats-vertical lg:stats-horizontal shadow w-full mb-6">
+    {% if errors %}
+        <!-- Yeni hata yönetimi komponentini kullan -->
+        {% include 'components/excel_errors.html' %}
+    {% else %}
+        <!-- Eski hata gösterimi (geriye uyumluluk için) -->
+        <div class="bg-base-100 shadow-lg rounded-lg p-6">
+            <div class="stats shadow mb-6 w-full">
                 <div class="stat">
-                    <div class="stat-figure text-success">
-                        <i class="fas fa-check-circle text-3xl"></i>
-                    </div>
-                    <div class="stat-title">Successful</div>
-                    <div class="stat-value text-success">{{ success_count }}</div>
-                    <div class="stat-desc">Products successfully imported</div>
-                </div>
-                
-                <div class="stat">
-                    <div class="stat-figure text-error">
-                        <i class="fas fa-exclamation-circle text-3xl"></i>
-                    </div>
-                    <div class="stat-title">Errors</div>
-                    <div class="stat-value text-error">{{ error_count }}</div>
-                    <div class="stat-desc">Failed imports</div>
-                </div>
-                
-                <div class="stat">
-                    <div class="stat-figure text-primary">
-                        <i class="fas fa-table text-3xl"></i>
-                    </div>
-                    <div class="stat-title">Total</div>
+                    <div class="stat-title">Toplam</div>
                     <div class="stat-value">{{ total }}</div>
-                    <div class="stat-desc">Total rows processed</div>
+                    <div class="stat-desc">Toplam satır sayısı</div>
+                </div>
+                
+                <div class="stat">
+                    <div class="stat-title">Başarılı</div>
+                    <div class="stat-value text-success">{{ success_count }}</div>
+                    <div class="stat-desc">Başarıyla içe aktarılan</div>
+                </div>
+                
+                <div class="stat">
+                    <div class="stat-title">Hata</div>
+                    <div class="stat-value text-error">{{ error_count }}</div>
+                    <div class="stat-desc">Hata nedeniyle atlanılan</div>
                 </div>
             </div>
-            
+
             {% if error_count > 0 %}
-                <div class="mt-6">
-                    <h3 class="text-lg font-semibold mb-2">Error Details</h3>
-                    <div class="overflow-x-auto">
-                        <table class="table table-zebra w-full">
-                            <thead>
-                                <tr>
-                                    <th>Row</th>
-                                    <th>Error Message</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for error in error_details %}
-                                <tr>
-                                    <td>{{ error|slice:":5" }}</td>
-                                    <td class="text-error">{{ error|slice:"5:" }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="card-title text-error">Hatalar</h2>
+                        <div class="overflow-x-auto">
+                            <table class="table table-zebra w-full">
+                                <thead>
+                                    <tr>
+                                        <th>Satır</th>
+                                        <th>Hata Mesajı</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for error in error_details %}
+                                        <tr>
+                                            <td>{{ error|slice:":5" }}</td>
+                                            <td class="text-error">{{ error|slice:"5:" }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </div>
-                
-                <div class="mt-6">
-                    <p class="mb-2">What would you like to do next?</p>
-                    <div class="flex space-x-2">
-                        <a href="{% url 'products:product_import' %}" class="btn btn-primary">
-                            <i class="fas fa-upload mr-2"></i> Try Another Import
-                        </a>
-                        <a href="{% url 'products:product_list' %}" class="btn btn-outline">
-                            <i class="fas fa-list mr-2"></i> Go to Product List
-                        </a>
-                    </div>
-                </div>
-            {% else %}
-                <div class="alert alert-success">
-                    <i class="fas fa-check-circle"></i>
-                    <span>All products were imported successfully!</span>
-                </div>
-                
-                <div class="flex justify-end mt-6">
-                    <a href="{% url 'products:product_list' %}" class="btn btn-primary">
-                        <i class="fas fa-list mr-2"></i> Go to Product List
-                    </a>
                 </div>
             {% endif %}
+
+            <div class="flex justify-end space-x-4 mt-6">
+                <a href="{% url 'products:product-import' %}" class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                    Yeni Dosya Yükle
+                </a>
+                <a href="{% url 'products:product-list' %}" class="btn">
+                    Ürün Listesine Dön
+                </a>
+            </div>
         </div>
-    {% include 'components/card_end.html' %}
+    {% endif %}
 </div>
 {% endblock %}

@@ -1,0 +1,63 @@
+/* Bildirim Bileşeni Stilleri */
+
+.notification-dropdown {
+  @apply fixed top-16 right-4 z-50 w-96 card bg-base-100 shadow-2xl glass-effect;
+}
+
+.notification-item {
+  @apply alert py-2;
+}
+
+.notification-title {
+  @apply font-bold text-sm;
+}
+
+.notification-desc {
+  @apply text-xs;
+}
+
+.notification-badge {
+  @apply badge badge-xs badge-primary indicator-item;
+}
+
+/* Notification Types */
+.notification-item.info {
+  @apply alert-info;
+}
+
+.notification-item.warning {
+  @apply alert-warning;
+}
+
+.notification-item.success {
+  @apply alert-success;
+}
+
+.notification-item.error {
+  @apply alert-error;
+}
+
+/* Transition Effects */
+.notification-enter {
+  @apply transition ease-out duration-200;
+}
+
+.notification-enter-start {
+  @apply opacity-0 transform scale-90;
+}
+
+.notification-enter-end {
+  @apply opacity-100 transform scale-100;
+}
+
+.notification-leave {
+  @apply transition ease-in duration-100;
+}
+
+.notification-leave-start {
+  @apply opacity-100 transform scale-100;
+}
+
+.notification-leave-end {
+  @apply opacity-0 transform scale-90;
+}

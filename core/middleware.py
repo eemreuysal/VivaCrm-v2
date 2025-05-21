@@ -7,12 +7,14 @@ import logging
 import re
 import time
 import json
+import uuid
 from django.utils import timezone
 from django.conf import settings
-from django.http import HttpRequest, HttpResponse, JsonResponse
+from django.http import HttpRequest, HttpResponse, JsonResponse, HttpResponseForbidden
 from django.utils.deprecation import MiddlewareMixin
 from django.contrib.auth import get_user_model
 from django.urls import resolve, Resolver404
+from django.core.cache import cache
 from core.query_optimizer import QueryCountMiddleware
 from core.logging_filters import TraceIdMiddleware, get_current_trace_id
 
@@ -224,3 +226,172 @@ class APIAccessLoggingMiddleware:
         else:
             ip = request.META.get('REMOTE_ADDR', 'unknown')
         return ip
+
+
+class SecurityHeadersMiddleware:
+    """
+    Middleware to add security headers to responses.
+    """
+    def __init__(self, get_response):
+        self.get_response = get_response
+    
+    def __call__(self, request):
+        response = self.get_response(request)
+        
+        # Content Security Policy
+        csp = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com; "
+            "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; "
+            "img-src 'self' data: https:; "
+            "font-src 'self' https://cdnjs.cloudflare.com; "
+            "connect-src 'self'; "
+            "media-src 'self'; "
+            "object-src 'none'; "
+            "frame-ancestors 'none'; "
+            "base-uri 'self'; "
+            "form-action 'self';"
+        )
+        response['Content-Security-Policy'] = csp
+        
+        # Diğer güvenlik başlıkları
+        response['X-Content-Type-Options'] = 'nosniff'
+        response['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        response['Feature-Policy'] = (
+            "accelerometer 'none'; "
+            "camera 'none'; "
+            "geolocation 'none'; "
+            "gyroscope 'none'; "
+            "magnetometer 'none'; "
+            "microphone 'none'; "
+            "payment 'none'; "
+            "usb 'none'"
+        )
+        response['Permissions-Policy'] = (
+            "accelerometer=(), "
+            "camera=(), "
+            "geolocation=(), "
+            "gyroscope=(), "
+            "magnetometer=(), "
+            "microphone=(), "
+            "payment=(), "
+            "usb=()"
+        )
+        
+        return response
+
+
+class RequestIDMiddleware:
+    """
+    Middleware to add unique request ID to each request for tracking.
+    """
+    def __init__(self, get_response):
+        self.get_response = get_response
+    
+    def __call__(self, request):
+        # Generate unique request ID
+        request_id = str(uuid.uuid4())
+        request.id = request_id
+        
+        # Add to logging context
+        logger.info(f"Request {request_id}: {request.method} {request.path}")
+        
+        # Process request
+        response = self.get_response(request)
+        
+        # Add request ID to response headers
+        response['X-Request-ID'] = request_id
+        
+        return response
+
+
+class RateLimitMiddleware:
+    """
+    Simple rate limiting middleware using cache.
+    """
+    def __init__(self, get_response):
+        self.get_response = get_response
+        self.rate_limit = getattr(settings, 'RATE_LIMIT', 100)  # requests per minute
+        self.rate_window = 60  # seconds
+    
+    def __call__(self, request):
+        # Skip for authenticated users (they may have different limits)
+        if request.user.is_authenticated:
+            return self.get_response(request)
+        
+        # Get client IP
+        client_ip = self._get_client_ip(request)
+        cache_key = f'rate_limit:{client_ip}'
+        
+        # Get current count
+        current_count = cache.get(cache_key, 0)
+        
+        # Check rate limit
+        if current_count >= self.rate_limit:
+            logger.warning(f"Rate limit exceeded for IP {client_ip}")
+            response = JsonResponse(
+                {'error': 'Rate limit exceeded. Please try again later.'},
+                status=429
+            )
+            response['Retry-After'] = str(self.rate_window)
+            return response
+        
+        # Increment counter
+        cache.set(cache_key, current_count + 1, self.rate_window)
+        
+        # Process request
+        response = self.get_response(request)
+        
+        # Add rate limit headers
+        response['X-RateLimit-Limit'] = str(self.rate_limit)
+        response['X-RateLimit-Remaining'] = str(self.rate_limit - current_count - 1)
+        response['X-RateLimit-Reset'] = str(int(time.time()) + self.rate_window)
+        
+        return response
+    
+    def _get_client_ip(self, request):
+        """Get the client IP address from the request."""
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0].strip()
+        else:
+            ip = request.META.get('REMOTE_ADDR', 'unknown')
+        return ip
+
+
+class HealthCheckMiddleware:
+    """
+    Middleware to handle health check requests without hitting the main app.
+    """
+    def __init__(self, get_response):
+        self.get_response = get_response
+    
+    def __call__(self, request):
+        # Health check endpoint
+        if request.path == '/health/':
+            # Basic health check - just return OK
+            # In production, you might want to check database, cache, etc.
+            return JsonResponse({'status': 'ok', 'timestamp': timezone.now().isoformat()})
+        
+        # Liveness check (Kubernetes)
+        if request.path == '/health/live/':
+            return JsonResponse({'status': 'alive'})
+        
+        # Readiness check (Kubernetes)
+        if request.path == '/health/ready/':
+            # Check if the app is ready to serve requests
+            try:
+                # Check database connection
+                from django.db import connection
+                connection.cursor().execute('SELECT 1')
+                
+                # Check cache connection
+                cache.set('health_check', 'ok', 10)
+                cache.get('health_check')
+                
+                return JsonResponse({'status': 'ready'})
+            except Exception as e:
+                logger.error(f"Readiness check failed: {e}")
+                return JsonResponse({'status': 'not ready', 'error': str(e)}, status=503)
+        
+        return self.get_response(request)

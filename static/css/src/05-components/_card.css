@@ -1,0 +1,77 @@
+/**
+ * Card Component
+ * Base card styles and variations
+ */
+
+/* Base Card */
+.card {
+  @apply bg-base-100 shadow-md rounded-box p-4;
+  @apply transition-all duration-300 ease-in-out;
+}
+
+/* Card Hover State */
+.card--interactive {
+  @apply hover:shadow-lg hover:scale-[1.02];
+  @apply cursor-pointer;
+}
+
+/* Card Body */
+.card__body {
+  @apply p-4;
+}
+
+/* Card Header */
+.card__header {
+  @apply flex items-center justify-between mb-4;
+}
+
+/* Card Title */
+.card__title {
+  @apply text-lg font-semibold;
+}
+
+/* Card Variations */
+.card--stat {
+  background-color: hsl(var(--b1, 0 0% 100%));
+  @apply shadow-md rounded-lg p-4;
+  @apply transition-all duration-300 ease-in-out;
+}
+
+.card--chart {
+  background-color: hsl(var(--b1, 0 0% 100%));
+  @apply shadow-md rounded-lg p-4;
+  @apply transition-all duration-300 ease-in-out;
+  @apply overflow-hidden;
+}
+
+.card--table {
+  background-color: hsl(var(--b1, 0 0% 100%));
+  @apply shadow-md rounded-lg p-4;
+  @apply transition-all duration-300 ease-in-out;
+}
+
+/* Stat Card Elements */
+.stat-icon {
+  @apply w-12 h-12 rounded-xl bg-primary/10 text-primary;
+  @apply flex items-center justify-center;
+}
+
+.stat-value {
+  @apply text-3xl font-bold;
+}
+
+.stat-label {
+  @apply text-gray-600 text-sm;
+}
+
+.stat-trend {
+  @apply flex items-center gap-1 text-sm;
+}
+
+.stat-trend--up {
+  @apply text-success;
+}
+
+.stat-trend--down {
+  @apply text-error;
+}

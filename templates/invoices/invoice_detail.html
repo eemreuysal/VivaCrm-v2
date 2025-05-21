@@ -188,12 +188,12 @@
                                 <td>{{ forloop.counter }}</td>
                                 <td>{{ item.description }}</td>
                                 <td class="text-right">{{ item.quantity }}</td>
-                                <td class="text-right">{{ item.unit_price|floatformat:2 }} ₺</td>
-                                <td class="text-right">{{ item.discount_amount|floatformat:2 }} ₺</td>
-                                <td class="text-right">{{ item.line_total|floatformat:2 }} ₺</td>
+                                <td class="text-right">{{ item.unit_price|floatformat:2 }} $</td>
+                                <td class="text-right">{{ item.discount_amount|floatformat:2 }} $</td>
+                                <td class="text-right">{{ item.line_total|floatformat:2 }} $</td>
                                 <td class="text-right">{{ item.tax_rate }}%</td>
-                                <td class="text-right">{{ item.tax_amount|floatformat:2 }} ₺</td>
-                                <td class="text-right font-bold">{{ item.total_with_tax|floatformat:2 }} ₺</td>
+                                <td class="text-right">{{ item.tax_amount|floatformat:2 }} $</td>
+                                <td class="text-right font-bold">{{ item.total_with_tax|floatformat:2 }} $</td>
                                 {% if invoice.status == 'draft' %}
                                     <td>
                                         <div class="flex space-x-2">
@@ -223,31 +223,31 @@
                     <tfoot>
                         <tr class="bg-base-200">
                             <td colspan="5" class="text-right font-bold">{% trans "Ara Toplam" %}</td>
-                            <td colspan="4" class="text-right font-bold">{{ invoice.subtotal|floatformat:2 }} ₺</td>
+                            <td colspan="4" class="text-right font-bold">{{ invoice.subtotal|floatformat:2 }} $</td>
                             {% if invoice.status == 'draft' %}<td></td>{% endif %}
                         </tr>
                         <tr class="bg-base-200">
                             <td colspan="5" class="text-right font-bold">{% trans "KDV Tutarı" %}</td>
-                            <td colspan="4" class="text-right font-bold">{{ invoice.tax_amount|floatformat:2 }} ₺</td>
+                            <td colspan="4" class="text-right font-bold">{{ invoice.tax_amount|floatformat:2 }} $</td>
                             {% if invoice.status == 'draft' %}<td></td>{% endif %}
                         </tr>
                         {% if invoice.shipping_cost > 0 %}
                         <tr class="bg-base-200">
                             <td colspan="5" class="text-right font-bold">{% trans "Kargo Ücreti" %}</td>
-                            <td colspan="4" class="text-right font-bold">{{ invoice.shipping_cost|floatformat:2 }} ₺</td>
+                            <td colspan="4" class="text-right font-bold">{{ invoice.shipping_cost|floatformat:2 }} $</td>
                             {% if invoice.status == 'draft' %}<td></td>{% endif %}
                         </tr>
                         {% endif %}
                         {% if invoice.discount_amount > 0 %}
                         <tr class="bg-base-200">
                             <td colspan="5" class="text-right font-bold">{% trans "İndirim" %}</td>
-                            <td colspan="4" class="text-right font-bold">-{{ invoice.discount_amount|floatformat:2 }} ₺</td>
+                            <td colspan="4" class="text-right font-bold">-{{ invoice.discount_amount|floatformat:2 }} $</td>
                             {% if invoice.status == 'draft' %}<td></td>{% endif %}
                         </tr>
                         {% endif %}
                         <tr class="bg-base-300">
                             <td colspan="5" class="text-right font-bold text-lg">{% trans "Genel Toplam" %}</td>
-                            <td colspan="4" class="text-right font-bold text-lg">{{ invoice.total_amount|floatformat:2 }} ₺</td>
+                            <td colspan="4" class="text-right font-bold text-lg">{{ invoice.total_amount|floatformat:2 }} $</td>
                             {% if invoice.status == 'draft' %}<td></td>{% endif %}
                         </tr>
                     </tfoot>

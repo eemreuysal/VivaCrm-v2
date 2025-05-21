@@ -1,51 +1,79 @@
-from django.urls import path
-from . import views
-from . import views_excel
+"""
+URL configuration for products app.
+"""
+from django.urls import path, include
+from products.views import (
+    # Category views
+    CategoryListView, CategoryDetailView, CategoryCreateView, CategoryUpdateView, 
+    CategoryDeleteView, export_categories,
+    
+    # Product views
+    ProductListView, ProductDetailView, ProductCreateView, ProductUpdateView, ProductDeleteView,
+    
+    # Product Image views
+    ProductImageCreateView, ProductImageDeleteView,
+    
+    # Product Attribute views
+    ProductAttributeListView, ProductAttributeCreateView, ProductAttributeUpdateView,
+    ProductAttributeDeleteView, ProductAttributeValueCreateView, ProductAttributeValueUpdateView,
+    ProductAttributeValueDeleteView,
+    
+    # Stock Management views
+    StockMovementListView, StockMovementCreateView, StockMovementDetailView,
+    BulkStockAdjustmentView, movement_fields_view,
+    
+    # Excel views
+    product_excel_export_view as excel_export,
+    product_excel_import_view as excel_import,
+    product_excel_template_view as excel_template,
+)
 
 app_name = "products"
 
 urlpatterns = [
     # Category URLs
-    path("categories/", views.CategoryListView.as_view(), name="category-list"),
-    path("categories/new/", views.CategoryCreateView.as_view(), name="category-create"),
-    path("categories/<slug:slug>/", views.CategoryDetailView.as_view(), name="category-detail"),
-    path("categories/<slug:slug>/edit/", views.CategoryUpdateView.as_view(), name="category-update"),
-    path("categories/<slug:slug>/delete/", views.CategoryDeleteView.as_view(), name="category-delete"),
+    path("categories/", CategoryListView.as_view(), name="category-list"),
+    path("categories/export/", export_categories, name="export_categories"),
+    path("categories/new/", CategoryCreateView.as_view(), name="category-create"),
+    path("categories/<slug:slug>/", CategoryDetailView.as_view(), name="category-detail"),
+    path("categories/<slug:slug>/edit/", CategoryUpdateView.as_view(), name="category-update"),
+    path("categories/<slug:slug>/delete/", CategoryDeleteView.as_view(), name="category-delete"),
     
+    # Excel Import/Export URLs - Facade pattern implementasyonu
+    path("excel/", include('products.urls_excel')),
+    
+    # Legacy Excel URLs (geriye uyumluluk için - deprecate edilecek)
+    path("excel/export/", excel_export, name="export_products"),
+    path("excel/import/", excel_import, name="product-import"),
+    path("excel/template/", excel_template, name="generate-product-template"),
+
     # Product URLs
-    path("", views.ProductListView.as_view(), name="product-list"),
-    path("new/", views.ProductCreateView.as_view(), name="product-create"),
-    path("<slug:slug>/", views.ProductDetailView.as_view(), name="product-detail"),
-    path("<slug:slug>/edit/", views.ProductUpdateView.as_view(), name="product-update"),
-    path("<slug:slug>/delete/", views.ProductDeleteView.as_view(), name="product-delete"),
+    path("", ProductListView.as_view(), name="product-list"),
+    path("new/", ProductCreateView.as_view(), name="product-create"),
+    path("<slug:slug>/", ProductDetailView.as_view(), name="product-detail"),
+    path("<slug:slug>/edit/", ProductUpdateView.as_view(), name="product-update"),
+    path("<slug:slug>/delete/", ProductDeleteView.as_view(), name="product-delete"),
     
     # Product Image URLs
-    path("<slug:slug>/images/new/", views.ProductImageCreateView.as_view(), name="product-image-create"),
-    path("images/<int:pk>/delete/", views.ProductImageDeleteView.as_view(), name="product-image-delete"),
+    path("<slug:slug>/images/new/", ProductImageCreateView.as_view(), name="product-image-create"),
+    path("images/<int:pk>/delete/", ProductImageDeleteView.as_view(), name="product-image-delete"),
     
     # Product Attribute URLs
-    path("attributes/", views.ProductAttributeListView.as_view(), name="attribute-list"),
-    path("attributes/new/", views.ProductAttributeCreateView.as_view(), name="attribute-create"),
-    path("attributes/<slug:slug>/edit/", views.ProductAttributeUpdateView.as_view(), name="attribute-update"),
-    path("attributes/<slug:slug>/delete/", views.ProductAttributeDeleteView.as_view(), name="attribute-delete"),
+    path("attributes/", ProductAttributeListView.as_view(), name="attribute-list"),
+    path("attributes/new/", ProductAttributeCreateView.as_view(), name="attribute-create"),
+    path("attributes/<slug:slug>/edit/", ProductAttributeUpdateView.as_view(), name="attribute-update"),
+    path("attributes/<slug:slug>/delete/", ProductAttributeDeleteView.as_view(), name="attribute-delete"),
     
     # Product Attribute Value URLs
-    path("<slug:slug>/attributes/new/", views.ProductAttributeValueCreateView.as_view(), name="attribute-value-create"),
-    path("attribute-values/<int:pk>/edit/", views.ProductAttributeValueUpdateView.as_view(), name="attribute-value-update"),
-    path("attribute-values/<int:pk>/delete/", views.ProductAttributeValueDeleteView.as_view(), name="attribute-value-delete"),
+    path("<slug:slug>/attributes/new/", ProductAttributeValueCreateView.as_view(), name="attribute-value-create"),
+    path("attribute-values/<int:pk>/edit/", ProductAttributeValueUpdateView.as_view(), name="attribute-value-update"),
+    path("attribute-values/<int:pk>/delete/", ProductAttributeValueDeleteView.as_view(), name="attribute-value-delete"),
     
     # Stock Management URLs
-    path("stock/", views.StockMovementListView.as_view(), name="movement-list"),
-    path("stock/new/", views.StockMovementCreateView.as_view(), name="movement-create"),
-    path("stock/<int:pk>/", views.StockMovementDetailView.as_view(), name="movement-detail"),
-    path("stock/bulk-adjust/", views.BulkStockAdjustmentView.as_view(), name="bulk-stock-adjustment"),
-    path("movement-fields/", views.movement_fields_view, name="movement-fields"),
-    
-    # Excel Import/Export URLs
-    path("export/", views_excel.export_products, name="export_products"),
-    path("export/stock/", views_excel.export_stock, name="export_stock"),
-    path("import/", views_excel.ProductImportView.as_view(), name="product_import"),
-    path("import/stock/", views_excel.StockAdjustmentImportView.as_view(), name="stock_adjustment_import"),
-    path("template/", views_excel.generate_product_template, name="generate_product_template"),
-    path("template/stock/", views_excel.generate_stock_template, name="generate_stock_template"),
+    path("stock/", StockMovementListView.as_view(), name="movement-list"),
+    path("stock/new/", StockMovementCreateView.as_view(), name="movement-create"),
+    path("stock/<int:pk>/", StockMovementDetailView.as_view(), name="movement-detail"),
+    path("stock/bulk-adjust/", BulkStockAdjustmentView.as_view(), name="bulk-stock-adjustment"),
+    path("stock/import/", BulkStockAdjustmentView.as_view(), name="stock-adjustment-import"),  # Temporary redirect to bulk adjustment view
+    path("movement-fields/", movement_fields_view, name="movement-fields")
 ]

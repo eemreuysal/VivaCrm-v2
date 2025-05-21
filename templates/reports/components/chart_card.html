@@ -1,0 +1,200 @@
+{# Reusable chart card component #}
+{# Parameters: title, chart_id, height, chart_type, actions #}
+
+<div class="card bg-base-100 shadow-lg">
+  <div class="card-body">
+    <div class="flex justify-between items-start mb-4">
+      {% if title %}
+      <h3 class="card-title">{{ title }}</h3>
+      {% endif %}
+      
+      {% if actions %}
+      <div class="dropdown dropdown-end">
+        <label tabindex="0" class="btn btn-ghost btn-sm btn-circle">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
+          </svg>
+        </label>
+        <ul tabindex="0" class="dropdown-content menu shadow bg-base-100 rounded-box w-52">
+          {% for action in actions %}
+          <li><a href="{{ action.url }}" class="{{ action.class|default:'' }}">{{ action.label }}</a></li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+    </div>
+    
+    <div class="relative w-full" style="height: {{ height|default:'400px' }};">
+      <div id="{{ chart_id }}"></div>
+    </div>
+    
+    {% if description %}
+    <p class="text-sm text-base-content/70 mt-4">{{ description }}</p>
+    {% endif %}
+  </div>
+</div>
+
+{# Optional: Chart initialization script #}
+{% if include_script %}
+<script>
+  (function() {
+    const chartOptions = {
+      chart: {
+        type: '{{ chart_type|default:"line" }}',
+        height: '{{ height|default:"400" }}',
+        fontFamily: 'inherit',
+        toolbar: {
+          show: true,
+          tools: {
+            download: true,
+            selection: true,
+            zoom: true,
+            zoomin: true,
+            zoomout: true,
+            pan: true,
+            reset: true
+          }
+        },
+        animations: {
+          enabled: true,
+          easing: 'easeinout',
+          speed: 800
+        },
+        dropShadow: {
+          enabled: true,
+          opacity: 0.1,
+          blur: 3,
+          left: 2,
+          top: 2
+        }
+      },
+      tooltip: {
+        theme: 'dark',
+        y: {
+          formatter: function(val) {
+            return '{{ currency_symbol|default:"₺" }}' + val.toLocaleString('{{ locale|default:"tr-TR" }}');
+          }
+        }
+      },
+      grid: {
+        borderColor: '#e0e0e0',
+        strokeDashArray: 4,
+        padding: {
+          top: 0,
+          right: 10,
+          bottom: 0,
+          left: 10
+        }
+      },
+      colors: {{ chart_colors|default:"['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']"|safe }},
+      series: {{ chart_data|safe }},
+      dataLabels: {
+        enabled: {{ show_datalabels|default:"false"|lower }}
+      },
+      legend: {
+        position: '{{ legend_position|default:"bottom" }}',
+        horizontalAlign: '{{ legend_align|default:"center" }}',
+        fontFamily: 'inherit',
+        offsetY: 10,
+        itemMargin: {
+          horizontal: 10,
+          vertical: 5
+        }
+      },
+      stroke: {
+        curve: '{{ curve_type|default:"smooth" }}',
+        width: {{ stroke_width|default:2 }},
+      },
+      xaxis: {
+        categories: {{ chart_labels|safe }},
+        labels: {
+          style: {
+            fontFamily: 'inherit'
+          }
+        },
+        axisBorder: {
+          show: false
+        },
+        axisTicks: {
+          show: false
+        }
+      },
+      yaxis: {
+        labels: {
+          style: {
+            fontFamily: 'inherit'
+          }
+        }
+      },
+      responsive: [{
+        breakpoint: 768,
+        options: {
+          chart: {
+            height: 300
+          },
+          legend: {
+            position: 'bottom',
+            offsetY: 0
+          }
+        }
+      }]
+    };
+    
+    // Chart type specific options
+    if ('{{ chart_type|default:"line" }}' === 'pie' || '{{ chart_type|default:"line" }}' === 'donut') {
+      chartOptions.labels = {{ chart_labels|safe }};
+      chartOptions.series = {{ chart_data|safe }}[0].data;
+      
+      // Add donut specific options
+      if ('{{ chart_type|default:"line" }}' === 'donut') {
+        chartOptions.plotOptions = {
+          pie: {
+            donut: {
+              size: '55%',
+              background: 'transparent',
+              labels: {
+                show: true,
+                name: {
+                  show: true,
+                  fontSize: '22px',
+                  fontFamily: 'inherit',
+                  fontWeight: 600,
+                  color: '#374151',
+                  offsetY: -10
+                },
+                value: {
+                  show: true,
+                  fontSize: '16px',
+                  fontFamily: 'inherit',
+                  fontWeight: 400,
+                  color: '#6b7280',
+                  offsetY: 10,
+                  formatter: function(val) {
+                    return '{{ currency_symbol|default:"₺" }}' + val.toLocaleString('{{ locale|default:"tr-TR" }}');
+                  }
+                },
+                total: {
+                  show: true,
+                  showAlways: true,
+                  label: 'Toplam',
+                  fontSize: '22px',
+                  fontFamily: 'inherit',
+                  fontWeight: 600,
+                  color: '#374151',
+                  formatter: function(w) {
+                    return '{{ currency_symbol|default:"₺" }}' + w.globals.seriesTotals.reduce((a, b) => a + b, 0).toLocaleString('{{ locale|default:"tr-TR" }}');
+                  }
+                }
+              }
+            }
+          }
+        };
+      }
+    }
+    
+    // Create and render the chart
+    const chart = new ApexCharts(document.querySelector('#{{ chart_id }}'), chartOptions);
+    chart.render();
+  })();
+</script>
+{% endif %}

@@ -2,7 +2,7 @@ from rest_framework import viewsets, permissions, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
-from django.db.models import Q, F
+from django.db.models import Q, F, Prefetch, Count, Sum
 from django.utils import timezone
 
 from products.models import (
@@ -15,6 +15,20 @@ from .serializers import (
     ProductAttributeValueSerializer, StockMovementSerializer,
     ProductSimpleSerializer
 )
+
+try:
+    from core.api_optimizations import (
+        QueryOptimizationMixin, OptimizedPageNumberPagination, 
+        cache_response
+    )
+except ImportError:
+    # Fallback if optimization not available
+    QueryOptimizationMixin = object
+    OptimizedPageNumberPagination = None
+    def cache_response(*args, **kwargs):
+        def decorator(func):
+            return func
+        return decorator
 
 
 class IsStaffOrReadOnly(permissions.BasePermission):
@@ -76,9 +90,9 @@ class CategoryViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class ProductViewSet(viewsets.ModelViewSet):
+class ProductViewSet(QueryOptimizationMixin, viewsets.ModelViewSet):
     """
-    API endpoint for managing products.
+    API endpoint for managing products with query optimization.
     """
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
@@ -89,6 +103,13 @@ class ProductViewSet(viewsets.ModelViewSet):
     ordering_fields = ['name', 'price', 'stock', 'created_at']
     ordering = ['-created_at']
     lookup_field = 'slug'
+    
+    # Query optimization hints
+    select_related_fields = ['category', 'family']
+    prefetch_related_fields = ['images', 'attribute_values', 'stock_movements']
+    
+    # Use optimized pagination if available
+    pagination_class = OptimizedPageNumberPagination or None
     
     def get_serializer_class(self):
         """

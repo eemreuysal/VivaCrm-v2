@@ -1,0 +1,114 @@
+/**
+ * VivaCRM Main CSS File - Standardized
+ * ITCSS architectural pattern implementation
+ * Import order is important!
+ */
+
+/* Tailwind Base - Must come first for DaisyUI */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ========================================
+   00. Settings - Variables and constants 
+   ======================================== */
+@import "./00-settings/_variables-standardized.css";
+@import "./00-settings/_fonts.css";
+@import "./00-settings/_daisyui.css";
+
+/* ========================================
+   01. Tools - Mixins and functions 
+   ======================================== */
+/* Currently empty - add as needed */
+
+/* ========================================
+   02. Generic - Reset and normalize styles 
+   ======================================== */
+@import "./02-generic/_theme.css";
+
+/* ========================================
+   03. Elements - HTML element styling 
+   ======================================== */
+@import "./03-elements/_typography.css";
+
+/* ========================================
+   04. Objects - Design patterns, no cosmetics 
+   ======================================== */
+/* Currently empty - add as needed */
+
+/* ========================================
+   05. Components - UI components 
+   ======================================== */
+@import "./05-components/_avatar.css";
+@import "./05-components/_card.css";
+@import "./05-components/_dashboard.css";
+@import "./05-components/_menu.css";
+@import "./05-components/_navbar.css";
+@import "./05-components/sidebar.css";
+@import "./05-components/notifications.css";
+@import "./05-components/charts.css";
+
+/* ========================================
+   06. Themes - Theme specific overrides 
+   ======================================== */
+@import "./06-themes/_dark-standardized.css";
+
+/* ========================================
+   07. Utilities - Single-purpose helper classes 
+   ======================================== */
+@import "./07-utilities/_animations.css";
+@import "./07-utilities/_helpers.css";
+
+/* ========================================
+   Custom base styles - Component agnostic styles
+   ======================================== */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    /* Apply theme transition globally */
+    transition: var(--viva-transition-theme);
+  }
+  
+  body {
+    @apply font-sans text-base antialiased;
+    transition: var(--viva-transition-theme);
+  }
+  
+  /* Typography defaults */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-medium;
+    transition: var(--viva-transition-theme);
+  }
+  
+  h1 {
+    @apply text-3xl;
+  }
+  
+  h2 {
+    @apply text-2xl;
+  }
+  
+  h3 {
+    @apply text-xl;
+  }
+  
+  h4 {
+    @apply text-lg;
+  }
+  
+  a {
+    @apply transition-colors duration-200;
+  }
+  
+  /* Form elements */
+  input, select, textarea, button {
+    transition: var(--viva-transition-theme);
+  }
+  
+  /* Ensure smooth transitions for all theme changes */
+  *, *::before, *::after {
+    transition-property: background-color, border-color, color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+  }
+}

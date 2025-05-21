@@ -1,0 +1,56 @@
+{% load static %}
+{% comment %}
+    JavaScript Includes - Unified (Birleştirilmiş)
+    
+    Bu şablon, tüm JS dahil etme ihtiyaçları için merkezi bir noktadır.
+    Yeni tema yönetim sistemi burada kullanılır.
+{% endcomment %}
+
+<!-- Core Libraries -->
+<script src="{% static 'js/vendor/alpine.min.js' %}" defer></script>
+<script src="{% static 'js/vendor/htmx.min.js' %}" defer></script>
+
+<!-- Theme Management and Core Features -->
+<script type="module" src="{% static 'js/core/theme-store.js' %}"></script>
+<script type="module" src="{% static 'js/core/alpine-init.js' %}"></script>
+
+<!-- Chart Library (sadece gerekirse) -->
+{% if need_charts|default:False or 'dashboard' in request.path or 'reports' in request.path %}
+<script src="{% static 'js/vendor/apexcharts.min.js' %}" defer></script>
+<script type="module" src="{% static 'js/core/theme-chart-bridge.js' %}"></script>
+{% endif %}
+
+<!-- Environment and CSRF Setup -->
+<script>
+    // Global configuration
+    window.VivaCRM = window.VivaCRM || {};
+    Object.assign(window.VivaCRM, {
+        debug: {{ debug|yesno:"true,false" }},
+        version: '2.0.0',
+        environment: '{{ environment|default:"production" }}',
+        apiBase: '{{ api_base|default:"/api/v1" }}',
+        csrfToken: '{{ csrf_token }}'
+    });
+    
+    // HTMX CSRF setup
+    document.body.setAttribute('hx-headers', JSON.stringify({
+        'X-CSRFToken': '{{ csrf_token }}'
+    }));
+    
+    // Debug mode indicator
+    document.documentElement.setAttribute('data-debug', '{{ debug|yesno:"true,false" }}');
+</script>
+
+<!-- Error Tracking in Production -->
+{% if not debug %}
+<script>
+    window.addEventListener('error', function(event) {
+        console.error('Runtime error:', event.error);
+        
+        // Monitoring service integration
+        if (window.VivaCRM && window.VivaCRM.errorReporter) {
+            window.VivaCRM.errorReporter(event.error);
+        }
+    });
+</script>
+{% endif %}

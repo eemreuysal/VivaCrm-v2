@@ -1,52 +1,53 @@
-<!DOCTYPE html>
+{% extends "base/base.html" %}
 {% load static %}
-<html lang="tr" data-theme="vivacrm" class="light">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="VivaCRM - Müşteri İlişkileri Yönetim Sistemi">
-    <title>{% block title %}VivaCRM{% endblock %}</title>
-    
-    <!-- Tasarım Sistemi CSS -->
-    <link rel="stylesheet" href="{% static 'css/viva-design-system.css' %}">
-    
-    <!-- TailwindCSS -->
-    <link href="{% static 'css/dist/main.css' %}" rel="stylesheet" type="text/css" />
-    
-    <!-- HTMX -->
-    <script src="{% static 'js/lib/htmx.min.js' %}"></script>
-    
-    <!-- Alpine.js -->
-    <script defer src="{% static 'js/lib/alpine.min.js' %}"></script>
-    
-    {% block extra_css %}{% endblock %}
-    
-    <!-- Force light theme -->
-    <script>
-        // Immediately set the theme to light, don't wait for DOMContentLoaded
-        document.documentElement.setAttribute('data-theme', 'vivacrm');
-        localStorage.removeItem('vivacrm-theme');  // Remove any saved theme preference
-        
-        // Also set it after DOM loads to ensure it sticks
-        document.addEventListener('DOMContentLoaded', function() {
-            document.documentElement.setAttribute('data-theme', 'vivacrm');
-            localStorage.setItem('vivacrm-theme', 'vivacrm');
-        });
-    </script>
-</head>
-<body class="bg-base-200 min-h-screen flex items-center justify-center">
-    {% if messages %}
-        <div class="toast toast-top toast-end">
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} shadow-lg">
-                    <span>{{ message }}</span>
-                </div>
-            {% endfor %}
-        </div>
-    {% endif %}
-    
-    {% block content %}{% endblock %}
-    
-    {% block extra_js %}{% endblock %}
-</body>
-</html>
+
+{% block title %}{{ title|default:"Giriş" }} - VivaCRM{% endblock %}
+
+{% block body_attributes %}class="bg-base-200 min-h-screen"{% endblock %}
+
+{% block navbar %}
+<!-- Kimlik doğrulama sayfalarında navbar gösterme -->
+{% endblock %}
+
+{% block footer %}
+<!-- Kimlik doğrulama sayfalarında footer gösterme -->
+{% endblock %}
+
+{% block extra_css %}
+<!-- CDN üzerinden Tailwind ve DaisyUI (fallback) -->
+<link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+  /* Kimlik doğrulama sayfaları için özel stiller */
+  .auth-page-background {
+    background-image: radial-gradient(circle at 50% 50%, rgba(34, 197, 94, 0.05) 0%, rgba(14, 165, 233, 0.05) 100%);
+  }
+  
+  /* Animasyonlar */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .auth-animation {
+    animation: fadeIn 0.5s ease-out;
+  }
+  
+  /* Responsiveness için ek düzenlemeler */
+  @media (max-width: 640px) {
+    .auth-card {
+      box-shadow: none;
+      border-radius: 0;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="flex justify-end items-center p-4 absolute top-0 right-0">
+  <!-- Theme Toggle for auth pages -->
+  {% include 'includes/theme_switcher_unified.html' with button_class="btn btn-sm btn-ghost btn-circle" %}
+</div>
+{{ block.super }}
+{% endblock %}

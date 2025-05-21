@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 from .models import (
-    Category, Product, ProductImage, ProductAttribute, 
+    Category, ProductFamily, Product, ProductImage, ProductAttribute, 
     ProductAttributeValue, StockMovement
 )
 
@@ -9,6 +9,13 @@ from .models import (
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ['name', 'parent', 'is_active', 'created_at']
     list_filter = ['is_active', 'parent']
+    search_fields = ['name', 'description']
+    prepopulated_fields = {'slug': ('name',)}
+
+
+class ProductFamilyAdmin(admin.ModelAdmin):
+    list_display = ['name', 'is_active', 'created_at']
+    list_filter = ['is_active']
     search_fields = ['name', 'description']
     prepopulated_fields = {'slug': ('name',)}
 
@@ -24,14 +31,14 @@ class ProductAttributeValueInline(admin.TabularInline):
 
 
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['code', 'name', 'category', 'price', 'tax_rate', 'stock', 'status', 'is_active']
+    list_display = ['code', 'name', 'category', 'family', 'price', 'tax_rate', 'stock', 'status', 'is_active']
     list_filter = ['category', 'status', 'is_active', 'is_featured', 'is_physical', 'tax_rate']
     search_fields = ['code', 'name', 'description', 'sku', 'barcode']
     prepopulated_fields = {'slug': ('name',)}
     inlines = [ProductImageInline, ProductAttributeValueInline]
     fieldsets = (
         (None, {
-            'fields': ('code', 'name', 'slug', 'description', 'category')
+            'fields': ('code', 'name', 'slug', 'description', 'category', 'family')
         }),
         (_('Fiyat ve Vergi'), {
             'fields': ('price', 'cost', 'tax_rate', 'discount_price')
@@ -72,6 +79,7 @@ class StockMovementAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Category, CategoryAdmin)
+admin.site.register(ProductFamily, ProductFamilyAdmin)
 admin.site.register(Product, ProductAdmin)
 admin.site.register(ProductAttribute, ProductAttributeAdmin)
 admin.site.register(StockMovement, StockMovementAdmin)

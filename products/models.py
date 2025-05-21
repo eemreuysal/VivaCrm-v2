@@ -6,6 +6,11 @@ from django.utils.text import slugify
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
+try:
+    from core.db_optimizations import OptimizedManager
+except ImportError:
+    # Fallback to default manager if optimization not available
+    OptimizedManager = models.Manager
 
 
 class Category(models.Model):
@@ -31,6 +36,11 @@ class Category(models.Model):
         verbose_name = _("Kategori")
         verbose_name_plural = _("Kategoriler")
         ordering = ['name']
+        indexes = [
+            models.Index(fields=['name', 'slug']),
+            models.Index(fields=['is_active', 'created_at']),
+            models.Index(fields=['parent', 'is_active']),
+        ]
         
     def __str__(self):
         if self.parent:
@@ -40,6 +50,36 @@ class Category(models.Model):
     def get_absolute_url(self):
         return reverse("products:category-detail", kwargs={"slug": self.slug})
     
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+
+class ProductFamily(models.Model):
+    """
+    Product family model.
+    Used to group related products.
+    """
+    name = models.CharField(_("Aile Adı"), max_length=255)  # Karakter sınırını 100'den 255'e yükselttik
+    slug = models.SlugField(_("Slug"), max_length=255, unique=True)  # Slug sınırını da yükselttik
+    description = models.TextField(_("Açıklama"), blank=True)
+    is_active = models.BooleanField(_("Aktif"), default=True)
+    created_at = models.DateTimeField(_("Oluşturulma Tarihi"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("Güncellenme Tarihi"), auto_now=True)
+    
+    class Meta:
+        verbose_name = _("Ürün Ailesi")
+        verbose_name_plural = _("Ürün Aileleri")
+        ordering = ['name']
+        indexes = [
+            models.Index(fields=['name', 'is_active']),
+            models.Index(fields=['slug', 'is_active']),
+        ]
+        
+    def __str__(self):
+        return self.name
+        
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.name)
@@ -78,6 +118,13 @@ class Product(models.Model):
         verbose_name=_("Kategori"),
         null=True, blank=True
     )
+    family = models.ForeignKey(
+        ProductFamily, 
+        on_delete=models.SET_NULL,
+        related_name="products",
+        verbose_name=_("Ürün Ailesi"),
+        null=True, blank=True
+    )
     
     # Pricing
     price = models.DecimalField(_("Fiyat"), max_digits=10, decimal_places=2)
@@ -94,6 +141,7 @@ class Product(models.Model):
     dimensions = models.CharField(_("Boyutlar (U x G x Y)"), max_length=50, blank=True)
     sku = models.CharField(_("SKU"), max_length=50, blank=True)
     barcode = models.CharField(_("Barkod"), max_length=50, blank=True)
+    asin = models.CharField(_("ASIN"), max_length=50, blank=True, help_text=_("Amazon Standard Identification Number"))
     
     # Status
     status = models.CharField(_("Durum"), max_length=20, choices=STATUS_CHOICES, default='available')
@@ -102,10 +150,28 @@ class Product(models.Model):
     created_at = models.DateTimeField(_("Oluşturulma Tarihi"), auto_now_add=True)
     updated_at = models.DateTimeField(_("Güncellenme Tarihi"), auto_now=True)
     
+    # Managers
+    objects = OptimizedManager()
+    
+    # Default query optimization hints
+    default_select_related = ['category', 'family']
+    default_prefetch_related = ['images', 'stock_movements']
+    
     class Meta:
         verbose_name = _("Ürün")
         verbose_name_plural = _("Ürünler")
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['code', 'is_active']),
+            models.Index(fields=['slug', 'is_active']),
+            models.Index(fields=['category', 'is_active']),
+            models.Index(fields=['stock', 'threshold_stock']),
+            models.Index(fields=['price', 'is_active']),
+            models.Index(fields=['created_at', 'is_active']),
+            models.Index(fields=['status', 'is_active']),
+            models.Index(fields=['barcode']),
+            models.Index(fields=['sku']),
+        ]
         
     def __str__(self):
         return f"{self.code} - {self.name}"
@@ -115,24 +181,30 @@ class Product(models.Model):
     
     @property
     def tax_amount(self):
+        from decimal import Decimal
         if self.tax_rate is not None:
+            rate = Decimal(str(self.tax_rate)) / Decimal('100')
             if self.discount_price and self.discount_price > 0:
-                return round(self.discount_price * (self.tax_rate / 100), 2)
-            return round(self.price * (self.tax_rate / 100), 2)
-        return 0
+                return round(self.discount_price * rate, 2)
+            return round(self.price * rate, 2)
+        return Decimal('0')
     
     @property
     def price_with_tax(self):
+        from decimal import Decimal
+        tax = self.tax_amount
         if self.discount_price and self.discount_price > 0:
-            return round(self.discount_price + self.tax_amount, 2)
-        return round(self.price + self.tax_amount, 2)
+            return round(self.discount_price + tax, 2)
+        return round(self.price + tax, 2)
     
     @property
     def profit_margin(self):
+        from decimal import Decimal
         if self.cost and self.cost > 0:
+            hundred = Decimal('100')
             if self.discount_price and self.discount_price > 0:
-                return round(((self.discount_price - self.cost) / self.cost) * 100, 2)
-            return round(((self.price - self.cost) / self.cost) * 100, 2)
+                return round(((self.discount_price - self.cost) / self.cost) * hundred, 2)
+            return round(((self.price - self.cost) / self.cost) * hundred, 2)
         return None
     
     def save(self, *args, **kwargs):
@@ -162,6 +234,10 @@ class ProductImage(models.Model):
         verbose_name = _("Ürün Görseli")
         verbose_name_plural = _("Ürün Görselleri")
         ordering = ['order', 'created_at']
+        indexes = [
+            models.Index(fields=['product', 'is_primary']),
+            models.Index(fields=['product', 'order']),
+        ]
         
     def __str__(self):
         return f"{self.product.name} - {self.order}"
@@ -181,6 +257,10 @@ class ProductAttribute(models.Model):
         verbose_name = _("Ürün Özelliği")
         verbose_name_plural = _("Ürün Özellikleri")
         ordering = ['name']
+        indexes = [
+            models.Index(fields=['name', 'is_active']),
+            models.Index(fields=['slug', 'is_active']),
+        ]
         
     def __str__(self):
         return self.name
@@ -214,6 +294,10 @@ class ProductAttributeValue(models.Model):
         verbose_name = _("Ürün Özellik Değeri")
         verbose_name_plural = _("Ürün Özellik Değerleri")
         unique_together = ('product', 'attribute')
+        indexes = [
+            models.Index(fields=['product', 'attribute']),
+            models.Index(fields=['attribute', 'value']),
+        ]
         
     def __str__(self):
         return f"{self.product.name} - {self.attribute.name}: {self.value}"
@@ -251,6 +335,7 @@ class StockMovement(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
+        blank=True,
         related_name="stock_movements",
         verbose_name=_("Oluşturan")
     )
@@ -263,30 +348,47 @@ class StockMovement(models.Model):
         verbose_name = _("Stok Hareketi")
         verbose_name_plural = _("Stok Hareketleri")
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['product', 'created_at']),
+            models.Index(fields=['movement_type', 'created_at']),
+            models.Index(fields=['created_by', 'created_at']),
+            models.Index(fields=['reference']),
+        ]
         
     def __str__(self):
         return f"{self.product.name} - {self.get_movement_type_display()} - {self.quantity}"
     
     def save(self, *args, **kwargs):
-        # Store previous stock level
-        if self.pk is None:  # Only on creation
-            self.previous_stock = self.product.stock
-            
-            # Update product stock based on movement type
-            if self.movement_type in ['purchase', 'return', 'adjustment', 'inventory']:
-                self.new_stock = self.previous_stock + self.quantity
-            else:  # sale, waste, transfer
-                self.new_stock = max(0, self.previous_stock - abs(self.quantity))
-            
-            # Update product cost if provided
-            if self.unit_cost and self.movement_type == 'purchase':
-                # Calculate weighted average cost if there's existing stock
-                if self.previous_stock > 0 and self.product.cost:
-                    total_old_value = self.previous_stock * self.product.cost
-                    total_new_value = self.quantity * self.unit_cost
-                    self.product.cost = (total_old_value + total_new_value) / self.new_stock
-                else:
-                    self.product.cost = self.unit_cost
+        try:
+            # Store previous stock level
+            if self.pk is None:  # Only on creation
+                self.previous_stock = self.product.stock
+                
+                # Update product stock based on movement type
+                if self.movement_type in ['purchase', 'return', 'adjustment', 'inventory']:
+                    self.new_stock = self.previous_stock + self.quantity
+                else:  # sale, waste, transfer
+                    self.new_stock = max(0, self.previous_stock - abs(self.quantity))
+                
+                # Update product cost if provided
+                if self.unit_cost and self.movement_type == 'purchase':
+                    # Calculate weighted average cost if there's existing stock
+                    if self.previous_stock > 0 and self.product.cost:
+                        total_old_value = self.previous_stock * self.product.cost
+                        total_new_value = self.quantity * self.unit_cost
+                        self.product.cost = (total_old_value + total_new_value) / self.new_stock
+                    else:
+                        self.product.cost = self.unit_cost
+        except Exception as e:
+            # Log and handle any calculation errors
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error in StockMovement.save(): {str(e)}")
+            # Set safe default values
+            if not hasattr(self, 'previous_stock'):
+                self.previous_stock = 0
+            if not hasattr(self, 'new_stock'):
+                self.new_stock = 0
                     
         super().save(*args, **kwargs)
 
@@ -299,4 +401,8 @@ def update_product_stock(sender, instance, created, **kwargs):
     if created:
         product = instance.product
         product.stock = instance.new_stock
-        product.save(update_fields=['stock', 'cost'] if instance.unit_cost else ['stock'])
+        # Only update cost if unit_cost is provided
+        update_fields = ['stock']
+        if instance.unit_cost:
+            update_fields.append('cost')
+        product.save(update_fields=update_fields)

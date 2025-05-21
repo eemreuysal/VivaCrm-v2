@@ -15,7 +15,7 @@ Kullanımı:
 %}
 -->
 
-<div class="card bg-base-100 shadow-xl" 
+<div class="card bg-base-100 shadow-lg hover:shadow-xl transition-all duration-300" 
      x-data="{ 
        searchQuery: '', 
        selectedItems: [], 
@@ -58,8 +58,8 @@ Kullanımı:
      }">
   
   <!-- Başlık ve Arama -->
-  <div class="flex justify-between items-center p-4 bg-base-200 rounded-t-lg">
-    <h2 class="card-title">{{ title }}</h2>
+  <div class="flex justify-between items-center p-4 border-b border-base-300 rounded-t-lg">
+    <h2 class="card-title font-bold">{{ title }}</h2>
     
     <div class="flex items-center gap-2">
       <!-- Arama kutusu -->
@@ -77,7 +77,7 @@ Kullanımı:
             name="q" 
             id="search-input"
             placeholder="Ara..." 
-            class="input input-bordered" 
+            class="input input-bordered focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200" 
             value="{{ request.GET.q|default:'' }}"
             x-model="searchQuery"
           />
@@ -116,9 +116,9 @@ Kullanımı:
   </div>
   
   <!-- Tablo içeriği -->
-  <div class="card-body p-0">
+  <div class="card-body p-0 overflow-hidden">
     <div id="data-table-content" class="overflow-x-auto">
-      <table class="table table-zebra w-full">
+      <table class="table table-zebra w-full border-collapse overflow-hidden">
         <thead>
           <tr>
             {% if select %}
@@ -284,14 +284,14 @@ Kullanımı:
     {% endif %}
     
     <!-- Çoklu işlem seçenekleri -->
-    <div x-show="selectedItems.length > 0" x-transition class="p-4 bg-base-200 border-t flex justify-between items-center">
-      <span><span x-text="selectedItems.length"></span> öğe seçildi</span>
+    <div x-show="selectedItems.length > 0" x-transition.opacity.duration.300ms class="p-4 bg-base-100 border-t border-base-300 flex justify-between items-center shadow-inner">
+      <span class="badge badge-primary badge-lg"><span x-text="selectedItems.length"></span> öğe seçildi</span>
       
       <div class="flex gap-2">
         {% if bulk_actions %}
         <div class="dropdown dropdown-top dropdown-end">
-          <label tabindex="0" class="btn btn-primary">Toplu İşlemler</label>
-          <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52 z-50">
+          <label tabindex="0" class="btn btn-primary shadow-md hover:shadow-lg transition-all duration-200">Toplu İşlemler</label>
+          <ul tabindex="0" class="dropdown-content menu p-2 shadow-xl bg-base-100 rounded-box w-52 z-50">
             {% for action_name, action_url in bulk_actions.items %}
             <li>
               <button 
@@ -299,6 +299,7 @@ Kullanımı:
                 hx-vals='{"ids": JSON.stringify(selectedItems)}'
                 hx-confirm="Seçili öğeler için {{ action_name }} işlemini gerçekleştirmek istediğinize emin misiniz?"
                 hx-target="{{ target|default:'#data-table-content' }}"
+                class="hover:bg-base-200 transition-colors duration-200"
               >
                 {{ action_name }}
               </button>
@@ -308,7 +309,7 @@ Kullanımı:
         </div>
         {% endif %}
         
-        <button class="btn btn-outline" @click="selectedItems = []; allSelected = false">Seçimi Temizle</button>
+        <button class="btn btn-outline hover:bg-base-200 transition-all duration-200 shadow hover:shadow-md" @click="selectedItems = []; allSelected = false">Seçimi Temizle</button>
       </div>
     </div>
   </div>

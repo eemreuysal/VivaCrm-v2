@@ -1,0 +1,48 @@
+{% comment %}
+    Ana Navbar Bileşeni
+    Kullanım: {% include 'components/navbar.html' %}
+{% endcomment %}
+
+<div class="navbar bg-base-100 bg-gradient-to-r from-base-100 to-base-100/80 backdrop-blur-lg border-b border-base-300 sticky top-0 z-40 shadow-lg">
+    <div class="navbar-start">
+        {% if show_drawer_toggle|default:False %}
+        <label for="drawer-toggle" class="btn btn-ghost btn-circle drawer-button lg:hidden" aria-label="Toggle sidebar">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+        </label>
+        {% else %}
+        <div class="dropdown">
+            <label tabindex="0" class="btn btn-ghost lg:hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16" />
+                </svg>
+            </label>
+            <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
+                {% include 'includes/navbar_menu.html' %}
+            </ul>
+        </div>
+        {% endif %}
+        
+        <div class="ml-4 flex items-center gap-3">
+            <h1 class="text-xl font-bold text-gradient">{{ page_title|default:"Dashboard" }}</h1>
+            {% if show_badge|default:True %}
+            <span class="badge badge-primary badge-sm animate-pulse">v2.0</span>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="navbar-center hidden lg:flex">
+        {{ navbar_center|safe }}
+    </div>
+    
+    <div class="navbar-end">
+        {% if show_notifications|default:True %}
+        {% include 'components/navbar_notifications.html' %}
+        {% endif %}
+        
+        {% include 'includes/theme_switcher_unified.html' with button_class="btn btn-ghost btn-circle" %}
+        
+        {% include 'components/navbar_user_menu.html' %}
+    </div>
+</div>

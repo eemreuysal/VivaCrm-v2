@@ -1,0 +1,108 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No",
+    "retry": "Retry"
+  },
+  "validation": {
+    "required": "This field is required",
+    "email": "Please enter a valid email address",
+    "min": "Must be at least {{min}} characters",
+    "max": "Must be no more than {{max}} characters",
+    "number": "Please enter a valid number",
+    "url": "Please enter a valid URL"
+  },
+  "errors": {
+    "general": "An error occurred",
+    "network": "Network error",
+    "server": "Server error",
+    "notFound": "Not found",
+    "unauthorized": "Unauthorized access",
+    "forbidden": "Access denied",
+    "unknown": "Unknown error"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "totalCustomers": "Total Customers",
+    "totalProducts": "Total Products",
+    "totalOrders": "Total Orders",
+    "totalRevenue": "Total Revenue",
+    "recentOrders": "Recent Orders",
+    "lowStock": "Low Stock Alerts"
+  },
+  "products": {
+    "title": "Products",
+    "addProduct": "Add Product",
+    "editProduct": "Edit Product",
+    "deleteProduct": "Delete Product",
+    "name": "Product Name",
+    "code": "Product Code",
+    "category": "Category",
+    "price": "Price",
+    "stock": "Stock",
+    "description": "Description",
+    "importExcel": "Import from Excel",
+    "exportExcel": "Export to Excel"
+  },
+  "orders": {
+    "title": "Orders",
+    "createOrder": "Create Order",
+    "orderNumber": "Order Number",
+    "customer": "Customer",
+    "date": "Date",
+    "status": "Status",
+    "total": "Total",
+    "items": "Items",
+    "statusOptions": {
+      "pending": "Pending",
+      "processing": "Processing",
+      "shipped": "Shipped",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled"
+    }
+  },
+  "customers": {
+    "title": "Customers",
+    "addCustomer": "Add Customer",
+    "editCustomer": "Edit Customer",
+    "deleteCustomer": "Delete Customer",
+    "name": "Full Name",
+    "email": "Email",
+    "phone": "Phone",
+    "address": "Address",
+    "city": "City",
+    "country": "Country",
+    "orders": "Orders"
+  },
+  "excel": {
+    "import": "Import",
+    "export": "Export",
+    "selectFile": "Select File",
+    "uploadFile": "Upload File",
+    "processing": "Processing...",
+    "preview": "Preview",
+    "rowsProcessed": "{{count}} rows processed",
+    "importSuccess": "Import successful",
+    "importError": "Import error"
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "username": "Username",
+    "password": "Password",
+    "rememberMe": "Remember Me",
+    "forgotPassword": "Forgot Password",
+    "resetPassword": "Reset Password",
+    "profile": "Profile"
+  }
+}

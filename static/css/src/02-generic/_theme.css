@@ -1,0 +1,96 @@
+/**
+ * VivaCRM Theme Integration
+ * DaisyUI ve Tailwind theme sistemi ile entegrasyon
+ */
+
+/* VivaCRM Custom Theme Variables */
+[data-theme="vivacrm"] {
+  /* Override specific DaisyUI variables if needed */
+  --rounded-box: 1rem;
+  --rounded-btn: 0.5rem;
+  --rounded-badge: 1.5rem;
+  --tab-border: 2px;
+  --tab-radius: 0.5rem;
+}
+
+[data-theme="vivacrmDark"] {
+  /* Dark theme specific overrides */
+  --rounded-box: 1rem;
+  --rounded-btn: 0.5rem;
+  --rounded-badge: 1.5rem;
+  --tab-border: 2px;
+  --tab-radius: 0.5rem;
+}
+
+/* Modal Backdrop */
+.modal {
+  @apply backdrop-blur-sm;
+}
+
+/* Form Elements */
+.input,
+.textarea,
+.select {
+  @apply transition-colors duration-200;
+}
+
+.input:focus,
+.textarea:focus,
+.select:focus {
+  @apply ring-2 ring-primary ring-offset-2 outline-none;
+}
+
+/* Table Styles */
+.table {
+  @apply border border-gray-200;
+}
+
+.table thead {
+  background-color: hsl(var(--b2, 210 20% 98%));
+}
+
+.table tbody tr:hover {
+  background-color: hsl(var(--b2, 210 20% 98%) / 0.5);
+}
+
+/* Badge Styles */
+.badge {
+  @apply font-medium;
+}
+
+/* Progress Bar */
+.progress {
+  background-color: hsl(var(--b2, 210 20% 98%));
+}
+
+.progress-primary {
+  @apply bg-primary;
+}
+
+.progress-secondary {
+  @apply bg-secondary;
+}
+
+.progress-accent {
+  @apply bg-accent;
+}
+
+/* Tooltip */
+.tooltip {
+  @apply transition-opacity duration-200;
+}
+
+/* Dropdown */
+.dropdown-content {
+  @apply shadow-lg border border-gray-200;
+}
+
+/* Tab Styles */
+.tabs-boxed {
+  background-color: hsl(var(--b2, 210 20% 98%));
+  @apply p-1 rounded-lg;
+}
+
+.tab.tab-active {
+  @apply bg-base-100 text-primary;
+}

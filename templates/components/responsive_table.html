@@ -1,0 +1,111 @@
+{% comment %}
+Responsive tablo bileşeni.
+
+Kullanım:
+{% include "components/responsive_table.html" with 
+  id="unique-id"           # Benzersiz ID (zorunlu)
+  headers=headers_list     # Başlık listesi - [{'key': 'name', 'label': 'İsim', 'width': '1/4', 'format': 'currency'}] (zorunlu)
+  data=data_list           # Veri listesi (zorunlu)
+  empty_text="Veri yok"    # Boş mesajı (isteğe bağlı)
+  card_mode=True           # Mobilde kart görünümü (isteğe bağlı, varsayılan: True)
+  zebra=True               # Zebra stilinde satırlar (isteğe bağlı, varsayılan: True)
+  hover=True               # Hover efekti (isteğe bağlı, varsayılan: True)
+  class="mt-4"             # Tablo konteyner sınıfı (isteğe bağlı)
+  actions_template="path/to/actions.html"  # İşlem butonları template'i (isteğe bağlı)
+%}
+
+Not: Eğer actions_template belirtilirse, bu template içinde "item" değişkeni kullanılabilir.
+{% endcomment %}
+
+{% load table_filters %}
+
+<div id="{{ id }}" class="overflow-x-auto w-full {{ class }}" 
+     x-data="{ 
+        cardMode: {% if card_mode %}true{% else %}false{% endif %},
+        screenWidth: window.innerWidth,
+        checkMode() {
+            // Ekran genişliği 768px'den küçükse ve card_mode aktifse kart modunu göster
+            return this.screenWidth < 768 && {% if card_mode %}true{% else %}false{% endif %};
+        }
+     }"
+     x-init="
+        $watch('screenWidth', () => cardMode = checkMode());
+        window.addEventListener('resize', () => screenWidth = window.innerWidth);
+     "
+>
+  <!-- Mobil/Tablet Görünümünde Kart Modu -->
+  <div x-show="cardMode" class="space-y-4">
+    {% for item in data %}
+    <div class="card bg-base-100 shadow-md hover:shadow-lg transition-shadow duration-300">
+      <div class="card-body p-4">
+        {% for header in headers %}
+        <div class="grid grid-cols-2 gap-2 py-1 {% if not forloop.last %}border-b border-base-200{% endif %}">
+          <div class="font-medium text-sm opacity-70">{{ header.label }}</div>
+          <div class="text-sm">
+            {% if header.format %}
+              {{ item|get_dict_value:header.key|apply_format:header.format }}
+            {% else %}
+              {{ item|get_dict_value:header.key }}
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+        
+        {% if actions_template %}
+        <div class="card-actions justify-end mt-3">
+          {% include actions_template with item=item %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% empty %}
+    <div class="text-center py-8">
+      <div class="opacity-60">{{ empty_text|default:"Veri bulunamadı." }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  
+  <!-- Desktop Görünümünde Normal Tablo -->
+  <div x-show="!cardMode">
+    <table class="table table-auto w-full">
+      <thead>
+        <tr>
+          {% for header in headers %}
+          <th class="{% if header.width %}w-{{ header.width }}{% endif %}">
+            {{ header.label }}
+          </th>
+          {% endfor %}
+          {% if actions_template %}
+          <th class="w-24">İşlemler</th>
+          {% endif %}
+        </tr>
+      </thead>
+      <tbody class="{% if zebra|default:True %}table-zebra{% endif %} {% if hover|default:True %}hover{% endif %}">
+        {% for item in data %}
+        <tr>
+          {% for header in headers %}
+          <td>
+            {% if header.format %}
+              {{ item|get_dict_value:header.key|apply_format:header.format }}
+            {% else %}
+              {{ item|get_dict_value:header.key }}
+            {% endif %}
+          </td>
+          {% endfor %}
+          {% if actions_template %}
+          <td>
+            {% include actions_template with item=item %}
+          </td>
+          {% endif %}
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="{{ headers|length }}{% if actions_template %}+1{% endif %}" class="text-center py-8">
+            <div class="opacity-60">{{ empty_text|default:"Veri bulunamadı." }}</div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,0 +1,12 @@
+{% comment %}
+    Navbar menü öğeleri - Hem mobil hem desktop için kullanılır
+{% endcomment %}
+
+<li><a href="{% url 'dashboard:dashboard' %}">Gösterge Paneli</a></li>
+<li><a href="{% url 'customers:customer-list' %}">Müşteriler</a></li>
+<li><a href="{% url 'products:product-list' %}">Ürünler</a></li>
+<li><a href="{% url 'orders:order-list' %}">Siparişler</a></li>
+<li><a href="{% url 'reports:dashboard' %}">Raporlar</a></li>
+{% if request.user.is_staff %}
+<li><a href="{% url 'admin_panel:dashboard' %}">Yönetim Paneli</a></li>
+{% endif %}

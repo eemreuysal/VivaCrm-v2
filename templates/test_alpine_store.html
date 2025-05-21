@@ -1,0 +1,66 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Alpine.js Store Testi{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-8">
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h2 class="card-title">Alpine.js Store Testi</h2>
+            
+            <div class="divider"></div>
+            
+            <!-- Theme Store Test -->
+            <div class="bg-base-200 p-4 rounded-lg my-4">
+                <h3 class="text-lg font-bold mb-4">Theme Store Test</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="card bg-base-100 shadow-md">
+                        <div class="card-body">
+                            <h4 class="font-bold">Store Değerleri</h4>
+                            <p class="mb-2">Dark Mode: <span x-text="$store.theme.darkMode"></span></p>
+                            <p class="mb-2">System Preference: <span x-text="$store.theme.systemPreference"></span></p>
+                            
+                            <div class="form-control mt-4">
+                                <label class="label cursor-pointer">
+                                    <span class="label-text">Koyu Tema</span>
+                                    <input type="checkbox" x-model="$store.theme.darkMode" @change="$store.theme.toggle()" class="toggle toggle-primary" />
+                                </label>
+                            </div>
+                            
+                            <button @click="$store.theme.toggle()" class="btn btn-primary mt-4">Temayı Değiştir</button>
+                        </div>
+                    </div>
+                    
+                    <div class="card bg-base-100 shadow-md">
+                        <div class="card-body">
+                            <h4 class="font-bold">Arkaplan Testi</h4>
+                            <div class="p-4 rounded bg-base-300 flex items-center justify-center h-32">
+                                <p class="text-base-content">Bu metin temanın içeriğine göre renk değiştirir.</p>
+                            </div>
+                            
+                            <button @click="$store.theme.useSystemPreference()" class="btn btn-secondary mt-4">
+                                Sistem Temasını Kullan
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Console Debug Section -->
+            <div class="bg-base-200 p-4 rounded-lg mt-4">
+                <h3 class="text-lg font-bold mb-4">Console Debug</h3>
+                
+                <button @click="console.log('Alpine.js Store:', $store)" class="btn btn-info mr-2">
+                    Log Store to Console
+                </button>
+                
+                <button @click="console.log('Theme Store:', $store.theme)" class="btn btn-success">
+                    Log Theme Store to Console
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

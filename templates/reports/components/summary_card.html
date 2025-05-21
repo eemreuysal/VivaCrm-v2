@@ -1,0 +1,25 @@
+<!-- Özet Kartı Component -->
+<!-- Kullanım: {% include 'reports/components/summary_card.html' with title="Başlık" value="123" change="+15%" icon_path="M3 3h2l..." color="primary" %} -->
+
+<div class="card bg-base-100 shadow-md hover:shadow-lg transition-shadow">
+    <div class="card-body p-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-base-content/70">{{ title }}</p>
+                <h3 class="text-2xl font-bold">{{ value|default:"0" }}</h3>
+                {% if change %}
+                <p class="text-sm {% if '+' in change %}text-success{% else %}text-error{% endif %} mt-1">
+                    {{ change }} geçen dönem
+                </p>
+                {% endif %}
+            </div>
+            <div class="avatar placeholder">
+                <div class="bg-{{ color|default:'primary' }}/10 text-{{ color|default:'primary' }} rounded-lg w-12 h-12 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ icon_path|default:'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' }}" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

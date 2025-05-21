@@ -1,85 +1,102 @@
-<!-- 
-Sayfalama (pagination) komponenti.
+{% comment %}
+Pagination bileşeni.
+
 Kullanımı:
 {% include "components/pagination.html" with 
-  objects=page_obj
-  size="md"
-  query_params=request.GET
-  target="#content-area"
+  page_obj=paginator_object            # Django paginator page nesnesi (zorunlu)
+  url_pattern=url                      # URL pattern/prefix (varsayılan: "?page=")
+  size="md"                            # Buton boyutu - sm, md, lg (varsayılan: md)
+  class="py-4"                         # Ek CSS sınıfları (isteğe bağlı)
+  show_numbers=True                    # Sayı gösterimi (varsayılan: True)
+  show_extremes=True                   # İlk ve son sayfa butonları (varsayılan: True)
+  num_pages=3                          # Gösterilecek sayfa numarası sayısı (varsayılan: 3)
+  align="center"                       # Hizalama - start, center, end (varsayılan: center)
+  parameters=request.GET               # URL parametreleri (varsayılan: request.GET)
+  htmx=True                            # HTMX sorgusu mı? (varsayılan: False)
+  htmx_target="#content"               # HTMX hedef elementi
+  htmx_swap="innerHTML"                # HTMX swap metodu (varsayılan: innerHTML)
+  htmx_trigger="click"                 # HTMX tetikleyici (varsayılan: click)
 %}
+{% endcomment %}
 
-Boyutlar:
-- sm (küçük)
-- md (orta) - varsayılan
-- lg (büyük)
--->
-
-{% if objects.has_other_pages %}
-<div class="flex justify-center my-4 {{ class }}">
+{% if page_obj.paginator.num_pages > 1 %}
+<div class="pagination flex {{ align|default:'justify-center' }} {{ class }}">
   <div class="btn-group">
     <!-- İlk Sayfa -->
-    {% if objects.has_previous %}
-      <a 
-        href="?page=1{% for key, value in query_params.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
-        class="btn {% if size == 'sm' %}btn-sm{% elif size == 'lg' %}btn-lg{% endif %}"
-        {% if target %}
-        hx-get="?page=1{% for key, value in query_params.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
-        hx-target="{{ target }}"
-        hx-push-url="true"
-        {% endif %}
-      >«</a>
-    {% else %}
-      <button class="btn {% if size == 'sm' %}btn-sm{% elif size == 'lg' %}btn-lg{% endif %} btn-disabled">«</button>
+    {% if show_extremes|default:True and page_obj.has_previous %}
+    <a href="{{ url_pattern|default:'?page=' }}1{% if parameters %}{% for key, value in parameters.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}{% endif %}" 
+       class="btn btn-{{ size|default:'md' }}"
+       {% if htmx|default:False %}
+       hx-get="{{ url_pattern|default:'?page=' }}1{% if parameters %}{% for key, value in parameters.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}{% endif %}"
+       hx-target="{{ htmx_target }}"
+       hx-swap="{{ htmx_swap|default:'innerHTML' }}"
+       hx-trigger="{{ htmx_trigger|default:'click' }}"
+       {% endif %}
+       title="İlk sayfa">«</a>
     {% endif %}
     
     <!-- Önceki Sayfa -->
-    {% if objects.has_previous %}
-      <a 
-        href="?page={{ objects.previous_page_number }}{% for key, value in query_params.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
-        class="btn {% if size == 'sm' %}btn-sm{% elif size == 'lg' %}btn-lg{% endif %}"
-        {% if target %}
-        hx-get="?page={{ objects.previous_page_number }}{% for key, value in query_params.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
-        hx-target="{{ target }}"
-        hx-push-url="true"
-        {% endif %}
-      >‹</a>
-    {% else %}
-      <button class="btn {% if size == 'sm' %}btn-sm{% elif size == 'lg' %}btn-lg{% endif %} btn-disabled">‹</button>
+    {% if page_obj.has_previous %}
+    <a href="{{ url_pattern|default:'?page=' }}{{ page_obj.previous_page_number }}{% if parameters %}{% for key, value in parameters.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}{% endif %}" 
+       class="btn btn-{{ size|default:'md' }}"
+       {% if htmx|default:False %}
+       hx-get="{{ url_pattern|default:'?page=' }}{{ page_obj.previous_page_number }}{% if parameters %}{% for key, value in parameters.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}{% endif %}"
+       hx-target="{{ htmx_target }}"
+       hx-swap="{{ htmx_swap|default:'innerHTML' }}"
+       hx-trigger="{{ htmx_trigger|default:'click' }}"
+       {% endif %}
+       title="Önceki sayfa">‹</a>
     {% endif %}
     
-    <!-- Mevcut Sayfa Göstergesi -->
-    <button class="btn {% if size == 'sm' %}btn-sm{% elif size == 'lg' %}btn-lg{% endif %} btn-active">
-      {{ objects.number }} / {{ objects.paginator.num_pages }}
-    </button>
+    <!-- Sayfa Numaraları -->
+    {% if show_numbers|default:True %}
+      {% with ''|center:page_obj.paginator.num_pages as range %}
+        {% for _ in range %}
+          {% with forloop.counter as i %}
+            {% if i >= page_obj.number|add:"-3" and i <= page_obj.number|add:"3" %}
+              <a href="{{ url_pattern|default:'?page=' }}{{ i }}{% if parameters %}{% for key, value in parameters.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}{% endif %}" 
+                 class="btn btn-{{ size|default:'md' }} {% if page_obj.number == i %}btn-active{% endif %}"
+                 {% if htmx|default:False %}
+                 hx-get="{{ url_pattern|default:'?page=' }}{{ i }}{% if parameters %}{% for key, value in parameters.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}{% endif %}"
+                 hx-target="{{ htmx_target }}"
+                 hx-swap="{{ htmx_swap|default:'innerHTML' }}"
+                 hx-trigger="{{ htmx_trigger|default:'click' }}"
+                 {% endif %}
+                 title="Sayfa {{ i }}">{{ i }}</a>
+            {% endif %}
+          {% endwith %}
+        {% endfor %}
+      {% endwith %}
+    {% else %}
+      <button class="btn btn-{{ size|default:'md' }} pointer-events-none">
+        {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+      </button>
+    {% endif %}
     
     <!-- Sonraki Sayfa -->
-    {% if objects.has_next %}
-      <a 
-        href="?page={{ objects.next_page_number }}{% for key, value in query_params.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
-        class="btn {% if size == 'sm' %}btn-sm{% elif size == 'lg' %}btn-lg{% endif %}"
-        {% if target %}
-        hx-get="?page={{ objects.next_page_number }}{% for key, value in query_params.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
-        hx-target="{{ target }}"
-        hx-push-url="true"
-        {% endif %}
-      >›</a>
-    {% else %}
-      <button class="btn {% if size == 'sm' %}btn-sm{% elif size == 'lg' %}btn-lg{% endif %} btn-disabled">›</button>
+    {% if page_obj.has_next %}
+    <a href="{{ url_pattern|default:'?page=' }}{{ page_obj.next_page_number }}{% if parameters %}{% for key, value in parameters.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}{% endif %}" 
+       class="btn btn-{{ size|default:'md' }}"
+       {% if htmx|default:False %}
+       hx-get="{{ url_pattern|default:'?page=' }}{{ page_obj.next_page_number }}{% if parameters %}{% for key, value in parameters.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}{% endif %}"
+       hx-target="{{ htmx_target }}"
+       hx-swap="{{ htmx_swap|default:'innerHTML' }}"
+       hx-trigger="{{ htmx_trigger|default:'click' }}"
+       {% endif %}
+       title="Sonraki sayfa">›</a>
     {% endif %}
     
     <!-- Son Sayfa -->
-    {% if objects.has_next %}
-      <a 
-        href="?page={{ objects.paginator.num_pages }}{% for key, value in query_params.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
-        class="btn {% if size == 'sm' %}btn-sm{% elif size == 'lg' %}btn-lg{% endif %}"
-        {% if target %}
-        hx-get="?page={{ objects.paginator.num_pages }}{% for key, value in query_params.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
-        hx-target="{{ target }}"
-        hx-push-url="true"
-        {% endif %}
-      >»</a>
-    {% else %}
-      <button class="btn {% if size == 'sm' %}btn-sm{% elif size == 'lg' %}btn-lg{% endif %} btn-disabled">»</button>
+    {% if show_extremes|default:True and page_obj.has_next %}
+    <a href="{{ url_pattern|default:'?page=' }}{{ page_obj.paginator.num_pages }}{% if parameters %}{% for key, value in parameters.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}{% endif %}" 
+       class="btn btn-{{ size|default:'md' }}"
+       {% if htmx|default:False %}
+       hx-get="{{ url_pattern|default:'?page=' }}{{ page_obj.paginator.num_pages }}{% if parameters %}{% for key, value in parameters.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}{% endif %}"
+       hx-target="{{ htmx_target }}"
+       hx-swap="{{ htmx_swap|default:'innerHTML' }}"
+       hx-trigger="{{ htmx_trigger|default:'click' }}"
+       {% endif %}
+       title="Son sayfa">»</a>
     {% endif %}
   </div>
 </div>

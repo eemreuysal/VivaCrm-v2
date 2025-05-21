@@ -206,9 +206,9 @@
                 <td>{{ forloop.counter }}</td>
                 <td>{{ item.description }}</td>
                 <td class="text-right">{{ item.quantity }}</td>
-                <td class="text-right">{{ item.unit_price|floatformat:2 }} ₺</td>
+                <td class="text-right">{{ item.unit_price|floatformat:2 }} $</td>
                 <td class="text-right">{{ item.tax_rate }}%</td>
-                <td class="text-right">{{ item.total_with_tax|floatformat:2 }} ₺</td>
+                <td class="text-right">{{ item.total_with_tax|floatformat:2 }} $</td>
             </tr>
             {% endfor %}
         </tbody>
@@ -219,27 +219,27 @@
             <tbody>
                 <tr>
                     <td><span class="label">Ara Toplam:</span></td>
-                    <td class="text-right">{{ invoice.subtotal|floatformat:2 }} ₺</td>
+                    <td class="text-right">{{ invoice.subtotal|floatformat:2 }} $</td>
                 </tr>
                 <tr>
                     <td><span class="label">KDV Tutarı:</span></td>
-                    <td class="text-right">{{ invoice.tax_amount|floatformat:2 }} ₺</td>
+                    <td class="text-right">{{ invoice.tax_amount|floatformat:2 }} $</td>
                 </tr>
                 {% if invoice.shipping_cost > 0 %}
                 <tr>
                     <td><span class="label">Kargo Ücreti:</span></td>
-                    <td class="text-right">{{ invoice.shipping_cost|floatformat:2 }} ₺</td>
+                    <td class="text-right">{{ invoice.shipping_cost|floatformat:2 }} $</td>
                 </tr>
                 {% endif %}
                 {% if invoice.discount_amount > 0 %}
                 <tr>
                     <td><span class="label">İndirim:</span></td>
-                    <td class="text-right">-{{ invoice.discount_amount|floatformat:2 }} ₺</td>
+                    <td class="text-right">-{{ invoice.discount_amount|floatformat:2 }} $</td>
                 </tr>
                 {% endif %}
                 <tr style="font-size: 14px; font-weight: bold;">
                     <td><span class="label">Genel Toplam:</span></td>
-                    <td class="text-right">{{ invoice.total_amount|floatformat:2 }} ₺</td>
+                    <td class="text-right">{{ invoice.total_amount|floatformat:2 }} $</td>
                 </tr>
             </tbody>
         </table>

@@ -7,148 +7,405 @@
 
 {% block content %}
 <div class="container mx-auto p-4">
-    <div class="flex justify-between items-center mb-4">
-        <h1 class="text-2xl font-bold">{% trans "Stok Hareketleri" %}</h1>
+    <!-- Page Header & Quick Actions -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
-            <a href="{% url 'products:movement-create' %}" class="btn btn-primary">
-                <i class="fas fa-plus mr-2"></i>{% trans "Yeni Hareket" %}
+            <h1 class="text-3xl font-bold text-primary">{% trans "Stok Hareketleri" %}</h1>
+            <p class="text-base-content/70">{% trans "Ürün stok hareketlerini takip edin ve yönetin" %}</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+            <a href="{% url 'products:movement-create' %}" class="btn btn-primary gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                </svg>
+                {% trans "Yeni Hareket" %}
             </a>
-            <a href="{% url 'products:bulk-stock-adjustment' %}" class="btn btn-secondary ml-2">
-                <i class="fas fa-tasks mr-2"></i>{% trans "Toplu Ayarlama" %}
+            <a href="{% url 'products:bulk-stock-adjustment' %}" class="btn btn-secondary gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+                {% trans "Toplu Ayarlama" %}
             </a>
         </div>
     </div>
 
-    <!-- Filters -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <h2 class="text-lg font-semibold mb-3">{% trans "Filtrele" %}</h2>
-            <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="form-control">
-                    <label class="label">
-                        <span class="label-text">{% trans "Ürün" %}</span>
-                    </label>
-                    <select name="product" class="select select-bordered w-full">
-                        <option value="">{% trans "Tüm Ürünler" %}</option>
-                        {% for product in products %}
-                            <option value="{{ product.id }}" {% if product.id|slugify == product_id %}selected{% endif %}>{{ product.code }} - {{ product.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="form-control">
-                    <label class="label">
-                        <span class="label-text">{% trans "Hareket Tipi" %}</span>
-                    </label>
-                    <select name="type" class="select select-bordered w-full">
-                        <option value="">{% trans "Tüm Tipler" %}</option>
-                        {% for key, value in movement_types.items %}
-                            <option value="{{ key }}" {% if key == movement_type %}selected{% endif %}>{{ value }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="form-control">
-                    <label class="label">
-                        <span class="label-text">{% trans "Başlangıç Tarihi" %}</span>
-                    </label>
-                    <input type="date" name="start_date" value="{{ start_date }}" class="input input-bordered w-full" />
-                </div>
-                <div class="form-control">
-                    <label class="label">
-                        <span class="label-text">{% trans "Bitiş Tarihi" %}</span>
-                    </label>
-                    <input type="date" name="end_date" value="{{ end_date }}" class="input input-bordered w-full" />
-                </div>
-                <div class="md:col-span-4 flex justify-end">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-search mr-2"></i>{% trans "Filtrele" %}
-                    </button>
-                    <a href="{% url 'products:movement-list' %}" class="btn btn-ghost ml-2">
-                        <i class="fas fa-times mr-2"></i>{% trans "Temizle" %}
-                    </a>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Summary -->
-    <div class="card mb-4 bg-base-200">
-        <div class="card-body">
-            <h2 class="text-lg font-semibold mb-3">{% trans "Özet" %}</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="stats shadow">
-                    <div class="stat">
-                        <div class="stat-title">{% trans "Toplam Hareket" %}</div>
-                        <div class="stat-value">{{ total_movements }}</div>
+    <!-- Stats Dashboard -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <!-- Total Movements Card -->
+        <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300 border-t-4 border-primary">
+            <div class="card-body p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="card-title text-lg font-medium text-base-content/80">{% trans "Toplam Hareket" %}</h2>
+                        <p class="text-3xl font-bold mt-2">{{ total_movements }}</p>
                     </div>
+                    <div class="rounded-full bg-primary/10 p-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                        </svg>
+                    </div>
+                </div>
+                {% if start_date or end_date %}
+                <div class="text-xs mt-4 py-1 px-2 bg-base-200 rounded-md">
+                    {% if start_date %}{% trans "Başlangıç:" %} {{ start_date }}{% endif %}
+                    {% if end_date %}{% if start_date %} | {% endif %}{% trans "Bitiş:" %} {{ end_date }}{% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Movement Types Distribution -->
+        <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300 border-t-4 border-secondary">
+            <div class="card-body p-6">
+                <div class="flex justify-between items-start">
+                    <h2 class="card-title text-lg font-medium text-base-content/80">{% trans "Hareket Dağılımı" %}</h2>
+                    <div class="dropdown dropdown-end">
+                        <div tabindex="0" role="button" class="btn btn-ghost btn-xs">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                            </svg>
+                        </div>
+                        <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                            {% for key, value in movement_types.items %}
+                            <li><a href="?type={{ key }}">{{ value }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="mt-2 flex flex-wrap gap-2">
+                    <span class="badge badge-info">{% trans "Alım" %}</span>
+                    <span class="badge badge-warning">{% trans "Satış" %}</span>
+                    <span class="badge badge-success">{% trans "İade" %}</span>
+                    <span class="badge badge-primary">{% trans "Düzeltme" %}</span>
+                    <span class="badge badge-secondary">{% trans "Envanter" %}</span>
+                    <span class="badge badge-error">{% trans "Fire" %}</span>
+                </div>
+                <div class="w-full h-1 mt-4 bg-base-200 rounded overflow-hidden">
+                    <div class="flex">
+                        <div class="bg-info h-1" style="width: 30%"></div>
+                        <div class="bg-warning h-1" style="width: 20%"></div>
+                        <div class="bg-success h-1" style="width: 15%"></div>
+                        <div class="bg-primary h-1" style="width: 15%"></div>
+                        <div class="bg-secondary h-1" style="width: 10%"></div>
+                        <div class="bg-error h-1" style="width: 10%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Filter Card -->
+        <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300 border-t-4 border-accent">
+            <div class="card-body p-6">
+                <h2 class="card-title text-lg font-medium text-base-content/80">{% trans "Hızlı Filtreleme" %}</h2>
+                <div class="grid grid-cols-2 gap-2 mt-2">
+                    <a href="?type=purchase" class="btn btn-info btn-sm btn-outline">
+                        {% trans "Alım Hareketleri" %}
+                    </a>
+                    <a href="?type=sale" class="btn btn-warning btn-sm btn-outline">
+                        {% trans "Satış Hareketleri" %}
+                    </a>
+                    <a href="?type=return" class="btn btn-success btn-sm btn-outline">
+                        {% trans "İade Hareketleri" %}
+                    </a>
+                    <a href="?type=adjustment" class="btn btn-primary btn-sm btn-outline">
+                        {% trans "Düzeltme Hareketleri" %}
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Filters -->
+    <div class="card bg-base-100 shadow-lg mb-6 relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-1 h-full bg-secondary"></div>
+        <div class="card-body p-6 relative">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" />
+                    </svg>
+                    {% trans "Detaylı Filtreleme" %}
+                </h2>
+                <button id="toggleFilters" class="btn btn-ghost btn-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Active Filters -->
+            <div class="flex flex-wrap gap-2 mb-4">
+                {% if product_id %}
+                <div class="badge badge-outline gap-1">
+                    {% trans "Ürün" %}: 
+                    {% for product in products %}
+                        {% if product.id|slugify == product_id %}{{ product.name }}{% endif %}
+                    {% endfor %}
+                    <a href="?{% if movement_type %}type={{ movement_type }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}" class="ml-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </a>
+                </div>
+                {% endif %}
+                
+                {% if movement_type %}
+                <div class="badge badge-outline gap-1">
+                    {% trans "Tip" %}: {{ movement_types|get_item:movement_type }}
+                    <a href="?{% if product_id %}product={{ product_id }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}" class="ml-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </a>
+                </div>
+                {% endif %}
+                
+                {% if start_date or end_date %}
+                <div class="badge badge-outline gap-1">
+                    {% trans "Tarih" %}: 
+                    {% if start_date %}{{ start_date }}{% endif %}
+                    {% if start_date and end_date %} - {% endif %}
+                    {% if end_date %}{{ end_date }}{% endif %}
+                    <a href="?{% if product_id %}product={{ product_id }}{% endif %}{% if movement_type %}&type={{ movement_type }}{% endif %}" class="ml-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </a>
+                </div>
+                {% endif %}
+                
+                {% if product_id or movement_type or start_date or end_date %}
+                <a href="{% url 'products:movement-list' %}" class="btn btn-ghost btn-xs gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                    {% trans "Tümünü Temizle" %}
+                </a>
+                {% endif %}
+            </div>
+
+            <div id="filterContent" class="overflow-hidden transition-all duration-300" style="max-height: 0;">
+                <form method="get" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-medium">{% trans "Ürün" %}</span>
+                        </label>
+                        <select name="product" class="select select-bordered w-full">
+                            <option value="">{% trans "Tüm Ürünler" %}</option>
+                            {% for product in products %}
+                                <option value="{{ product.id }}" {% if product.id|slugify == product_id %}selected{% endif %}>{{ product.code }} - {{ product.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-medium">{% trans "Hareket Tipi" %}</span>
+                        </label>
+                        <select name="type" class="select select-bordered w-full">
+                            <option value="">{% trans "Tüm Tipler" %}</option>
+                            {% for key, value in movement_types.items %}
+                                <option value="{{ key }}" {% if key == movement_type %}selected{% endif %}>{{ value }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-medium">{% trans "Başlangıç Tarihi" %}</span>
+                        </label>
+                        <input type="date" name="start_date" value="{{ start_date }}" class="input input-bordered w-full" />
+                    </div>
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-medium">{% trans "Bitiş Tarihi" %}</span>
+                        </label>
+                        <input type="date" name="end_date" value="{{ end_date }}" class="input input-bordered w-full" />
+                    </div>
+                    <div class="lg:col-span-4 flex justify-end gap-2 mt-2">
+                        <button type="submit" class="btn btn-primary gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                            </svg>
+                            {% trans "Filtrele" %}
+                        </button>
+                        <a href="{% url 'products:movement-list' %}" class="btn btn-ghost gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                            {% trans "Temizle" %}
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Movements Table -->
-    <div class="card">
-        <div class="card-body">
+    <div class="card bg-base-100 shadow-xl overflow-hidden">
+        <div class="card-body p-0">
             <div class="overflow-x-auto">
-                <table class="table w-full">
-                    <thead>
+                <table class="table table-zebra w-full">
+                    <thead class="bg-base-200">
                         <tr>
-                            <th>{% trans "Ürün" %}</th>
-                            <th>{% trans "Hareket Tipi" %}</th>
-                            <th class="text-right">{% trans "Miktar" %}</th>
-                            <th>{% trans "Önceki Stok" %}</th>
-                            <th>{% trans "Yeni Stok" %}</th>
-                            <th>{% trans "Referans" %}</th>
-                            <th>{% trans "Tarih" %}</th>
-                            <th>{% trans "İşlemler" %}</th>
+                            <th class="bg-opacity-80">{% trans "Ürün" %}</th>
+                            <th class="bg-opacity-80">{% trans "Hareket Tipi" %}</th>
+                            <th class="text-right bg-opacity-80">{% trans "Miktar" %}</th>
+                            <th class="bg-opacity-80">{% trans "Önceki Stok" %}</th>
+                            <th class="bg-opacity-80">{% trans "Yeni Stok" %}</th>
+                            <th class="bg-opacity-80">{% trans "Referans" %}</th>
+                            <th class="bg-opacity-80">{% trans "Tarih" %}</th>
+                            <th class="bg-opacity-80 text-center">{% trans "İşlemler" %}</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for movement in movements %}
-                            <tr>
+                            <tr class="hover">
                                 <td>
-                                    <a href="{% url 'products:product-detail' movement.product.slug %}" class="font-medium">
-                                        {{ movement.product.code }} - {{ movement.product.name }}
-                                    </a>
+                                    <div class="flex items-center gap-2">
+                                        {% if movement.product.images.first %}
+                                            <div class="avatar">
+                                                <div class="mask mask-squircle w-8 h-8">
+                                                    <img src="{{ movement.product.images.first.image.url }}" alt="{{ movement.product.name }}" />
+                                                </div>
+                                            </div>
+                                        {% else %}
+                                            <div class="avatar placeholder">
+                                                <div class="bg-base-300 mask mask-squircle w-8 h-8">
+                                                    <span class="text-sm">{{ movement.product.name|slice:":1" }}</span>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                        <div>
+                                            <a href="{% url 'products:product-detail' movement.product.slug %}" class="font-medium text-primary hover:underline truncate block" style="max-width: 200px;">
+                                                {{ movement.product.name }}
+                                            </a>
+                                            <span class="text-sm opacity-70">{{ movement.product.code }}</span>
+                                        </div>
+                                    </div>
                                 </td>
                                 <td>
                                     {% if movement.movement_type == 'purchase' %}
-                                        <span class="badge badge-info">{{ movement.get_movement_type_display }}</span>
+                                        <span class="badge badge-info gap-1">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                                                <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM14 11a1 1 0 011 1v1h1a1 1 0 110 2h-1v1a1 1 0 11-2 0v-1h-1a1 1 0 110-2h1v-1a1 1 0 011-1z" />
+                                            </svg>
+                                            {{ movement.get_movement_type_display }}
+                                        </span>
                                     {% elif movement.movement_type == 'sale' %}
-                                        <span class="badge badge-warning">{{ movement.get_movement_type_display }}</span>
+                                        <span class="badge badge-warning gap-1">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                                                <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
+                                            </svg>
+                                            {{ movement.get_movement_type_display }}
+                                        </span>
                                     {% elif movement.movement_type == 'return' %}
-                                        <span class="badge badge-success">{{ movement.get_movement_type_display }}</span>
+                                        <span class="badge badge-success gap-1">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+                                            </svg>
+                                            {{ movement.get_movement_type_display }}
+                                        </span>
                                     {% elif movement.movement_type == 'adjustment' %}
-                                        <span class="badge badge-primary">{{ movement.get_movement_type_display }}</span>
+                                        <span class="badge badge-primary gap-1">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                                                <path d="M5 4a1 1 0 00-2 0v7.268a2 2 0 000 3.464V16a1 1 0 102 0v-1.268a2 2 0 000-3.464V4zM11 4a1 1 0 10-2 0v1.268a2 2 0 000 3.464V16a1 1 0 102 0V8.732a2 2 0 000-3.464V4zM16 3a1 1 0 011 1v7.268a2 2 0 010 3.464V16a1 1 0 11-2 0v-1.268a2 2 0 010-3.464V4a1 1 0 011-1z" />
+                                            </svg>
+                                            {{ movement.get_movement_type_display }}
+                                        </span>
                                     {% elif movement.movement_type == 'inventory' %}
-                                        <span class="badge badge-secondary">{{ movement.get_movement_type_display }}</span>
+                                        <span class="badge badge-secondary gap-1">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                                                <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
+                                            </svg>
+                                            {{ movement.get_movement_type_display }}
+                                        </span>
                                     {% elif movement.movement_type == 'waste' %}
-                                        <span class="badge badge-error">{{ movement.get_movement_type_display }}</span>
+                                        <span class="badge badge-error gap-1">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                            </svg>
+                                            {{ movement.get_movement_type_display }}
+                                        </span>
                                     {% else %}
                                         <span class="badge">{{ movement.get_movement_type_display }}</span>
                                     {% endif %}
                                 </td>
-                                <td class="text-right">
+                                <td class="text-right font-mono">
                                     {% if movement.movement_type in 'purchase,return,adjustment,inventory' %}
-                                        <span class="text-success">+{{ movement.quantity }}</span>
+                                        <span class="text-success font-bold">+{{ movement.quantity }}</span>
                                     {% else %}
-                                        <span class="text-error">-{{ movement.quantity }}</span>
+                                        <span class="text-error font-bold">-{{ movement.quantity }}</span>
                                     {% endif %}
                                 </td>
-                                <td>{{ movement.previous_stock }}</td>
-                                <td>{{ movement.new_stock }}</td>
-                                <td>{{ movement.reference|default:"-" }}</td>
-                                <td>{{ movement.created_at|date:"d.m.Y H:i" }}</td>
+                                <td class="font-mono">{{ movement.previous_stock }}</td>
+                                <td class="font-mono">
+                                    <span class="font-bold">{{ movement.new_stock }}</span>
+                                    
+                                    {% if movement.previous_stock < movement.new_stock %}
+                                        <span class="badge badge-xs badge-success">+{{ movement.new_stock|add:"-"|add:movement.previous_stock }}</span>
+                                    {% elif movement.previous_stock > movement.new_stock %}
+                                        <span class="badge badge-xs badge-error">{{ movement.new_stock|add:"-"|add:movement.previous_stock }}</span>
+                                    {% else %}
+                                        <span class="badge badge-xs badge-ghost">±0</span>
+                                    {% endif %}
+                                </td>
                                 <td>
-                                    <a href="{% url 'products:movement-detail' movement.id %}" class="btn btn-sm btn-ghost">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
+                                    {% if movement.reference %}
+                                        <span class="font-medium">{{ movement.reference }}</span>
+                                    {% else %}
+                                        <span class="text-base-content/50">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="flex flex-col">
+                                        <span>{{ movement.created_at|date:"d.m.Y" }}</span>
+                                        <span class="text-xs opacity-70">{{ movement.created_at|date:"H:i" }}</span>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <div class="dropdown dropdown-hover dropdown-left">
+                                        <a href="{% url 'products:movement-detail' movement.id %}" class="btn btn-sm btn-circle btn-ghost hover:bg-base-300">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                            </svg>
+                                        </a>
+                                        <div tabindex="0" class="dropdown-content z-[1] card card-compact shadow bg-base-100 w-64">
+                                            <div class="card-body">
+                                                <h3 class="card-title text-sm">{{ movement.product.name }}</h3>
+                                                <p class="text-xs">{{ movement.get_movement_type_display }} - {{ movement.created_at|date:"d.m.Y H:i" }}</p>
+                                                <div class="card-actions justify-end mt-2">
+                                                    <a href="{% url 'products:movement-detail' movement.id %}" class="btn btn-primary btn-xs">
+                                                        {% trans "Detay Görüntüle" %}
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </td>
                             </tr>
                         {% empty %}
                             <tr>
-                                <td colspan="8" class="text-center py-4">
-                                    <div class="alert alert-info mb-0">
-                                        {% trans "Hiç stok hareketi bulunamadı." %}
+                                <td colspan="8" class="text-center py-8">
+                                    <div class="flex flex-col items-center justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-base-content/30 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                        </svg>
+                                        <p class="text-base-content/60 text-lg mb-1">{% trans "Hiç stok hareketi bulunamadı." %}</p>
+                                        <p class="text-base-content/50 text-sm mb-4">{% trans "Filtrelerinizi değiştirmeyi veya yeni bir stok hareketi eklemeyi deneyin." %}</p>
+                                        <div class="flex gap-2">
+                                            <a href="{% url 'products:movement-list' %}" class="btn btn-sm btn-ghost gap-1">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                                </svg>
+                                                {% trans "Filtreleri Temizle" %}
+                                            </a>
+                                            <a href="{% url 'products:movement-create' %}" class="btn btn-sm btn-primary gap-1">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                                                </svg>
+                                                {% trans "Yeni Hareket Ekle" %}
+                                            </a>
+                                        </div>
                                     </div>
                                 </td>
                             </tr>
@@ -159,31 +416,168 @@
 
             <!-- Pagination -->
             {% if is_paginated %}
-                <div class="flex justify-center my-4">
-                    <div class="btn-group">
-                        {% if page_obj.has_previous %}
-                            <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page=1" class="btn btn-sm">
-                                <i class="fas fa-angle-double-left"></i>
-                            </a>
-                            <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.previous_page_number }}" class="btn btn-sm">
-                                <i class="fas fa-angle-left"></i>
-                            </a>
-                        {% endif %}
-                        
-                        <button class="btn btn-sm">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</button>
-                        
-                        {% if page_obj.has_next %}
-                            <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.next_page_number }}" class="btn btn-sm">
-                                <i class="fas fa-angle-right"></i>
-                            </a>
-                            <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.paginator.num_pages }}" class="btn btn-sm">
-                                <i class="fas fa-angle-double-right"></i>
-                            </a>
-                        {% endif %}
+                <div class="py-4 px-6">
+                    <div class="flex flex-wrap items-center justify-between gap-4">
+                        <div class="text-sm text-base-content/70">
+                            {% trans "Toplam" %} {{ page_obj.paginator.count }} {% trans "hareket" %} | 
+                            {% trans "Sayfa" %} {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+                        </div>
+                        <div class="join">
+                            {% if page_obj.has_previous %}
+                                <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page=1" class="join-item btn btn-sm">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M15.707 15.707a1 1 0 01-1.414 0l-5-5a1 1 0 010-1.414l5-5a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 010 1.414zm-6 0a1 1 0 01-1.414 0l-5-5a1 1 0 010-1.414l5-5a1 1 0 011.414 1.414L5.414 10l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                                    </svg>
+                                </a>
+                                <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.previous_page_number }}" class="join-item btn btn-sm">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                    </svg>
+                                </a>
+                            {% else %}
+                                <button class="join-item btn btn-sm btn-disabled">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M15.707 15.707a1 1 0 01-1.414 0l-5-5a1 1 0 010-1.414l5-5a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 010 1.414zm-6 0a1 1 0 01-1.414 0l-5-5a1 1 0 010-1.414l5-5a1 1 0 011.414 1.414L5.414 10l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                                    </svg>
+                                </button>
+                                <button class="join-item btn btn-sm btn-disabled">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                    </svg>
+                                </button>
+                            {% endif %}
+                            
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <button class="join-item btn btn-sm btn-active">{{ num }}</button>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ num }}" class="join-item btn btn-sm">{{ num }}</a>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if page_obj.has_next %}
+                                <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.next_page_number }}" class="join-item btn btn-sm">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                                    </svg>
+                                </a>
+                                <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.paginator.num_pages }}" class="join-item btn btn-sm">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10.293 15.707a1 1 0 010-1.414L14.586 10l-4.293-4.293a1 1 0 111.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                                        <path fill-rule="evenodd" d="M4.293 15.707a1 1 0 010-1.414L8.586 10 4.293 5.707a1 1 0 011.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                                    </svg>
+                                </a>
+                            {% else %}
+                                <button class="join-item btn btn-sm btn-disabled">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                                    </svg>
+                                </button>
+                                <button class="join-item btn btn-sm btn-disabled">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10.293 15.707a1 1 0 010-1.414L14.586 10l-4.293-4.293a1 1 0 111.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                                        <path fill-rule="evenodd" d="M4.293 15.707a1 1 0 010-1.414L8.586 10 4.293 5.707a1 1 0 011.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                                    </svg>
+                                </button>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             {% endif %}
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleFilters = document.getElementById('toggleFilters');
+        const filterContent = document.getElementById('filterContent');
+        let filtersOpen = false;
+        
+        // Check if any filters are applied
+        const hasActiveFilters = {% if product_id or movement_type or start_date or end_date %}true{% else %}false{% endif %};
+        
+        // Initialize filter panel state
+        if (hasActiveFilters) {
+            filterContent.style.maxHeight = filterContent.scrollHeight + 'px';
+            filtersOpen = true;
+            toggleFilters.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd" />
+                </svg>
+            `;
+        }
+        
+        // Toggle filter panel
+        toggleFilters.addEventListener('click', function() {
+            if (filtersOpen) {
+                filterContent.style.maxHeight = '0';
+                toggleFilters.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                `;
+            } else {
+                filterContent.style.maxHeight = filterContent.scrollHeight + 'px';
+                toggleFilters.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd" />
+                    </svg>
+                `;
+            }
+            filtersOpen = !filtersOpen;
+        });
+        
+        // Enhance select dropdowns
+        const selects = document.querySelectorAll('select');
+        selects.forEach(select => {
+            select.addEventListener('change', function() {
+                if (this.value) {
+                    this.classList.add('select-success');
+                } else {
+                    this.classList.remove('select-success');
+                }
+            });
+            
+            // Initialize select styling
+            if (select.value) {
+                select.classList.add('select-success');
+            }
+        });
+        
+        // Enhance date inputs
+        const dateInputs = document.querySelectorAll('input[type="date"]');
+        dateInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                if (this.value) {
+                    this.classList.add('input-success');
+                } else {
+                    this.classList.remove('input-success');
+                }
+            });
+            
+            // Initialize date input styling
+            if (input.value) {
+                input.classList.add('input-success');
+            }
+        });
+        
+        // Table row hover effect
+        const tableRows = document.querySelectorAll('tbody tr');
+        tableRows.forEach(row => {
+            row.addEventListener('mouseover', function() {
+                this.classList.add('shadow-md');
+                this.style.transform = 'translateY(-2px)';
+                this.style.transition = 'transform 0.2s, box-shadow 0.2s';
+            });
+            
+            row.addEventListener('mouseout', function() {
+                this.classList.remove('shadow-md');
+                this.style.transform = 'translateY(0)';
+            });
+        });
+    });
+</script>
 {% endblock %}

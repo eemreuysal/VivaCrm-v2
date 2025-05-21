@@ -1,0 +1,298 @@
+{% load static %}
+<!-- Dashboard özel stilleri -->
+<style>
+  /* === Ana Dashboard Stilleri === */
+  .dashboard-container {
+    transition: background-color 0.3s ease;
+    background: linear-gradient(135deg, hsl(var(--b1)) 0%, hsl(var(--b2)) 100%);
+    min-height: calc(100vh - 64px); /* Header'ı hesaba katarak */
+  }
+  
+  .dashboard-fade-in {
+    animation: dashboardFadeIn 0.6s ease-out;
+  }
+
+  /* === Kart Bileşenleri için Standardize Edilmiş Sınıflar === */
+  .card {
+    transition: all 0.3s ease;
+    @apply relative overflow-hidden shadow-lg;
+    border-radius: 0.75rem;
+  }
+
+  /* Stat Kartı */
+  .stat-card {
+    @apply relative overflow-hidden transition-all duration-300;
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.05);
+  }
+  
+  .stat-card:hover {
+    @apply shadow-xl;
+    transform: translateY(-3px);
+  }
+
+  /* Grafik Kartı */
+  .chart-card {
+    @apply rounded-xl overflow-hidden transition-all duration-300;
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.05);
+  }
+  
+  .chart-card:hover {
+    @apply shadow-xl;
+  }
+
+  /* Tablo Kartı */
+  .table-card {
+    @apply rounded-xl overflow-hidden transition-all duration-300;
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.05);
+  }
+  
+  /* === Hover ve Etkileşim Efektleri === */
+  .hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  }
+  
+  .hover-scale {
+    transition: transform 0.3s ease;
+  }
+  
+  .hover-scale:hover {
+    transform: scale(1.02);
+  }
+  
+  .hover-glow {
+    transition: box-shadow 0.3s ease;
+  }
+  
+  .hover-glow:hover {
+    box-shadow: 0 0 15px rgba(var(--p), 0.4);
+  }
+
+  /* === Animasyonlar === */
+  .animate-fade-in {
+    animation: fadeIn 0.6s ease-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.5s ease-out;
+  }
+  
+  .animate-slide-in {
+    animation: slideIn 0.5s ease-out;
+  }
+  
+  .animate-pulse {
+    animation: pulse 2s infinite;
+  }
+  
+  .animate-bounce-soft {
+    animation: bounceSoft 2s infinite;
+  }
+
+  /* === İkon ve Görsel Efektler === */
+  .stat-icon {
+    @apply flex items-center justify-center rounded-full;
+    width: 42px;
+    height: 42px;
+    transition: all 0.3s ease;
+  }
+  
+  .stat-icon-primary {
+    @apply bg-primary/20 text-primary;
+  }
+  
+  .stat-icon-secondary {
+    @apply bg-secondary/20 text-secondary;
+  }
+  
+  .stat-icon-accent {
+    @apply bg-accent/20 text-accent;
+  }
+  
+  .stat-icon-success {
+    @apply bg-success/20 text-success;
+  }
+  
+  .stat-icon.hover-effect:hover {
+    transform: scale(1.1) rotate(5deg);
+  }
+
+  /* Cam efekti (glass morphism) */
+  .glass-effect {
+    @apply bg-opacity-70 backdrop-blur-md;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Gradyan arkaplanlar */
+  .gradient-primary {
+    background: linear-gradient(135deg, hsl(var(--p)) 0%, hsl(var(--pf)) 100%);
+  }
+  
+  .gradient-secondary {
+    background: linear-gradient(135deg, hsl(var(--s)) 0%, hsl(var(--sf)) 100%);
+  }
+  
+  .gradient-accent {
+    background: linear-gradient(135deg, hsl(var(--a)) 0%, hsl(var(--af)) 100%);
+  }
+
+  /* === Tablo Stilleri === */
+  .table-responsive {
+    @apply overflow-x-auto rounded-xl;
+  }
+  
+  .table-row-hover {
+    transition: background-color 0.15s ease;
+  }
+  
+  .table-row-hover:hover {
+    @apply bg-primary/5;
+  }
+  
+  /* İlerleme çubukları */
+  .progress-bar-container {
+    @apply w-full bg-base-200 rounded-full overflow-hidden;
+    height: 8px;
+  }
+  
+  .progress-bar {
+    @apply h-full;
+    transition: width 1s ease-in-out;
+  }
+  
+  .progress-bar-success {
+    @apply bg-success;
+  }
+  
+  .progress-bar-warning {
+    @apply bg-warning;
+  }
+  
+  .progress-bar-error {
+    @apply bg-error;
+  }
+
+  /* === Filtre Alanı Stilleri === */
+  .filters-container {
+    @apply mb-6 rounded-xl p-4 md:p-6;
+    transition: all 0.3s ease;
+  }
+  
+  .date-filter-dropdown {
+    @apply absolute right-0 mt-2 p-4 bg-base-100 rounded-lg shadow-xl z-30 w-72;
+    border: 1px solid hsl(var(--bc) / 0.1);
+  }
+  
+  /* === Modern Buton Stilleri === */
+  .btn-modern {
+    @apply flex items-center justify-center rounded-lg relative overflow-hidden;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-modern:hover {
+    @apply shadow-md;
+  }
+  
+  .btn-modern:active {
+    transform: translateY(1px);
+  }
+  
+  .btn-icon {
+    @apply flex items-center justify-center rounded-full;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-icon:hover {
+    transform: scale(1.05);
+  }
+
+  /* === Yükleme ve Boş Durum Stilleri === */
+  .loading-container {
+    @apply flex flex-col items-center justify-center py-8;
+  }
+  
+  .loading-text {
+    @apply text-sm text-base-content/60 mt-2;
+  }
+  
+  .empty-state {
+    @apply flex flex-col items-center justify-center py-8 text-base-content/60;
+  }
+  
+  .empty-state-icon {
+    @apply text-base-content/40 mb-2;
+    font-size: 2rem;
+  }
+
+  /* === Gösterge Paneli Duyarlı Tasarım === */
+  @media (max-width: 768px) {
+    .stats-container {
+      @apply grid-cols-1 gap-3;
+    }
+    
+    .charts-container {
+      @apply grid-cols-1 gap-4;
+    }
+    
+    .date-filter-dropdown {
+      width: calc(100vw - 2rem);
+      @apply right-0 left-0 mx-auto;
+    }
+    
+    .chart-card {
+      height: 300px !important;
+    }
+  }
+
+  /* === Özel Animasyon Tanımları === */
+  @keyframes dashboardFadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  
+  @keyframes pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.6; }
+  }
+  
+  @keyframes bounceSoft {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+  }
+  
+  /* === Koyu Tema Uyarlamaları === */
+  [data-theme="dark"] .dashboard-container {
+    background: linear-gradient(135deg, hsl(var(--b2)) 0%, hsl(var(--b1)) 100%);
+  }
+  
+  [data-theme="dark"] .stat-card,
+  [data-theme="dark"] .chart-card,
+  [data-theme="dark"] .table-card {
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.2);
+  }
+  
+  [data-theme="dark"] .hover-glow:hover {
+    box-shadow: 0 0 15px rgba(var(--p), 0.6);
+  }
+</style>

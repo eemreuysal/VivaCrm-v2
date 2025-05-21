@@ -1,0 +1,153 @@
+/**
+ * VivaCRM Dashboard Component Styles
+ * Modern, clean ve performanslı
+ */
+
+/* Dashboard Container */
+.dashboard-container {
+  @apply min-h-screen;
+  background: linear-gradient(to bottom right, hsl(var(--b1, 0 0% 100%)), hsl(var(--b2, 210 20% 98%)));
+}
+
+/* Card component basics */
+.card--stat {
+  @apply transition-all duration-300;
+}
+
+.hover-lift {
+  @apply hover:translate-y-[-5px] hover:shadow-2xl;
+}
+
+/* Dashboard fade-in animations */
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Dashboard loading overlay */
+.dashboard-loading {
+  @apply fixed top-0 left-0 right-0 bottom-0 flex items-center justify-center z-[1000];
+  background-color: rgba(255, 255, 255, 0.8);
+}
+
+.dark .dashboard-loading {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+/* Stat Cards */
+.stat-icon {
+  @apply w-12 h-12 rounded-xl flex items-center justify-center;
+}
+
+.stat-value {
+  @apply text-3xl font-bold;
+}
+
+.stat-label {
+  @apply text-base-content/60 text-sm;
+}
+
+.stat-trend {
+  @apply flex items-center gap-1 text-sm;
+}
+
+.stat-trend.up {
+  @apply text-success;
+}
+
+.stat-trend.down {
+  @apply text-error;
+}
+
+/* Chart container */
+.chart-container {
+  height: 350px;
+  width: 100%;
+  @apply mb-6;
+}
+
+/* Chart Elements */
+.chart-header {
+  @apply flex items-center justify-between mb-4;
+}
+
+.chart-title {
+  @apply text-lg font-semibold;
+}
+
+/* Table Components */
+.table-responsive {
+  @apply overflow-x-auto;
+}
+
+/* Progress bar for low stock */
+.progress {
+  @apply overflow-hidden rounded-full bg-base-200;
+}
+
+.progress-bar {
+  @apply h-full;
+}
+
+/* Sort indicators for tables */
+.sort-asc::after {
+  content: "↑";
+  @apply ml-1;
+}
+
+.sort-desc::after {
+  content: "↓";
+  @apply ml-1;
+}
+
+/* Date filter styles */
+.date-filter-container {
+  @apply relative;
+}
+
+.date-filter-dropdown {
+  @apply absolute right-0 mt-2 p-4 bg-base-100 rounded-lg shadow-xl z-30 w-64;
+}
+
+/* Dark Mode Adjustments */
+[data-theme="vivacrmDark"] .dashboard-container {
+  background: linear-gradient(to bottom right, hsl(var(--b3, 215 16% 27%)), hsl(var(--b1, 221 39% 11%)));
+}
+
+[data-theme="vivacrmDark"] .stat-icon {
+  @apply bg-primary/20;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .dashboard-stats-grid {
+    @apply grid-cols-1 gap-4;
+  }
+  
+  .chart-container {
+    height: 300px;
+  }
+  
+  .dashboard-loading {
+    @apply p-4;
+  }
+  
+  .date-filter-dropdown {
+    width: calc(100vw - 2rem);
+    @apply right-auto left-1/2 transform -translate-x-1/2;
+  }
+}
+
+/* Loading States */
+.card--loading {
+  @apply animate-pulse;
+}
+
+.card--loading .stat-value,
+.card--loading .chart-container {
+  @apply bg-base-200 rounded;
+}

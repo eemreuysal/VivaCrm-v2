@@ -8,6 +8,9 @@ Kullanımı:
   cancel_text="İptal"
   confirm_text="Tamam"
   confirm_class="btn-primary"
+  confirm_js="() => { console.log('Onaylandı!'); }"
+  backdrop_close=True
+  close_button=True
 %}
 
 JavaScript ile açmak için:
@@ -20,7 +23,7 @@ HTMX ile açmak için:
 
 Dinamik içerik için:
 <div id="example-modal" 
-     x-data="{ open: false }" 
+     x-data="modal" 
      @open-modal.window="open = true" 
      @close-modal.window="open = false">
   <div x-show="open" class="modal modal-open" x-transition>
@@ -40,16 +43,8 @@ Dinamik içerik için:
 
 <div 
   id="{{ id }}" 
-  x-data="{ 
-    open: false,
-    onConfirm() {
-      const confirmFunction = window['{{ id }}_confirm'];
-      if (typeof confirmFunction === 'function') {
-        confirmFunction();
-      }
-      this.open = false;
-    }
-  }" 
+  x-data="modal"
+  x-init="setupCallback('{{ id }}', {% if confirm_js %}function() { {{ confirm_js|safe }} }{% else %}null{% endif %})"
   @open-modal.window="open = true" 
   @close-modal.window="open = false"
   @keydown.escape.window="open = false"
@@ -111,12 +106,3 @@ Dinamik içerik için:
     {% endif %}
   </div>
 </div>
-
-<!-- Eğer varsa, onConfirm işlevini tanımla -->
-{% if confirm_js %}
-<script>
-  window['{{ id }}_confirm'] = function() {
-    {{ confirm_js|safe }}
-  };
-</script>
-{% endif %}

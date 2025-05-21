@@ -1,0 +1,32 @@
+{% comment %}
+    Sidebar Bölüm Bileşeni
+    Kullanım: {% include 'components/sidebar_section.html' with section=section %}
+{% endcomment %}
+
+<li class="menu-title mt-4">
+    <span class="text-xs uppercase">{{ section.title }}</span>
+</li>
+
+{% for item in section.items %}
+    {% if item.type == 'submenu' %}
+    <li class="{% if item.has_active %}has-active-child{% endif %}">
+        <details {% if item.open %}open{% endif %}>
+            <summary class="hover-lift">
+                {% if item.icon %}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    {{ item.icon|safe }}
+                </svg>
+                {% endif %}
+                {{ item.title }}
+            </summary>
+            <ul>
+                {% for subitem in item.items %}
+                    {% include 'components/menu_item.html' with url=subitem.url title=subitem.title active=subitem.active %}
+                {% endfor %}
+            </ul>
+        </details>
+    </li>
+    {% else %}
+        {% include 'components/menu_item.html' with url=item.url title=item.title icon=item.icon active=item.active %}
+    {% endif %}
+{% endfor %}

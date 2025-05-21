@@ -1,0 +1,50 @@
+<!-- 
+Grafik kartı komponenti.
+Kullanımı:
+{% include "components/dashboard/chart_card.html" with 
+  id="salesChart"
+  title="Satış Grafiği"
+  height="350px"
+  description="Son 30 günün satış grafiği"
+  color="primary"
+  loading=False
+%}
+-->
+
+<div class="card bg-base-100 shadow-xl h-full">
+  <div class="card-body p-6">
+    <div class="flex justify-between items-center mb-4">
+      <div>
+        <h3 class="card-title text-lg font-medium">{{ title }}</h3>
+        {% if description %}
+        <p class="text-sm text-base-content/60 mt-1">{{ description }}</p>
+        {% endif %}
+      </div>
+      
+      {% if show_filters %}
+      <div class="dropdown dropdown-end">
+        <label tabindex="0" class="btn btn-sm btn-ghost">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+          </svg>
+        </label>
+        <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52">
+          {% for option in filter_options %}
+          <li><a class="chart-filter" data-filter="{{ option.value }}">{{ option.label }}</a></li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+    </div>
+    
+    <div class="chart-container" style="height: {{ height|default:'350px' }}; width: 100%;">
+      {% if loading %}
+      <div class="flex items-center justify-center h-full">
+        <span class="loading loading-spinner loading-md text-{{ color|default:'primary' }}"></span>
+      </div>
+      {% else %}
+      <div id="{{ id }}" class="w-full h-full"></div>
+      {% endif %}
+    </div>
+  </div>
+</div>

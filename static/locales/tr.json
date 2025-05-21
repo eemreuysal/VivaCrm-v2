@@ -1,0 +1,108 @@
+{
+  "common": {
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "delete": "Sil",
+    "edit": "Düzenle",
+    "create": "Oluştur",
+    "search": "Ara",
+    "loading": "Yükleniyor...",
+    "error": "Hata",
+    "success": "Başarılı",
+    "confirm": "Onayla",
+    "yes": "Evet",
+    "no": "Hayır",
+    "retry": "Tekrar Dene"
+  },
+  "validation": {
+    "required": "Bu alan zorunludur",
+    "email": "Geçerli bir e-posta adresi giriniz",
+    "min": "En az {{min}} karakter olmalıdır",
+    "max": "En fazla {{max}} karakter olabilir",
+    "number": "Geçerli bir sayı giriniz",
+    "url": "Geçerli bir URL giriniz"
+  },
+  "errors": {
+    "general": "Bir hata oluştu",
+    "network": "Ağ hatası",
+    "server": "Sunucu hatası",
+    "notFound": "Bulunamadı",
+    "unauthorized": "Yetkisiz erişim",
+    "forbidden": "Erişim engellendi",
+    "unknown": "Bilinmeyen hata"
+  },
+  "dashboard": {
+    "title": "Gösterge Paneli",
+    "totalCustomers": "Toplam Müşteri",
+    "totalProducts": "Toplam Ürün",
+    "totalOrders": "Toplam Sipariş",
+    "totalRevenue": "Toplam Gelir",
+    "recentOrders": "Son Siparişler",
+    "lowStock": "Düşük Stok Uyarıları"
+  },
+  "products": {
+    "title": "Ürünler",
+    "addProduct": "Ürün Ekle",
+    "editProduct": "Ürün Düzenle",
+    "deleteProduct": "Ürün Sil",
+    "name": "Ürün Adı",
+    "code": "Ürün Kodu",
+    "category": "Kategori",
+    "price": "Fiyat",
+    "stock": "Stok",
+    "description": "Açıklama",
+    "importExcel": "Excel'den İçe Aktar",
+    "exportExcel": "Excel'e Aktar"
+  },
+  "orders": {
+    "title": "Siparişler",
+    "createOrder": "Sipariş Oluştur",
+    "orderNumber": "Sipariş No",
+    "customer": "Müşteri",
+    "date": "Tarih",
+    "status": "Durum",
+    "total": "Toplam",
+    "items": "Ürünler",
+    "statusOptions": {
+      "pending": "Beklemede",
+      "processing": "İşleniyor",
+      "shipped": "Kargoda",
+      "delivered": "Teslim Edildi",
+      "cancelled": "İptal Edildi"
+    }
+  },
+  "customers": {
+    "title": "Müşteriler",
+    "addCustomer": "Müşteri Ekle",
+    "editCustomer": "Müşteri Düzenle",
+    "deleteCustomer": "Müşteri Sil",
+    "name": "Ad Soyad",
+    "email": "E-posta",
+    "phone": "Telefon",
+    "address": "Adres",
+    "city": "Şehir",
+    "country": "Ülke",
+    "orders": "Siparişler"
+  },
+  "excel": {
+    "import": "İçe Aktar",
+    "export": "Dışa Aktar",
+    "selectFile": "Dosya Seç",
+    "uploadFile": "Dosya Yükle",
+    "processing": "İşleniyor...",
+    "preview": "Önizleme",
+    "rowsProcessed": "{{count}} satır işlendi",
+    "importSuccess": "İçe aktarma başarılı",
+    "importError": "İçe aktarma hatası"
+  },
+  "auth": {
+    "login": "Giriş Yap",
+    "logout": "Çıkış Yap",
+    "username": "Kullanıcı Adı",
+    "password": "Şifre",
+    "rememberMe": "Beni Hatırla",
+    "forgotPassword": "Şifremi Unuttum",
+    "resetPassword": "Şifre Sıfırla",
+    "profile": "Profil"
+  }
+}

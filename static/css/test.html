@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="tr" data-theme="vivacrm">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Test - VivaCRM</title>
+    <link rel="stylesheet" href="./dist/main.css">
+</head>
+<body>
+    <div class="container mx-auto p-4">
+        <h1 class="text-3xl font-bold mb-4">VivaCRM CSS Test</h1>
+        
+        <!-- DaisyUI Card Test -->
+        <div class="card bg-base-100 shadow-xl mb-4">
+            <div class="card-body">
+                <h2 class="card-title">Kart Başlığı</h2>
+                <p>Bu bir test kartıdır. DaisyUI ve özel stillerimizi test ediyoruz.</p>
+                <div class="card-actions justify-end">
+                    <button class="btn btn-primary">Primary</button>
+                    <button class="btn btn-secondary">Secondary</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Custom Components -->
+        <div class="card card--stat mb-4">
+            <div class="stat-icon">
+                <span>📊</span>
+            </div>
+            <div class="stat-value">1,234</div>
+            <div class="stat-label">Toplam Müşteri</div>
+            <div class="stat-trend stat-trend--up">↑ 12%</div>
+        </div>
+
+        <!-- Theme Toggle Test -->
+        <button onclick="toggleTheme()" class="btn btn-outline">
+            Tema Değiştir
+        </button>
+    </div>
+
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'vivacrm' ? 'vivacrmDark' : 'vivacrm';
+            html.setAttribute('data-theme', newTheme);
+        }
+    </script>
+</body>
+</html>

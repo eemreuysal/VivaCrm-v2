@@ -1,0 +1,60 @@
+{% load static %}
+{% comment %}
+    Standardized head include template
+    Supports both traditional includes and Vite integration
+    
+    Kullanımı:
+    {% include 'includes/head_unified.html' with 
+       title="Sayfa Başlığı"           # Sayfa başlığı (opsiyonel)
+       description="Sayfa açıklaması"  # Sayfa açıklaması (opsiyonel)
+       use_vite=True|False             # Vite entegrasyonu kullanılsın mı? (opsiyonel, varsayılan: Django settings'deki değer)
+       use_critical_css=True|False     # Kritik CSS kullanılsın mı? (opsiyonel, varsayılan: False)
+    %}
+{% endcomment %}
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="description" content="{{ description|default:'VivaCRM - Müşteri İlişkileri Yönetim Sistemi' }}">
+<meta name="author" content="VivaCRM Team">
+
+<title>{% if title %}{{ title }} - VivaCRM{% else %}{% block title %}VivaCRM{% endblock %}{% endif %}</title>
+
+<!-- Favicon -->
+<link rel="icon" type="image/x-icon" href="{% static 'img/favicon.ico' %}">
+
+<!-- Alpine.js Theme Store Preparation -->
+<script>
+// Alpine.js store için globalleri hazırla
+window.VivaCRM = window.VivaCRM || {};
+window.VivaCRM.themePreference = localStorage.getItem('vivacrm-theme') === 'dark' ? 'dark' : 'light';
+window.VivaCRM.systemPreference = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+
+// ThemeManager FOUC (Flash of Unstyled Content) Önleme
+// sayfa yüklenmeden önce doğru temayı uygulamak için
+(function() {
+  const theme = localStorage.getItem('vivacrm-theme') || 
+                (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  
+  if (theme === 'dark') {
+    document.documentElement.classList.add('dark');
+    document.documentElement.setAttribute('data-theme', 'vivacrmDark');
+  } else {
+    document.documentElement.classList.remove('dark');
+    document.documentElement.setAttribute('data-theme', 'vivacrm');
+  }
+})();
+</script>
+
+<!-- CSS Includes - Standardized -->
+{% include 'includes/css_unified.html' with 
+    use_vite=use_vite|default:settings.USE_VITE 
+    use_critical_css=use_critical_css|default:False 
+    preload_fonts=True 
+%}
+
+<!-- Extra CSS -->
+{% block extra_css %}{% endblock %}
+
+<!-- Django CSRF Token for JavaScript use -->
+{% csrf_token %}

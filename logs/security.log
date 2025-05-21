@@ -1,1 +1,1 @@
-{"time": "2025-05-14 23:09:28,041", "level": "WARNING", "message": "Security event: {'event_type': 'user_created', 'description': 'User account created: emreuysal', 'user': 'anonymous', 'ip_address': None, 'user_id': 2, 'username': 'emreuysal', 'is_staff': True, 'is_superuser': True}", "module": "security", "trace_id": "9e21cfe4-dc76-4cca-aa97-762e3864beb5"}
+

@@ -1,2 +1,44 @@
 **/.claude/settings.local.json
-node_modules
+node_modules/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.DS_Store
+.env
+db.sqlite3
+/media/
+/staticfiles/
+staticfiles/
+/logs/
+*.log
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.coverage
+htmlcov/
+.pytest_cache/
+celerybeat-schedule
+celerybeat.pid
+
+# Build outputs
+static/css/dist/
+static/js/dist/
+*.min.css
+*.min.js
+
+# PostCSS build outputs
+static/css/*.bundle.css
+static/css/dist/*.css
+
+# Legacy files
+static/css/src/legacy/

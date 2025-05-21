@@ -1,243 +1,176 @@
-from rest_framework import viewsets, permissions, status
+"""
+API views for dashboard data.
+
+This module contains API endpoints for retrieving dashboard data in JSON format.
+"""
+
+from django.views.decorators.http import require_GET
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.cache import cache_page
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from django.db.models import Count, Sum, F, DecimalField, Q, Value, CharField, Case, When
-from django.db.models.functions import TruncDate, TruncMonth
-from datetime import datetime, timedelta
-from django.utils import timezone
-import calendar
+from rest_framework.permissions import IsAuthenticated
 
-from customers.models import Customer
-from products.models import Product, Category
-from orders.models import Order, OrderItem
-from invoices.models import Invoice
-
-from .serializers import (
-    DashboardSummarySerializer, RecentOrderSerializer, TopCustomerSerializer,
-    TopProductSerializer, LowStockProductSerializer, SalesChartDataSerializer,
-    ProductCategoryChartSerializer, OrderStatusChartSerializer,
-    CustomerTypeChartSerializer
+from ..cache_helpers import (
+    get_cached_dashboard_stats,
+    get_cached_chart_data,
+    get_cached_low_stock_products
 )
+from ..views import DashboardContentView
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
-def dashboard_summary(request):
+@permission_classes([IsAuthenticated])
+def dashboard_stats(request):
     """
-    API endpoint for dashboard summary statistics.
+    API endpoint for retrieving dashboard statistics data.
+    
+    Args:
+        request: HTTP request object
+        
+    Returns:
+        JsonResponse: Dashboard statistics in JSON format
     """
-    # Current time and date ranges
-    now = timezone.now()
-    start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    thirty_days_ago = now - timedelta(days=30)
+    # Get period and date range information from request
+    period = request.GET.get('period', 'month')
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
     
-    # Summary statistics
-    total_customers = Customer.objects.filter(is_active=True).count()
-    total_products = Product.objects.filter(is_active=True).count()
-    total_orders = Order.objects.all().count()
+    # Check if forced refresh is requested
+    refresh = request.GET.get('refresh', 'false') == 'true'
     
-    # Revenue
-    revenue = Order.objects.filter(
-        status__in=['completed', 'delivered']
-    ).aggregate(Sum('total_amount'))
-    total_revenue = revenue['total_amount__sum'] or 0
+    # Retrieve cached dashboard statistics
+    stats = get_cached_dashboard_stats(
+        refresh=refresh,
+        start_date=start_date,
+        end_date=end_date
+    )
     
-    # Current month statistics
-    month_orders = Order.objects.filter(created_at__gte=start_of_month)
-    monthly_orders = month_orders.count()
-    month_revenue = month_orders.filter(
-        status__in=['completed', 'delivered']
-    ).aggregate(Sum('total_amount'))
-    monthly_revenue = month_revenue['total_amount__sum'] or 0
+    # Calculate additional trends if needed
+    if 'order_trend' not in stats:
+        # Create a temporary view instance to calculate trends
+        view = DashboardContentView()
+        date_ranges = view._get_date_ranges(period)
+        
+        # Add trends to stats
+        view._add_trends_data(stats, date_ranges)
     
-    # Last 30 days orders
-    last_30d_orders_count = Order.objects.filter(
-        created_at__gte=thirty_days_ago
-    ).count()
-    
-    # Build response data
-    data = {
-        'total_customers': total_customers,
-        'total_products': total_products,
-        'total_orders': total_orders,
-        'total_revenue': total_revenue,
-        'monthly_orders': monthly_orders,
-        'monthly_revenue': monthly_revenue,
-        'last_30d_orders_count': last_30d_orders_count
-    }
-    
-    serializer = DashboardSummarySerializer(data)
-    return Response(serializer.data)
+    return JsonResponse(stats)
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
-def recent_orders(request):
+@permission_classes([IsAuthenticated])
+def dashboard_chart_data(request, chart_type):
     """
-    API endpoint for recent orders.
-    """
-    # Get only 5 most recent orders
-    recent_orders = Order.objects.all().order_by('-created_at')[:5]
-    serializer = RecentOrderSerializer(recent_orders, many=True)
-    return Response(serializer.data)
-
-
-@api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
-def top_customers(request):
-    """
-    API endpoint for top customers.
-    """
-    top_customers = Customer.objects.annotate(
-        order_count=Count('orders'),
-        total_spent=Sum('orders__total_amount', default=0)
-    ).filter(order_count__gt=0).order_by('-total_spent')[:5]
+    API endpoint for retrieving dashboard chart data.
     
-    serializer = TopCustomerSerializer(top_customers, many=True)
-    return Response(serializer.data)
-
-
-@api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
-def top_products(request):
+    Args:
+        request: HTTP request object
+        chart_type: Type of chart data to retrieve (sales, products, orders)
+        
+    Returns:
+        JsonResponse: Chart data in JSON format
     """
-    API endpoint for top products.
-    """
-    top_products = OrderItem.objects.values(
-        'product__name', 'product__id'
-    ).annotate(
-        quantity_sold=Sum('quantity'),
-        total_revenue=Sum(F('quantity') * F('unit_price'), output_field=DecimalField())
-    ).order_by('-quantity_sold')[:5]
+    # Get period from request
+    period = request.GET.get('period', 'month')
     
-    serializer = TopProductSerializer(top_products, many=True)
-    return Response(serializer.data)
-
-
-@api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
-def low_stock_products(request):
-    """
-    API endpoint for low stock products.
-    """
-    low_stock_products = Product.objects.filter(
-        is_active=True, 
-        stock__lte=F('threshold_stock'),
-        is_physical=True
-    ).order_by('stock')[:5]
+    # Check if forced refresh is requested
+    refresh = request.GET.get('refresh', 'false') == 'true'
     
-    serializer = LowStockProductSerializer(low_stock_products, many=True)
-    return Response(serializer.data)
-
-
-class SalesChartView(APIView):
-    """
-    API endpoint for sales chart data.
-    """
-    permission_classes = [permissions.IsAuthenticated]
+    # Retrieve cached chart data
+    chart_data = get_cached_chart_data(chart_type, period, refresh=refresh)
     
-    def get(self, request):
-        period = request.query_params.get('period', 'daily')
-        days = int(request.query_params.get('days', 30))
-        
-        # Limit days to reasonable values
-        if days > 365:
-            days = 365
-        elif days < 7:
-            days = 7
-        
-        now = timezone.now()
-        start_date = now - timedelta(days=days)
-        
-        if period == 'monthly':
-            # Monthly aggregation
-            sales_data = Order.objects.filter(
-                created_at__gte=start_date
-            ).annotate(
-                date=TruncMonth('created_at')
-            ).values('date').annotate(
-                orders=Count('id'),
-                revenue=Sum('total_amount', default=0)
-            ).order_by('date')
-        else:
-            # Daily aggregation (default)
-            sales_data = Order.objects.filter(
-                created_at__gte=start_date
-            ).annotate(
-                date=TruncDate('created_at')
-            ).values('date').annotate(
-                orders=Count('id'),
-                revenue=Sum('total_amount', default=0)
-            ).order_by('date')
-        
-        serializer = SalesChartDataSerializer(sales_data, many=True)
-        return Response(serializer.data)
-
-
-class ProductCategoryChartView(APIView):
-    """
-    API endpoint for product category distribution chart.
-    """
-    permission_classes = [permissions.IsAuthenticated]
+    # If no chart data found, return empty structure
+    if not chart_data:
+        chart_data = {
+            'labels': [],
+            'datasets': []
+        }
     
-    def get(self, request):
-        # Count products by category
-        category_data = Product.objects.values(
-            'category__name'
-        ).annotate(
-            category=F('category__name'),
-            product_count=Count('id')
-        ).order_by('-product_count')
-        
-        # Handle products without a category
-        for item in category_data:
-            if item['category'] is None:
-                item['category'] = 'Uncategorized'
-        
-        serializer = ProductCategoryChartSerializer(category_data, many=True)
-        return Response(serializer.data)
+    return JsonResponse(chart_data)
 
 
-class OrderStatusChartView(APIView):
+class DashboardApiView(DashboardContentView):
     """
-    API endpoint for order status distribution chart.
-    """
-    permission_classes = [permissions.IsAuthenticated]
+    API view for all dashboard data, inherits from DashboardContentView.
     
-    def get(self, request):
-        # Count orders by status
-        status_data = Order.objects.values(
-            'status'
-        ).annotate(
-            status_display=Case(
-                *[When(status=k, then=Value(v)) for k, v in dict(Order.STATUS_CHOICES).items()],
-                output_field=CharField()
-            ),
-            order_count=Count('id')
-        ).order_by('-order_count')
-        
-        serializer = OrderStatusChartSerializer(status_data, many=True)
-        return Response(serializer.data)
-
-
-class CustomerTypeChartView(APIView):
+    This view returns all dashboard data in JSON format for RESTful API usage.
     """
-    API endpoint for customer type distribution chart.
-    """
-    permission_classes = [permissions.IsAuthenticated]
     
-    def get(self, request):
-        # Count customers by type
-        type_data = Customer.objects.values(
-            'type'
-        ).annotate(
-            type_display=Case(
-                *[When(type=k, then=Value(v)) for k, v in dict(Customer.CUSTOMER_TYPE_CHOICES).items()],
-                output_field=CharField()
-            ),
-            customer_count=Count('id')
-        ).order_by('-customer_count')
+    def get(self, request, *args, **kwargs):
+        """
+        Handle GET requests for dashboard API.
         
-        serializer = CustomerTypeChartSerializer(type_data, many=True)
-        return Response(serializer.data)
+        Args:
+            request: HTTP request object
+            
+        Returns:
+            JsonResponse: Complete dashboard data in JSON format
+        """
+        # Get context data from parent class
+        context = self.get_context_data(**kwargs)
+        
+        # Convert appropriate values to JSON-serializable format
+        result = {
+            'period': context.get('period', 'month'),
+            'period_description': context.get('period_description', ''),
+            'date_ranges': {
+                'start_date': context.get('start_date').isoformat() if context.get('start_date') else None,
+                'end_date': context.get('end_date').isoformat() if context.get('end_date') else None,
+            },
+            'stats': {
+                'total_orders': context.get('total_orders', 0),
+                'total_revenue': float(context.get('total_revenue', 0)),
+                'total_customers': context.get('total_customers', 0),
+                'total_products': context.get('total_products', 0),
+                'order_trend': context.get('order_trend', 0),
+                'revenue_trend': context.get('revenue_trend', 0),
+                'customer_trend': context.get('customer_trend', 0),
+                'product_trend': context.get('product_trend', 0),
+            },
+            'charts': {
+                'sales': {
+                    'labels': context.get('sales_labels', '[]'),
+                    'datasets': context.get('sales_data', '[]'),
+                },
+                'categories': {
+                    'labels': context.get('category_labels', '[]'),
+                    'datasets': context.get('category_data', '[]'),
+                },
+                'orders': {
+                    'labels': context.get('orders_labels', '[]'),
+                    'datasets': context.get('orders_data', '[]'),
+                }
+            },
+        }
+        
+        # Add low stock products data
+        low_stock_products = []
+        for product in context.get('low_stock_products', []):
+            low_stock_products.append({
+                'id': str(product.id),
+                'name': product.name,
+                'sku': product.sku,
+                'stock_quantity': product.stock,
+                'threshold_stock': product.threshold_stock,
+                'status': 'out_of_stock' if product.stock == 0 else 'low_stock'
+            })
+        
+        result['low_stock_products'] = low_stock_products
+        
+        # Add recent orders data
+        recent_orders = []
+        for order in context.get('recent_orders', []):
+            recent_orders.append({
+                'id': str(order.id),
+                'order_number': order.order_number,
+                'customer_name': order.customer.name,
+                'created_at': order.created_at.isoformat(),
+                'total_amount': float(order.total_amount),
+                'status': order.status,
+                'status_display': order.get_status_display()
+            })
+        
+        result['recent_orders'] = recent_orders
+        
+        return JsonResponse(result)

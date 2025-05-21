@@ -1,88 +1,46 @@
-<!DOCTYPE html>
+{% extends "base/base.html" %}
 {% load static %}
-<html lang="tr" data-theme="vivacrm">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="description" content="VivaCRM - Tasarım Sistemi">
-    <meta name="author" content="VivaCRM Team">
-    
-    <title>{% block title %}VivaCRM Tasarım Sistemi{% endblock %}</title>
-    
-    <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="{% static 'img/favicon.ico' %}">
-    
-    <!-- Tasarım Sistemi CSS -->
-    <link rel="stylesheet" href="{% static 'css/viva-design-system.css' %}">
-    
-    <!-- CSS -->
-    <link rel="stylesheet" href="{% static 'css/dist/main.css' %}">
-    
-    <!-- Third-party CSS Libraries -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    
-    <!-- Optional CSS Libraries based on page needs -->
-    {% block optional_css %}{% endblock %}
-    
-    <!-- Extra CSS -->
-    {% block extra_css %}{% endblock %}
-    
-    <!-- HTMX -->
-    <script src="{% static 'js/lib/htmx.min.js' %}" defer></script>
-    
-    <!-- Alpine.js -->
-    <script src="{% static 'js/lib/alpine.min.js' %}" defer></script>
-    
-    <!-- Preload critical JavaScript -->
-    <link rel="preload" href="{% static 'js/dist/main.js' %}" as="script">
-</head>
-<body class="bg-base-200 min-h-screen flex flex-col">
-    
-    <!-- Navbar -->
-    <div class="navbar bg-base-100 shadow-lg sticky top-0 z-50">
-        <div class="navbar-start">
-            <a class="btn btn-ghost normal-case" href="/">
-                <img src="{% static 'img/vivacrm-logo.png' %}" alt="VivaCRM" class="h-8" />
-            </a>
-        </div>
-        
-        <div class="navbar-center">
-            <h1 class="text-xl font-bold">Tasarım Sistemi</h1>
-        </div>
-        
-        <div class="navbar-end">
-            <a href="/" class="btn btn-primary btn-sm">
-                <i class="fas fa-arrow-left mr-2"></i> Uygulamaya Dön
-            </a>
-        </div>
+
+{% block title %}VivaCRM Tasarım Sistemi{% endblock %}
+
+{% block body_attributes %}{% endblock %}
+
+{% block navbar %}
+<div class="navbar bg-base-100 shadow-lg sticky top-0 z-50">
+    <div class="navbar-start">
+        <a class="btn btn-ghost normal-case" href="/">
+            <img src="{% static 'img/vivacrm-logo.png' %}" alt="VivaCRM" class="h-8" />
+        </a>
     </div>
     
-    <!-- Main Content -->
-    <main class="container mx-auto px-4 py-8 flex-grow">
-        {% block content %}{% endblock %}
-    </main>
+    <div class="navbar-center">
+        <h1 class="text-xl font-bold">Tasarım Sistemi</h1>
+    </div>
     
-    <!-- Footer -->
-    <footer class="footer p-10 bg-base-200 text-base-content border-t border-base-300">
-        <div>
-            <div class="avatar">
-                <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white font-bold text-xl">
-                    V
-                </div>
+    <div class="navbar-end">
+        <a href="/" class="btn btn-primary btn-sm">
+            <i class="fas fa-arrow-left mr-2"></i> Uygulamaya Dön
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block body %}
+<main class="container mx-auto px-4 py-8 flex-grow">
+    {% block content %}{% endblock %}
+</main>
+{% endblock %}
+
+{% block footer %}
+<footer class="footer p-10 bg-base-200 text-base-content border-t border-base-300">
+    <div>
+        <div class="avatar">
+            <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white font-bold text-xl">
+                V
             </div>
-            <p class="font-bold">VivaCRM<br/>Tasarım Sistemi</p>
-            <p>© {% now "Y" %} - Tüm hakları saklıdır.</p>
         </div>
-    </footer>
-    
-    <!-- JavaScript -->
-    <script src="{% static 'js/dist/main.js' %}"></script>
-    
-    <!-- Third-party JavaScript Libraries -->
-    {% block optional_js %}{% endblock %}
-    
-    <!-- Extra JavaScript -->
-    {% block extra_js %}{% endblock %}
-</body>
-</html>
+        <p class="font-bold">VivaCRM<br/>Tasarım Sistemi</p>
+        <p>© {% now "Y" %} - Tüm hakları saklıdır.</p>
+    </div>
+</footer>
+{% endblock %}

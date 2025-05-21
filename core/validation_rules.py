@@ -396,3 +396,70 @@ class PresetRules:
             raise ValueError(f"Unknown rule type: {rule_type}")
         
         return rule_class(**kwargs)
+    
+    @classmethod
+    def turkish_phone(cls):
+        """Türkçe telefon numarası doğrulama kuralları"""
+        return RuleBuilder() \
+            .required(_("Telefon numarası zorunludur")) \
+            .phone(_("Geçersiz telefon numarası formatı"))
+    
+    @classmethod
+    def email_address(cls):
+        """Email adresi doğrulama kuralları"""
+        return RuleBuilder() \
+            .required(_("Email adresi zorunludur")) \
+            .email(_("Geçersiz email formatı"))
+    
+    @classmethod
+    def turkish_id(cls):
+        """TC Kimlik numarası doğrulama kuralları"""
+        return RuleBuilder() \
+            .required(_("TC Kimlik numarası zorunludur")) \
+            .tckn(_("Geçersiz TC Kimlik numarası"))
+    
+    @classmethod
+    def price_field(cls):
+        """Fiyat alanı doğrulama kuralları"""
+        return RuleBuilder() \
+            .required(_("Fiyat alanı zorunludur")) \
+            .numeric(_("Fiyat sayısal bir değer olmalıdır")) \
+            .range(min_value=0, error_message=_("Fiyat 0'dan büyük olmalıdır"))
+    
+    @classmethod
+    def percentage(cls):
+        """Yüzde alanı doğrulama kuralları"""
+        return RuleBuilder() \
+            .required(_("Yüzde alanı zorunludur")) \
+            .numeric(_("Yüzde sayısal bir değer olmalıdır")) \
+            .range(min_value=0, max_value=100, error_message=_("Yüzde 0-100 arasında olmalıdır"))
+    
+    @classmethod
+    def stock_quantity(cls):
+        """Stok miktarı doğrulama kuralları"""
+        return RuleBuilder() \
+            .required(_("Stok miktarı zorunludur")) \
+            .numeric(_("Stok miktarı sayısal bir değer olmalıdır")) \
+            .range(min_value=0, error_message=_("Stok miktarı 0 veya daha büyük olmalıdır"))
+    
+    @classmethod
+    def website_url(cls):
+        """Website URL doğrulama kuralları"""
+        return RuleBuilder() \
+            .regex(r'^https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+(/[-\w%!$&\'()*+,;=:]+)*$', 
+                  _("Geçerli bir URL giriniz"))
+    
+    @classmethod
+    def company_name(cls):
+        """Şirket adı doğrulama kuralları"""
+        return RuleBuilder() \
+            .required(_("Şirket adı zorunludur")) \
+            .length(min_length=2, max_length=255, error_message=_("Şirket adı 2-255 karakter arasında olmalıdır"))
+    
+    @classmethod
+    def tax_number(cls):
+        """Vergi numarası doğrulama kuralları"""
+        return RuleBuilder() \
+            .required(_("Vergi numarası zorunludur")) \
+            .length(min_length=10, max_length=10, error_message=_("Vergi numarası 10 haneli olmalıdır")) \
+            .numeric(_("Vergi numarası sadece rakamlardan oluşmalıdır"))

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="tr" data-theme="vivacrm" class="{% if use_critical_css %}no-js{% endif %}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="{{ description|default:'VivaCRM - Müşteri İlişkileri Yönetim Sistemi' }}">
+    <meta name="author" content="VivaCRM Team">
+
+    <title>{% if title %}{{ title }} - VivaCRM{% else %}{% block title %}VivaCRM{% endblock %}{% endif %}</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{% static 'img/favicon.ico' %}">
+
+    <!-- Alpine.js Theme Store Preparation (Minimal) -->
+    <script>
+    // Pre-render işlemi sırasında tema tercihini tanımla
+    window.VivaCRM = window.VivaCRM || {};
+    window.VivaCRM.themePreference = localStorage.getItem('vivacrm-theme') === 'dark' ? 'dark' : 'light';
+    window.VivaCRM.systemPreference = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    </script>
+
+    <!-- CSS Includes - Unified Approach -->
+    {% include 'includes/css_unified.html' with 
+        use_vite=use_vite|default:settings.USE_VITE|default:False
+        use_critical_css=use_critical_css|default:False 
+        preload_fonts=True 
+    %}
+
+    {% if use_critical_css %}
+    <!-- Critical CSS Inline -->
+    <style>
+        /* Critical CSS - Ultra Optimized - <0.8KB (gzip) */
+        *,::before,::after{box-sizing:border-box}
+        html{line-height:1.5;-webkit-text-size-adjust:100%;font-family:"Inter var",ui-sans-serif,system-ui,sans-serif}
+        body{margin:0;line-height:inherit}
+        html.no-js{visibility:hidden}
+        :root,[data-theme=vivacrm]{--p:142 71% 45%;--pc:0 0% 100%;--s:217 91% 60%;--sc:0 0% 100%;--b1:0 0% 100%;--b2:0 0% 98%;--b3:0 0% 95%;--bc:215 19% 19%}
+        [data-theme=vivacrmDark]{--b1:221 39% 11%;--b2:215 19% 19%;--b3:215 16% 27%;--bc:0 0% 98%}
+        .app-loading{position:fixed;inset:0;background:hsl(var(--b1));display:flex;align-items:center;justify-content:center;z-index:9999}
+        .app-loading-spinner{width:3rem;height:3rem;border:3px solid hsl(var(--bc)/0.1);border-top-color:hsl(var(--p));border-radius:50%;animation:spin 1s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .navbar{height:4rem;background:hsl(var(--b1));border-bottom:1px solid hsl(var(--bc)/0.1)}
+        .sidebar{width:16rem;background:hsl(var(--b2));min-height:calc(100vh - 4rem)}
+        .main-content{flex:1;background:hsl(var(--b3));min-height:calc(100vh - 4rem)}
+        .hidden{display:none}
+        .flex{display:flex}
+    </style>
+    
+    <!-- Font Loading Script -->
+    <script>
+        // Remove no-js class
+        document.documentElement.classList.remove('no-js');
+        
+        // Font Observer
+        if ('fonts' in document) {
+            document.fonts.ready.then(() => {
+                document.documentElement.classList.add('fonts-loaded');
+            });
+        } else {
+            document.documentElement.classList.add('fonts-loaded');
+        }
+    </script>
+    {% endif %}
+
+    <!-- Extra CSS -->
+    {% block extra_css %}{% endblock %}
+
+    <!-- Django CSRF Token for JavaScript use -->
+    {% csrf_token %}
+</head>
+<body class="bg-base-200 min-h-screen flex flex-col"
+      {% block body_attributes %}{% endblock %}>
+    
+    {% if use_critical_css %}
+    <!-- Loading Screen -->
+    <div class="app-loading" id="app-loading">
+        <div class="app-loading-spinner"></div>
+    </div>
+    {% endif %}
+    
+    <!-- Navbar -->
+    {% block navbar %}
+    <div class="navbar bg-base-100 shadow-lg sticky top-0 z-50">
+        <div class="navbar-start">
+            <div class="dropdown">
+                <label tabindex="0" class="btn btn-ghost lg:hidden">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16" />
+                    </svg>
+                </label>
+                <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
+                    {% include 'includes/navbar_menu.html' %}
+                </ul>
+            </div>
+        </div>
+        
+        <div class="navbar-center hidden lg:flex">
+            <ul class="menu menu-horizontal px-1">
+                {% include 'includes/navbar_menu.html' %}
+            </ul>
+        </div>
+        
+        <div class="navbar-end">
+            <!-- Theme Toggle Button - Unified -->
+            {% include 'includes/theme_switcher_unified.html' with button_class="btn btn-ghost btn-circle theme-toggle-btn" %}
+            
+            <!-- User Menu -->
+            {% if request.user.is_authenticated %}
+            <div class="dropdown dropdown-end">
+                <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
+                    {% if request.user.avatar %}
+                    <div class="w-10 rounded-full">
+                        <img src="{{ request.user.avatar.url }}" alt="{{ request.user.get_full_name }}" />
+                    </div>
+                    {% else %}
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center text-gray-700" style="background-color: #e2e3e4;">
+                        <span class="text-base font-bold">{{ request.user.get_full_name|first|default:"U" }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
+                    <li class="p-2 text-sm opacity-70">
+                        <span>{{ request.user.get_full_name|default:request.user.username }}</span>
+                        <span class="text-xs opacity-50">{{ request.user.email }}</span>
+                    </li>
+                    <div class="divider my-0"></div>
+                    <li><a href="{% url 'accounts:user-detail' username=request.user.username %}">Profilim</a></li>
+                    <li><a href="{% url 'accounts:user-update' %}">Ayarlar</a></li>
+                    <div class="divider my-0"></div>
+                    <li>
+                        <form method="post" action="{% url 'accounts:logout' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="w-full text-left px-4 py-2 hover:bg-base-200">Çıkış</button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+            {% else %}
+            <div class="flex gap-2">
+                <a href="{% url 'accounts:login' %}" class="btn btn-sm btn-primary">Giriş Yap</a>
+                <a href="{% url 'accounts:register' %}" class="btn btn-sm btn-secondary">Kayıt Ol</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endblock %}
+    
+    <!-- Toast Messages -->
+    {% include 'includes/toast_messages.html' %}
+    
+    <!-- Main Content -->
+    <main class="w-full flex-grow">
+        {% block body %}
+            {% block content %}{% endblock %}
+        {% endblock %}
+    </main>
+    
+    <!-- Footer -->
+    {% block footer %}
+    {% include 'includes/footer.html' %}
+    {% endblock %}
+    
+    <!-- JavaScript Libraries - Unified -->
+    {% include 'includes/js_unified_implementation.html' with 
+        use_vite=use_vite|default:settings.USE_VITE|default:False
+        defer=False
+        need_charts=need_charts|default:'dashboard' in request.path
+        need_htmx=True 
+        need_alpine=True
+        alpine_is_synchronous=False
+        environment=environment|default:"production"
+    %}
+    
+    <!-- Optional JavaScript -->
+    {% block optional_js %}{% endblock %}
+    
+    <!-- Extra JavaScript -->
+    {% block extra_js %}{% endblock %}
+    
+    {% if use_critical_css %}
+    <!-- Remove Loading Screen -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loader = document.getElementById('app-loading');
+            if (loader) {
+                setTimeout(() => {
+                    loader.style.opacity = '0';
+                    setTimeout(() => {
+                        loader.style.display = 'none';
+                    }, 300);
+                }, 100);
+            }
+        });
+    </script>
+    {% endif %}
+</body>
+</html>

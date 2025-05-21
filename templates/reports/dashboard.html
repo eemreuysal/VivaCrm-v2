@@ -70,8 +70,8 @@
           
           <div class="stat">
             <div class="stat-title">Toplam Gelir</div>
-            <div class="stat-value">{{ sales_summary.total_revenue }} ₺</div>
-            <div class="stat-desc">Ortalama Sipariş: {{ sales_summary.avg_order_value|floatformat:2 }} ₺</div>
+            <div class="stat-value">{{ sales_summary.total_revenue }} $</div>
+            <div class="stat-desc">Ortalama Sipariş: {{ sales_summary.avg_order_value|floatformat:2 }} $</div>
           </div>
           
           <div class="stat">
@@ -147,7 +147,7 @@
                   <div class="text-sm opacity-70">{{ product.product__code }}</div>
                 </td>
                 <td class="text-right">{{ product.quantity_sold }}</td>
-                <td class="text-right">{{ product.total_revenue }} ₺</td>
+                <td class="text-right">{{ product.total_revenue }} $</td>
               </tr>
               {% endfor %}
             </tbody>
@@ -193,7 +193,7 @@
                   {% endif %}
                 </td>
                 <td class="text-right">{{ customer.order_count }}</td>
-                <td class="text-right">{{ customer.total_spent }} ₺</td>
+                <td class="text-right">{{ customer.total_spent }} $</td>
               </tr>
               {% endfor %}
             </tbody>
@@ -250,7 +250,7 @@
                   {% endif %}
                 </td>
                 <td class="text-right">{{ stat.count }}</td>
-                <td class="text-right">{{ stat.total_amount }} ₺</td>
+                <td class="text-right">{{ stat.total_amount }} $</td>
                 <td class="text-right">{{ stat.percentage|floatformat:1 }}%</td>
               </tr>
               {% endfor %}

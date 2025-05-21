@@ -1,0 +1,149 @@
+/**
+ * VivaCRM Typography Styles
+ * Font styles ve text utilities
+ */
+
+/* Font Face Definitions - fonts.css dosyasına taşındı */
+
+/* Base Typography */
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  @apply font-sans text-base text-gray-900 leading-relaxed;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+  @apply font-medium leading-tight;
+}
+
+h1 {
+  @apply text-4xl sm:text-5xl;
+}
+
+h2 {
+  @apply text-3xl sm:text-4xl;
+}
+
+h3 {
+  @apply text-2xl sm:text-3xl;
+}
+
+h4 {
+  @apply text-xl sm:text-2xl;
+}
+
+h5 {
+  @apply text-lg sm:text-xl;
+}
+
+h6 {
+  @apply text-base sm:text-lg;
+}
+
+/* Paragraph */
+p {
+  @apply mb-4 last:mb-0;
+}
+
+/* Links */
+a {
+  @apply text-primary hover:text-primary/80 transition-colors duration-200;
+}
+
+/* Lists */
+ul, ol {
+  @apply mb-4 pl-6;
+}
+
+ul {
+  @apply list-disc;
+}
+
+ol {
+  @apply list-decimal;
+}
+
+li {
+  @apply mb-2 last:mb-0;
+}
+
+/* Code */
+code {
+  @apply font-mono text-sm bg-gray-200 px-1 py-0.5 rounded;
+}
+
+pre {
+  @apply font-mono text-sm bg-gray-200 p-4 rounded-lg overflow-x-auto;
+}
+
+pre code {
+  @apply bg-transparent p-0;
+}
+
+/* Blockquote */
+blockquote {
+  @apply border-l-4 border-green-500 pl-4 italic my-4;
+}
+
+/* Text Utilities */
+.text-display {
+  @apply text-5xl sm:text-6xl font-bold;
+}
+
+.text-headline {
+  @apply text-3xl sm:text-4xl font-semibold;
+}
+
+.text-title {
+  @apply text-xl sm:text-2xl font-semibold;
+}
+
+.text-subtitle {
+  @apply text-lg font-medium;
+}
+
+.text-body {
+  @apply text-base;
+}
+
+.text-small {
+  @apply text-sm;
+}
+
+.text-caption {
+  @apply text-xs;
+}
+
+/* Font Weight Utilities */
+.font-thin {
+  font-weight: 100;
+}
+
+.font-light {
+  font-weight: 300;
+}
+
+.font-regular {
+  font-weight: 400;
+}
+
+.font-medium {
+  font-weight: 500;
+}
+
+.font-semibold {
+  font-weight: 600;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.font-black {
+  font-weight: 900;
+}

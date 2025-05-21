@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import OrderViewSet, OrderItemViewSet, PaymentViewSet, ShipmentViewSet
+from .views import OrderViewSet, OrderItemViewSet, PaymentViewSet, ShipmentViewSet, OrderImportAPIView
 
 router = DefaultRouter()
 router.register(r'orders', OrderViewSet)
@@ -12,4 +12,5 @@ app_name = 'orders_api'
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('order-import/', OrderImportAPIView.as_view(), name='order-import'),
 ]

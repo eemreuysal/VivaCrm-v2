@@ -1,12 +1,18 @@
 from django.db import models
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
-from django.conf import settings
+from django.conf import settings  # This import is actually used correctly in models.py
 from django.utils import timezone
 from django.db.models import Sum
+from decimal import Decimal, ROUND_DOWN
 
 from customers.models import Customer, Address
 from products.models import Product
+
+try:
+    from core.db_optimizations import OptimizedManager
+except ImportError:
+    OptimizedManager = models.Manager
 
 
 class Order(models.Model):
@@ -81,11 +87,11 @@ class Order(models.Model):
     payment_notes = models.TextField(_("Ödeme Notları"), blank=True)
     
     # Amounts
-    subtotal = models.DecimalField(_("Ara Toplam"), max_digits=10, decimal_places=2, default=0)
-    tax_amount = models.DecimalField(_("KDV Tutarı"), max_digits=10, decimal_places=2, default=0)
-    shipping_cost = models.DecimalField(_("Kargo Ücreti"), max_digits=10, decimal_places=2, default=0)
-    discount_amount = models.DecimalField(_("İndirim Tutarı"), max_digits=10, decimal_places=2, default=0)
-    total_amount = models.DecimalField(_("Toplam Tutar"), max_digits=10, decimal_places=2, default=0)
+    subtotal = models.DecimalField(_("Ara Toplam"), max_digits=15, decimal_places=2, default=0)
+    tax_amount = models.DecimalField(_("KDV Tutarı"), max_digits=15, decimal_places=2, default=0)
+    shipping_cost = models.DecimalField(_("Kargo Ücreti"), max_digits=15, decimal_places=2, default=0)
+    discount_amount = models.DecimalField(_("İndirim Tutarı"), max_digits=15, decimal_places=2, default=0)
+    total_amount = models.DecimalField(_("Toplam Tutar"), max_digits=15, decimal_places=2, default=0)
     
     # Relations
     owner = models.ForeignKey(
@@ -96,10 +102,38 @@ class Order(models.Model):
         null=True, blank=True
     )
     
+    # Fulfillment segment field
+    segment = models.CharField(
+        max_length=10,
+        choices=[
+            ('FBA', 'Fulfillment by Amazon'),
+            ('FBM', 'Fulfillment by Merchant'),
+        ],
+        null=True,
+        blank=True,
+        verbose_name=_("Fulfillment Tipi")
+    )
+    
+    # Managers
+    objects = OptimizedManager()
+    
+    # Default query optimization hints
+    default_select_related = ['customer', 'owner', 'shipping_address', 'billing_address']
+    default_prefetch_related = ['items', 'items__product']
+    
     class Meta:
         verbose_name = _("Sipariş")
         verbose_name_plural = _("Siparişler")
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['order_number']),
+            models.Index(fields=['customer', 'status']),
+            models.Index(fields=['created_at', 'status']),
+            models.Index(fields=['payment_status', 'status']),
+            models.Index(fields=['order_date', 'status']),
+            models.Index(fields=['total_amount', 'status']),
+            models.Index(fields=['owner', 'status']),
+        ]
     
     def __str__(self):
         return f"{self.order_number} - {self.customer.name}"
@@ -111,13 +145,16 @@ class Order(models.Model):
         """Calculate all price fields based on order items"""
         # Calculate subtotal
         items = self.items.all()
-        self.subtotal = sum(item.line_total for item in items)
+        subtotal = sum(item.line_total for item in items)
+        self.subtotal = Decimal(str(subtotal)).quantize(Decimal('0.01'), rounding=ROUND_DOWN)
         
         # Calculate tax
-        self.tax_amount = sum(item.tax_amount for item in items)
+        tax_amount = sum(item.tax_amount for item in items)
+        self.tax_amount = Decimal(str(tax_amount)).quantize(Decimal('0.01'), rounding=ROUND_DOWN)
         
         # Calculate total
-        self.total_amount = self.subtotal + self.tax_amount + self.shipping_cost - self.discount_amount
+        total = self.subtotal + self.tax_amount + self.shipping_cost - self.discount_amount
+        self.total_amount = Decimal(str(total)).quantize(Decimal('0.01'), rounding=ROUND_DOWN)
         
         self.save()
     
@@ -145,6 +182,37 @@ class Order(models.Model):
             'cancelled': 'badge-error',
         }
         return status_classes.get(self.payment_status, 'badge-ghost')
+    
+    def save(self, *args, **kwargs):
+        """Override save to generate order number and determine segment"""
+        if not self.order_number:
+            # Generate unique order number
+            prefix = 'ORD'
+            date_part = timezone.now().strftime('%Y%m%d')
+            
+            # Find the last order number for today
+            last_order = Order.objects.filter(
+                order_number__startswith=f'{prefix}-{date_part}'
+            ).order_by('-order_number').first()
+            
+            if last_order:
+                # Extract the sequence number and increment
+                last_sequence = int(last_order.order_number.split('-')[-1])
+                new_sequence = last_sequence + 1
+            else:
+                new_sequence = 1
+                
+            self.order_number = f'{prefix}-{date_part}-{new_sequence:04d}'
+        
+        # Müşteri ismine göre segment belirleme
+        if self.customer and not self.segment:
+            # Müşteri ismi "*** ***" ise FBA, değilse FBM
+            if self.customer.name and self.customer.name.strip() == "*** ***":
+                self.segment = 'FBA'
+            else:
+                self.segment = 'FBM'
+        
+        super().save(*args, **kwargs)
 
 
 class OrderItem(models.Model):
@@ -165,15 +233,19 @@ class OrderItem(models.Model):
         verbose_name=_("Ürün")
     )
     quantity = models.PositiveIntegerField(_("Miktar"), default=1)
-    unit_price = models.DecimalField(_("Birim Fiyat"), max_digits=10, decimal_places=2)
+    unit_price = models.DecimalField(_("Birim Fiyat"), max_digits=15, decimal_places=2)
     tax_rate = models.IntegerField(_("KDV Oranı (%)"), default=18)
-    discount_amount = models.DecimalField(_("İndirim Tutarı"), max_digits=10, decimal_places=2, default=0)
+    discount_amount = models.DecimalField(_("İndirim Tutarı"), max_digits=15, decimal_places=2, default=0)
     notes = models.TextField(_("Notlar"), blank=True)
     
     class Meta:
         verbose_name = _("Sipariş Kalemi")
         verbose_name_plural = _("Sipariş Kalemleri")
         ordering = ['id']
+        indexes = [
+            models.Index(fields=['order', 'product']),
+            models.Index(fields=['product', 'quantity']),
+        ]
     
     def __str__(self):
         return f"{self.order.order_number} - {self.product.name} ({self.quantity})"
@@ -181,17 +253,20 @@ class OrderItem(models.Model):
     @property
     def line_total(self):
         """Calculate total price for this item without tax"""
-        return (self.unit_price * self.quantity) - self.discount_amount
+        result = (self.unit_price * self.quantity) - self.discount_amount
+        return Decimal(str(result)).quantize(Decimal('0.01'), rounding=ROUND_DOWN)
     
     @property
     def tax_amount(self):
         """Calculate tax amount for this item"""
-        return (self.line_total * self.tax_rate) / 100
+        result = (self.line_total * self.tax_rate) / 100
+        return Decimal(str(result)).quantize(Decimal('0.01'), rounding=ROUND_DOWN)
     
     @property
     def total_with_tax(self):
         """Calculate total price with tax for this item"""
-        return self.line_total + self.tax_amount
+        result = self.line_total + self.tax_amount
+        return Decimal(str(result)).quantize(Decimal('0.01'), rounding=ROUND_DOWN)
 
 
 class Payment(models.Model):
@@ -216,6 +291,11 @@ class Payment(models.Model):
         verbose_name = _("Ödeme")
         verbose_name_plural = _("Ödemeler")
         ordering = ['-payment_date']
+        indexes = [
+            models.Index(fields=['order', 'payment_date']),
+            models.Index(fields=['payment_method', 'is_successful']),
+            models.Index(fields=['payment_date', 'is_successful']),
+        ]
     
     def __str__(self):
         return f"{self.order.order_number} - {self.get_payment_method_display()} - {self.amount} ₺"
@@ -253,6 +333,12 @@ class Shipment(models.Model):
         verbose_name = _("Kargo")
         verbose_name_plural = _("Kargolar")
         ordering = ['-shipping_date']
+        indexes = [
+            models.Index(fields=['order', 'status']),
+            models.Index(fields=['tracking_number']),
+            models.Index(fields=['shipping_date', 'status']),
+            models.Index(fields=['carrier', 'status']),
+        ]
     
     def __str__(self):
         return f"{self.order.order_number} - {self.carrier} - {self.tracking_number}"

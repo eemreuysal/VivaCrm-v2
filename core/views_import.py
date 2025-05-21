@@ -16,9 +16,14 @@ import os
 from datetime import datetime, timedelta
 
 from core.import_models import ImportHistory
-from products.excel import ProductExcelImport
-from products.custom_excel import StockAdjustmentExcelImporter
-from orders.excel import OrderExcelImport
+# Geçici olarak import yüklemesini devre dışı bırakıyoruz
+# from products.excel import ProductExcelImport
+# from products.custom_excel import StockAdjustmentExcelImporter
+# from orders.excel import OrderExcelImport
+
+# Geçici çözüm - dosyalar içe aktarılmayacak, sadece bakım sayfası gösterilecek
+from products.excel import ProductExcelImporter  # Başarıyla import edilen sınıf
+# from products.custom_excel import StockAdjustmentExcelImporter  # Bu modül bulunamadı
 
 
 class ImportHistoryListView(LoginRequiredMixin, ListView):
@@ -160,19 +165,25 @@ class ImportReloadView(LoginRequiredMixin, View):
         try:
             # İlgili modülün import işlemini başlat
             if import_history.module == 'products':
-                importer = ProductExcelImport()
+                importer = ProductExcelImporter()  # Güncellendi: ProductExcelImport -> ProductExcelImporter
                 with default_storage.open(import_history.file_path, 'rb') as f:
                     result = importer.import_data(f)
                     
             elif import_history.module == 'stock_adjustment':
-                importer = StockAdjustmentExcelImporter()
-                with default_storage.open(import_history.file_path, 'rb') as f:
-                    result = importer.import_file(f)
+                # Geçici olarak devre dışı bırakıldı
+                messages.error(request, 'Stok ayarlamaları importları geçici olarak bakımdadır.')
+                return redirect('core:import-history-detail', pk=pk)
+                # importer = StockAdjustmentExcelImporter()
+                # with default_storage.open(import_history.file_path, 'rb') as f:
+                #     result = importer.import_file(f)
                     
             elif import_history.module == 'orders':
-                importer = OrderExcelImport()
-                with default_storage.open(import_history.file_path, 'rb') as f:
-                    result = importer.import_data(f)
+                # Geçici olarak devre dışı bırakıldı
+                messages.error(request, 'Sipariş importları geçici olarak bakımdadır.')
+                return redirect('core:import-history-detail', pk=pk)
+                # importer = OrderExcelImport()
+                # with default_storage.open(import_history.file_path, 'rb') as f:
+                #     result = importer.import_data(f)
             else:
                 raise ValueError(f'Bilinmeyen modül: {import_history.module}')
             

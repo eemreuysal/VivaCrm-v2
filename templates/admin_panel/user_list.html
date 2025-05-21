@@ -8,10 +8,13 @@
 {% endblock %}
 
 {% block content %}
-<div class="flex justify-between items-center mb-6">
-  <h1 class="text-2xl font-bold">Kullanıcı Yönetimi</h1>
-  <a href="{% url 'accounts:register' %}" class="btn btn-primary">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+  <div>
+    <h1 class="text-2xl font-bold mb-1">Kullanıcı Yönetimi</h1>
+    <p class="text-base-content/70 text-sm">Tüm kullanıcıları görüntüleyin, düzenleyin ve yönetin</p>
+  </div>
+  <a href="{% url 'accounts:register' %}" class="btn btn-primary gap-2">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
     </svg>
     Yeni Kullanıcı
@@ -21,29 +24,38 @@
 <!-- Filtreleme ve Arama -->
 <div class="card bg-base-100 shadow-xl mb-6">
   <div class="card-body">
-    <div class="flex flex-col md:flex-row gap-4">
+    <div class="flex flex-col lg:flex-row gap-4">
       <div class="flex-grow">
-        <form method="get" action="{% url 'admin_panel:user-list' %}" class="flex gap-2">
-          <input type="text" name="q" value="{{ search_query }}" class="input input-bordered w-full" placeholder="Kullanıcı ara...">
-          <button type="submit" class="btn btn-primary">Ara</button>
+        <form method="get" action="{% url 'admin_panel:user-list' %}" class="join w-full">
+          <div class="relative flex-grow join-item">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-base-content/50">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </span>
+            <input type="text" name="q" value="{{ search_query }}" class="input input-bordered w-full pl-10" placeholder="Kullanıcı ara...">
+          </div>
+          <button type="submit" class="btn btn-primary join-item">Ara</button>
           {% if search_query %}
-          <a href="{% url 'admin_panel:user-list' %}" class="btn btn-ghost">Sıfırla</a>
+          <a href="{% url 'admin_panel:user-list' %}" class="btn btn-ghost join-item">Sıfırla</a>
           {% endif %}
         </form>
       </div>
-      <div class="flex gap-2">
-        <a href="{% url 'admin_panel:user-list' %}" class="btn btn-sm {% if not status_filter %}btn-primary{% else %}btn-outline btn-primary{% endif %}">
-          Tümü ({{ users.paginator.count }})
-        </a>
-        <a href="{% url 'admin_panel:user-list' %}?status=active" class="btn btn-sm {% if status_filter == 'active' %}btn-primary{% else %}btn-outline btn-primary{% endif %}">
-          Aktif ({{ active_count }})
-        </a>
-        <a href="{% url 'admin_panel:user-list' %}?status=inactive" class="btn btn-sm {% if status_filter == 'inactive' %}btn-primary{% else %}btn-outline btn-primary{% endif %}">
-          Pasif ({{ inactive_count }})
-        </a>
-        <a href="{% url 'admin_panel:user-list' %}?status=staff" class="btn btn-sm {% if status_filter == 'staff' %}btn-primary{% else %}btn-outline btn-primary{% endif %}">
-          Yöneticiler ({{ staff_count }})
-        </a>
+      <div class="flex flex-wrap gap-2 justify-center lg:justify-end">
+        <div class="tabs tabs-boxed bg-base-200">
+          <a href="{% url 'admin_panel:user-list' %}" class="tab {% if not status_filter %}tab-active{% endif %}">
+            Tümü <span class="ml-1 px-2 py-1 rounded-full bg-base-300 text-xs">{{ users.paginator.count }}</span>
+          </a>
+          <a href="{% url 'admin_panel:user-list' %}?status=active" class="tab {% if status_filter == 'active' %}tab-active{% endif %}">
+            Aktif <span class="ml-1 px-2 py-1 rounded-full bg-base-300 text-xs">{{ active_count }}</span>
+          </a>
+          <a href="{% url 'admin_panel:user-list' %}?status=inactive" class="tab {% if status_filter == 'inactive' %}tab-active{% endif %}">
+            Pasif <span class="ml-1 px-2 py-1 rounded-full bg-base-300 text-xs">{{ inactive_count }}</span>
+          </a>
+          <a href="{% url 'admin_panel:user-list' %}?status=staff" class="tab {% if status_filter == 'staff' %}tab-active{% endif %}">
+            Yönetici <span class="ml-1 px-2 py-1 rounded-full bg-base-300 text-xs">{{ staff_count }}</span>
+          </a>
+        </div>
       </div>
     </div>
   </div>
@@ -56,45 +68,78 @@
       <table class="table table-zebra w-full">
         <thead>
           <tr>
-            <th>Kullanıcı Adı</th>
-            <th>İsim</th>
-            <th>E-posta</th>
-            <th>Kayıt Tarihi</th>
-            <th>Son Giriş</th>
-            <th>Durum</th>
-            <th>İşlemler</th>
+            <th class="font-semibold text-base-content/80">Kullanıcı Adı</th>
+            <th class="font-semibold text-base-content/80">İsim</th>
+            <th class="font-semibold text-base-content/80">E-posta</th>
+            <th class="font-semibold text-base-content/80">Kayıt Tarihi</th>
+            <th class="font-semibold text-base-content/80">Son Giriş</th>
+            <th class="font-semibold text-base-content/80">Durum</th>
+            <th class="font-semibold text-base-content/80">İşlemler</th>
           </tr>
         </thead>
         <tbody>
           {% for user in users %}
-          <tr>
-            <td>{{ user.username }}</td>
+          <tr class="hover">
+            <td class="font-medium">{{ user.username }}</td>
             <td>{{ user.get_full_name }}</td>
             <td>{{ user.email }}</td>
             <td>{{ user.date_joined|date:"d.m.Y H:i" }}</td>
             <td>{{ user.last_login|date:"d.m.Y H:i"|default:"Hiç giriş yapmadı" }}</td>
             <td>
               {% if user.is_active %}
-              <span class="badge badge-success">Aktif</span>
+              <span class="badge badge-success gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                Aktif
+              </span>
               {% else %}
-              <span class="badge badge-error">Pasif</span>
+              <span class="badge badge-error gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Pasif
+              </span>
               {% endif %}
               
               {% if user.is_staff %}
-              <span class="badge badge-info">Personel</span>
+              <span class="badge badge-info gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Personel
+              </span>
               {% endif %}
               
               {% if user.is_superuser %}
-              <span class="badge badge-warning">Süper Kullanıcı</span>
+              <span class="badge badge-warning gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                Süper Kullanıcı
+              </span>
               {% endif %}
             </td>
             <td>
-              <a href="{% url 'admin_panel:user-detail' username=user.username %}" class="btn btn-xs btn-primary">Detay</a>
+              <a href="{% url 'admin_panel:user-detail' username=user.username %}" class="btn btn-sm btn-primary gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                Detay
+              </a>
             </td>
           </tr>
           {% empty %}
           <tr>
-            <td colspan="7" class="text-center py-4">Arama kriterlerinize uygun kullanıcı bulunamadı.</td>
+            <td colspan="7" class="text-center py-8">
+              <div class="flex flex-col items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-base-content/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                <p class="mt-2">Arama kriterlerinize uygun kullanıcı bulunamadı.</p>
+              </div>
+            </td>
           </tr>
           {% endfor %}
         </tbody>
@@ -103,25 +148,32 @@
     
     <!-- Pagination -->
     {% if is_paginated %}
-    <div class="flex justify-center mt-4">
-      <div class="btn-group">
-        {% if page_obj.has_previous %}
-        <a href="?page=1{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="btn btn-sm">«</a>
-        <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="btn btn-sm">‹</a>
-        {% else %}
-        <a class="btn btn-sm btn-disabled">«</a>
-        <a class="btn btn-sm btn-disabled">‹</a>
-        {% endif %}
-        
-        <a class="btn btn-sm btn-active">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</a>
-        
-        {% if page_obj.has_next %}
-        <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="btn btn-sm">›</a>
-        <a href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="btn btn-sm">»</a>
-        {% else %}
-        <a class="btn btn-sm btn-disabled">›</a>
-        <a class="btn btn-sm btn-disabled">»</a>
-        {% endif %}
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 border-t pt-6">
+      <div class="text-sm text-base-content/70">
+        Toplam <span class="font-medium">{{ users.paginator.count }}</span> kullanıcı, 
+        <span class="font-medium">{{ page_obj.start_index }} - {{ page_obj.end_index }}</span> arası gösteriliyor
+      </div>
+      
+      <div class="pagination">
+        <div class="join">
+          {% if page_obj.has_previous %}
+          <a href="?page=1{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="join-item btn btn-sm">«</a>
+          <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="join-item btn btn-sm">‹</a>
+          {% else %}
+          <a class="join-item btn btn-sm btn-disabled">«</a>
+          <a class="join-item btn btn-sm btn-disabled">‹</a>
+          {% endif %}
+          
+          <span class="join-item btn btn-sm btn-active">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+          
+          {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="join-item btn btn-sm">›</a>
+          <a href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="join-item btn btn-sm">»</a>
+          {% else %}
+          <a class="join-item btn btn-sm btn-disabled">›</a>
+          <a class="join-item btn btn-sm btn-disabled">»</a>
+          {% endif %}
+        </div>
       </div>
     </div>
     {% endif %}

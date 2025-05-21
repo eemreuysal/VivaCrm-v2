@@ -1,0 +1,96 @@
+/**
+ * VivaCRM Font Loading Strategy
+ * Performanslı font yükleme optimizasyonu
+ */
+
+/* Font Preloading - HTML <head> içinde kullanılmalı */
+/*
+<link rel="preload" href="/static/fonts/inter-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+*/
+
+/* Font Face Definitions - WOFF2 Only */
+@font-face {
+  font-family: 'Inter var';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap; /* FOUT yerine FOIT */
+  src: url('/static/fonts/inter-var.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Fallback for unsupported browsers */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/static/fonts/inter-regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/static/fonts/inter-medium.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/static/fonts/inter-semibold.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/static/fonts/inter-bold.woff2') format('woff2');
+}
+
+/* Font Loading Classes */
+.fonts-loading {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.fonts-loaded {
+  font-family: 'Inter var', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Font Smoothing */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "cv01", "cv02", "cv03", "cv04", "cv05", "cv06", "cv07", "cv08", "cv09", "cv10";
+}
+
+/* Turkish Character Support */
+@font-face {
+  font-family: 'Inter var Turkish';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/static/fonts/inter-var.woff2') format('woff2-variations');
+  unicode-range: U+00C7, U+00E7, U+011E, U+011F, U+0130, U+0131, U+015E, U+015F;
+}
+
+/* Font Loading JavaScript - HTML'de kullanılmalı */
+/*
+<script>
+// Font Observer Strategy
+if ('fonts' in document) {
+  document.fonts.ready.then(() => {
+    document.documentElement.classList.add('fonts-loaded');
+  });
+} else {
+  // Fallback for older browsers
+  document.documentElement.classList.add('fonts-loaded');
+}
+</script>
+*/

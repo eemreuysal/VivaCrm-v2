@@ -1,0 +1,24 @@
+{% extends "base/base.html" %}
+{% load i18n %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-10">
+    <div class="card lg:card-side bg-base-100 shadow-xl">
+        <figure><img src="/static/images/maintenance.svg" alt="Maintenance" class="w-64 h-64 p-6" /></figure>
+        <div class="card-body">
+            <h2 class="card-title text-2xl">{{ title }}</h2>
+            <p>{{ message }}</p>
+            <div class="card-actions justify-end mt-6">
+                <a href="/" class="btn btn-primary">Ana Sayfaya Dön</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mt-10 text-center">
+        <p class="text-lg">Excel Import özellikleri şu anda yapılandırılıyor, ancak form sınıfları başarıyla eklendi.</p>
+        <p class="text-lg mt-2">Yapı modüler hale getiriliyor, bu süreçte geçici olarak bu sayfa gösterilmektedir.</p>
+    </div>
+</div>
+{% endblock %}

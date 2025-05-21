@@ -1,5 +1,6 @@
 from django import template
 from django.template.defaultfilters import stringfilter
+from django.template.loader import render_to_string
 
 register = template.Library()
 
@@ -75,3 +76,59 @@ def block_tag(context, blockname):
             return ''.join(block(context) or '')
     except (KeyError, AttributeError):
         return ""
+
+@register.simple_tag(takes_context=True)
+def component(context, component_name, **kwargs):
+    """
+    Verilen komponenti render eder.
+    
+    Kullanım:
+    {% component 'card' title='Başlık' %}
+    """
+    # İçerik ekle
+    content = kwargs.pop('content', None)
+    
+    # Bileşen şablonunu render et
+    template_name = f'components/{component_name}.html'
+    
+    # Yeni context oluştur
+    component_context = {
+        'content': content,
+        **kwargs
+    }
+    
+    # User'ı context'e ekle (eğer varsa)
+    if 'request' in context:
+        component_context['request'] = context['request']
+    if 'user' in context:
+        component_context['user'] = context['user']
+    
+    from django.utils.safestring import mark_safe
+    return mark_safe(render_to_string(template_name, component_context))
+
+@register.simple_tag
+def component_start(component_name, **kwargs):
+    """
+    Bir komponenti başlatır.
+    
+    Kullanım:
+    {% component_start 'card' %}
+        İçerik
+    {% component_end %}
+    """
+    # Bileşen şablonunu render et (başlangıç kısmı)
+    template_name = f'components/{component_name}_start.html'
+    
+    try:
+        return render_to_string(template_name, kwargs)
+    except:
+        # Eğer _start şablonu yoksa, normal şablonu kullan
+        template_name = f'components/{component_name}.html'
+        return f'<div class="component-{component_name}">'
+
+@register.simple_tag
+def component_end():
+    """
+    Bir komponenti sonlandırır.
+    """
+    return '</div>'

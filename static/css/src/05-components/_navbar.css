@@ -1,0 +1,66 @@
+/**
+ * VivaCRM Navbar Component Styles
+ * !important kaldırılıp specificity ile çözüldü
+ */
+
+/* Navbar Container */
+.navbar {
+  background-color: hsl(var(--b1, 0 0% 100%));
+  @apply border-b border-gray-200 shadow-sm;
+}
+
+/* Navbar Avatar Styles - avatar.css dosyasına taşındı */
+
+/* Navbar Dropdown */
+.navbar-dropdown {
+  @apply absolute right-0 mt-2 w-48 origin-top-right;
+}
+
+.navbar-dropdown-content {
+  background-color: hsl(var(--b1, 0 0% 100%));
+  @apply rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 py-1;
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+  @apply p-2 rounded-full hover:bg-gray-100 transition-colors;
+}
+
+.theme-toggle svg {
+  @apply w-5 h-5 transition-transform duration-300;
+}
+
+.theme-toggle:hover svg {
+  @apply rotate-180;
+}
+
+/* Notification Badge */
+.navbar-badge {
+  @apply absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center;
+}
+
+/* Search Bar */
+.navbar-search {
+  @apply relative;
+}
+
+.navbar-search-input {
+  @apply w-full pl-10;
+}
+
+.navbar-search-icon {
+  @apply absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600;
+}
+
+/* Dark Mode Adjustments - dark-mode.css dosyasına taşındı */
+
+/* Mobile Responsive */
+@media (max-width: 640px) {
+  .navbar-search {
+    @apply w-full;
+  }
+  
+  .navbar-dropdown {
+    @apply w-full left-0 right-auto;
+  }
+}

@@ -2,20 +2,25 @@
 Basit ve esnek bir kart komponenti.
 Kullanımı:
 {% include "components/card.html" with 
-  title="Kart Başlığı"
-  subtitle="Alt Başlık (Opsiyonel)"
-  image="/path/to/image.jpg" (Opsiyonel)
-  actions=True (Opsiyonel, Footer'da aksiyonlar gösterilecekse)
-  collapsible=True (Opsiyonel, katlanabilir kart)
-  collapsed=False (Opsiyonel, başlangıçta katlanmış durumda mı?)
-  class="w-full md:w-1/2 lg:w-1/3" (Opsiyonel, ek stiller)
+  id="unique-card-id"                  # ID (opsiyonel)
+  title="Kart Başlığı"                 # Başlık 
+  subtitle="Alt Başlık"                # Alt başlık (opsiyonel)
+  image="/path/to/image.jpg"           # Görsel (opsiyonel)
+  content="HTML içerik"                # İçerik (opsiyonel)
+  footer="Altbilgi içeriği"            # Footer içeriği (opsiyonel)
+  actions=True                         # Footer'da aksiyonlar gösterilecekse (opsiyonel)
+  collapsible=True                     # Katlanabilir kart (opsiyonel)
+  collapsed=False                      # Başlangıçta katlanmış durumda mı? (opsiyonel)
+  is_hoverable=True                    # Hover efekti (opsiyonel)
+  border_color="primary"               # Kenarlık rengi (opsiyonel)
+  class="w-full md:w-1/2 lg:w-1/3"     # Ek stiller (opsiyonel)
 %}
   İçerik buraya gelecek
 {% include "components/card.html" %}
 
 Ya da:
 {% include "components/card.html" with title="Kart Başlığı" %}
-  {% block content %}
+  {% block card_content %}
     İçerik buraya gelecek
   {% endblock %}
   
@@ -25,12 +30,13 @@ Ya da:
 {% include "components/card.html" %}
 -->
 
-<div class="card {{ class|default:'w-full' }} bg-base-100 shadow-xl 
-            {% if is_hoverable %}hover:shadow-2xl transition-shadow duration-300{% endif %}
+<div class="card {{ class|default:'w-full' }} bg-base-100 shadow-lg hover:shadow-xl transition-all duration-300
+            {% if is_hoverable %}hover:-translate-y-1{% endif %}
             {% if border_color %}border-l-4 border-{{ border_color }}{% endif %}"
      {% if id %}id="{{ id }}"{% endif %}
      {% if collapsible %}
-     x-data="{ collapsed: {{ collapsed|yesno:'true,false' }} }"
+     x-data="card" 
+     x-init="init({{ collapsed|yesno:'true,false' }})"
      {% endif %}
 >
   {% if image %}
@@ -40,28 +46,28 @@ Ya da:
   {% endif %}
   
   {% if title %}
-  <div class="card-header p-4 bg-base-200 flex justify-between items-center{% if not image %} rounded-t-lg{% endif %}">
+  <div class="card-header p-4 border-b border-base-300 flex justify-between items-center{% if not image %} rounded-t-lg{% endif %}">
     <div>
-      <h2 class="card-title">{{ title }}</h2>
+      <h2 class="card-title font-bold text-base-content">{{ title }}</h2>
       {% if subtitle %}
-      <p class="text-sm opacity-70">{{ subtitle }}</p>
+      <p class="text-sm opacity-70 mt-1">{{ subtitle }}</p>
       {% endif %}
     </div>
     
     {% if collapsible %}
     <button 
-      class="btn btn-sm btn-ghost"
-      @click="collapsed = !collapsed"
+      class="btn btn-sm btn-ghost rounded-lg hover:bg-base-200 transition-colors duration-200"
+      @click="toggle()"
       aria-expanded="true"
       :aria-expanded="!collapsed"
     >
       <template x-if="collapsed">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
         </svg>
       </template>
       <template x-if="!collapsed">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
         </svg>
       </template>
@@ -72,15 +78,15 @@ Ya da:
   </div>
   {% endif %}
   
-  <div class="card-body" {% if collapsible %}x-show="!collapsed" x-transition{% endif %}>
+  <div class="card-body" {% if collapsible %}x-show="!collapsed" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform -translate-y-4" x-transition:enter-end="opacity-100 transform translate-y-0" x-transition:leave="transition ease-in duration-300" x-transition:leave-start="opacity-100 transform translate-y-0" x-transition:leave-end="opacity-0 transform -translate-y-4"{% endif %}>
     {% if content %}
       {{ content|safe }}
     {% else %}
-      {% block content %}{% endblock %}
+      {% block card_content %}{% endblock %}
     {% endif %}
     
     {% if actions or block.super %}
-    <div class="card-actions justify-end mt-4">
+    <div class="card-actions justify-end mt-4 gap-2">
       {% block actions %}
         <!-- Aksiyonlar buraya gelecek -->
       {% endblock %}
@@ -89,7 +95,7 @@ Ya da:
   </div>
   
   {% if footer %}
-  <div class="card-footer p-4 bg-base-200 text-base-content rounded-b-lg border-t border-base-300">
+  <div class="card-footer p-4 bg-base-100 text-base-content rounded-b-lg border-t border-base-300">
     {{ footer|safe }}
   </div>
   {% endif %}

@@ -1,0 +1,139 @@
+<!-- Low Stock Products -->
+<div class="table-card card bg-base-100 shadow-xl hover-lift animate-fade-in" style="animation-delay: 0.7s;">
+    <div class="card-body p-4">
+        <div class="flex justify-between items-center mb-4">
+            <div class="flex items-center space-x-2">
+                <div class="btn-icon w-8 h-8 bg-warning/20 text-warning rounded-full flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                </div>
+                <h3 class="card-title text-lg font-semibold">Düşük Stok Ürünleri</h3>
+            </div>
+            
+            <a href="/products/?stock=low" class="btn btn-modern btn-sm btn-ghost hover:bg-warning/10">
+                Tümünü Gör
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </a>
+        </div>
+        
+        <!-- Stock Loading State -->
+        <div x-show="loading" class="loading-container w-full py-10">
+            <span class="loading loading-spinner loading-md text-warning"></span>
+            <span class="loading-text">Stok bilgileri yükleniyor...</span>
+        </div>
+        
+        <!-- Desktop Table -->
+        <div x-show="!loading" class="table-responsive hidden md:block">
+            <table class="table table-zebra w-full">
+                <thead>
+                    <tr class="bg-base-200/50">
+                        <th class="rounded-tl-lg">Ürün Kodu</th>
+                        <th>Ürün Adı</th>
+                        <th>Mevcut Stok</th>
+                        <th>Eşik Değeri</th>
+                        <th class="rounded-tr-lg">Durum</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in low_stock_products %}
+                    <tr class="table-row-hover">
+                        <td>
+                            <a href="{% url 'products:product-detail' product.id %}" class="font-medium text-primary hover:underline">
+                                {{ product.sku }}
+                            </a>
+                        </td>
+                        <td>{{ product.name }}</td>
+                        <td class="{% if product.stock_quantity == 0 %}text-error font-medium{% endif %}">
+                            {{ product.stock_quantity }}
+                        </td>
+                        <td>{{ product.threshold_stock }}</td>
+                        <td>
+                            {% if product.stock_quantity == 0 %}
+                            <span class="badge badge-error">Stokta Yok</span>
+                            {% else %}
+                            <div class="flex items-center space-x-2">
+                                <span class="badge badge-warning">Düşük Stok</span>
+                                <div class="progress-bar-container w-16 h-2">
+                                    <div class="progress-bar bg-warning" style="width: {{ product.stock_quantity|floatformat:0|default:0|add:0 }}%;"></div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5">
+                            <div class="empty-state py-6">
+                                <div class="empty-state-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                                    </svg>
+                                </div>
+                                <p>Düşük stoklu ürün bulunmuyor</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Mobile Card View -->
+        <div x-show="!loading" class="block md:hidden space-y-4">
+            {% for product in low_stock_products %}
+            <div class="card bg-base-200/20 p-3 rounded-xl hover:bg-base-200/50 transition-all duration-200">
+                <div class="flex justify-between items-start mb-2">
+                    <a href="{% url 'products:product-detail' product.id %}" class="font-semibold text-primary hover:underline">
+                        {{ product.sku }}
+                    </a>
+                    {% if product.stock_quantity == 0 %}
+                    <span class="badge badge-error">Stokta Yok</span>
+                    {% else %}
+                    <span class="badge badge-warning">Düşük Stok</span>
+                    {% endif %}
+                </div>
+                <div class="text-sm text-base-content/70 mb-2">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-base-content/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg>
+                        {{ product.name }}
+                    </div>
+                </div>
+                
+                <!-- Stock Progress Bar -->
+                <div class="mt-2 mb-1">
+                    <div class="progress-bar-container w-full h-2">
+                        <div class="progress-bar {% if product.stock_quantity == 0 %}bg-error{% else %}bg-warning{% endif %}" 
+                             style="width: {% if product.stock_quantity == 0 %}5{% else %}{{ product.stock_quantity|floatformat:0|default:0|add:0 }}{% endif %}%;"></div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-between mt-2">
+                    <div class="flex items-center text-xs text-base-content/50">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1 text-warning/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Eşik: {{ product.threshold_stock }}
+                    </div>
+                    <div class="font-medium {% if product.stock_quantity == 0 %}text-error{% else %}text-warning{% endif %}">
+                        Stok: {{ product.stock_quantity }}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state py-8">
+                <div class="empty-state-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                    </svg>
+                </div>
+                <p>Düşük stoklu ürün bulunmuyor</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>

@@ -1,0 +1,59 @@
+{% comment %}
+Component: Stat Card
+Kullanım: {% component 'stat_card' icon='users' title='Başlık' value='123' trend='+5' trend_text='geçen aya göre' color='primary' %}
+{% endcomment %}
+
+<div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300">
+    <div class="card-body p-6">
+        <div class="flex items-start justify-between">
+            <div>
+                <p class="text-sm font-medium text-base-content/70">{{ title }}</p>
+                <p class="text-3xl font-bold {{ color|default:'text-primary' }}">{{ value }}</p>
+                
+                {% if trend %}
+                <div class="flex items-center mt-2 text-sm">
+                    {% if trend > 0 %}
+                        <svg class="w-4 h-4 text-success mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+                        </svg>
+                        <span class="text-success font-medium">+{{ trend }}%</span>
+                    {% elif trend < 0 %}
+                        <svg class="w-4 h-4 text-error mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                        <span class="text-error font-medium">{{ trend }}%</span>
+                    {% else %}
+                        <svg class="w-4 h-4 text-neutral mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                        </svg>
+                        <span class="text-neutral font-medium">0%</span>
+                    {% endif %}
+                    {% if trend_text %}
+                        <span class="text-base-content/60 ml-1">{{ trend_text }}</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="stat-figure text-{{ color|default:'primary' }}">
+                {% if icon == 'users' %}
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                {% elif icon == 'package' %}
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                {% elif icon == 'shopping-cart' %}
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                {% elif icon == 'currency-dollar' %}
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>

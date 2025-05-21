@@ -1,0 +1,47 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="tr" data-theme="vivacrm">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Test</title>
+    <link rel="stylesheet" href="{% static 'css/dist/main.css' %}">
+</head>
+<body class="bg-base-200">
+    <div class="container mx-auto p-8">
+        <h1 class="text-3xl font-bold mb-8 text-primary">CSS Test Sayfası</h1>
+        
+        <!-- Card Testi -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="card">
+                <h2 class="text-xl font-semibold mb-2">Temel Card</h2>
+                <p>Card component testi</p>
+            </div>
+            
+            <div class="card--stat">
+                <h2 class="text-xl font-semibold mb-2">Stat Card</h2>
+                <div class="text-3xl font-bold text-primary">1,234</div>
+                <p class="text-sm text-base-content/70">Toplam</p>
+            </div>
+            
+            <div class="card hover:shadow-xl transition-all">
+                <h2 class="text-xl font-semibold mb-2">Hover Card</h2>
+                <p>Üzerine gelin</p>
+            </div>
+        </div>
+        
+        <!-- Button Testi -->
+        <div class="flex gap-4 mb-8">
+            <button class="btn btn-primary">Primary</button>
+            <button class="btn btn-secondary">Secondary</button>
+            <button class="btn btn-accent">Accent</button>
+        </div>
+        
+        <!-- Status Badge -->
+        <div class="alert alert-success">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <span>CSS sistemi başarıyla çalışıyor!</span>
+        </div>
+    </div>
+</body>
+</html>

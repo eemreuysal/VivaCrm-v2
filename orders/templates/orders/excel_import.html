@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% trans "Excel Sipariş İçe Aktarma" %}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h1 class="card-title text-2xl mb-6">{% trans "Excel Sipariş İçe Aktarma" %}</h1>
+            
+            <div class="alert alert-info mb-5">
+                <div class="flex">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>{% trans "Excel dosyası kullanarak çoklu sipariş içe aktarabilirsiniz. Doğru format için önce şablon indirin." %}</span>
+                </div>
+            </div>
+            
+            <div id="validation-alert" class="alert alert-warning mb-5 hidden">
+                <div class="flex">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                    <div id="validation-message"></div>
+                </div>
+            </div>
+            
+            {% crispy form %}
+            
+            <div class="divider my-8">{% trans "İçe Aktarma Talimatları" %}</div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="prose max-w-none">
+                    <h3>{% trans "Adımlar" %}</h3>
+                    <ol>
+                        <li>{% trans "İlk olarak şablon dosyasını indirin." %}</li>
+                        <li>{% trans "Excel dosyasını gerekli verilerle doldurun." %}</li>
+                        <li>{% trans "Dosyayı yükleyip 'İçe Aktar' butonuna tıklayın." %}</li>
+                        <li>{% trans "İçe aktarma sırasında hatalar olursa, hata raporu gösterilecektir." %}</li>
+                        <li>{% trans "Mevcut siparişleri güncellemek için 'Mevcut siparişleri güncelle' seçeneğini işaretleyin." %}</li>
+                    </ol>
+                </div>
+                
+                <div class="prose max-w-none">
+                    <h3>{% trans "Önemli Notlar" %}</h3>
+                    <ul>
+                        <li>{% trans "Sipariş numarası aynı olan satırlar tek bir sipariş olarak gruplandırılır." %}</li>
+                        <li>{% trans "Eksik SKU, müşteri ismi veya fiyat verisi olan satırlar işlenmez." %}</li>
+                        <li>{% trans "Sistemde olmayan ürünler otomatik olarak oluşturulacaktır." %}</li>
+                        <li>{% trans "Müşteri adı sistemde bulunamazsa yeni müşteri kaydı oluşturulur." %}</li>
+                        <li>{% trans "Büyük dosyalar için 'Arkaplanda çalıştır' seçeneğini kullanabilirsiniz." %}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('excel-import-form');
+        const fileInput = document.querySelector('input[type="file"]');
+        const validationAlert = document.getElementById('validation-alert');
+        const validationMessage = document.getElementById('validation-message');
+        
+        if (fileInput) {
+            fileInput.addEventListener('change', function() {
+                // Dosya seçildiyse geçerliliğini kontrol et
+                if (this.files && this.files.length > 0) {
+                    const file = this.files[0];
+                    
+                    // Dosya tipi kontrolü
+                    if (!file.name.toLowerCase().endsWith('.xlsx') && !file.name.toLowerCase().endsWith('.xls')) {
+                        showValidationMessage('Geçersiz dosya formatı. Lütfen Excel (.xlsx veya .xls) dosyası seçin.');
+                        return;
+                    }
+                    
+                    // Form verisi oluştur
+                    const formData = new FormData();
+                    formData.append('excel_file', file);
+                    
+                    // AJAX validasyon
+                    fetch('{% url "orders:excel-validate" %}', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.valid) {
+                            showValidationMessage(`Dosya geçerli. ${data.total_rows} satır ve ${data.orders_count} sipariş bulundu.`, 'success');
+                        } else {
+                            showValidationMessage(`Dosya geçersiz: ${data.errors ? data.errors.join(', ') : 'Bilinmeyen hata'}`, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Validasyon hatası:', error);
+                        showValidationMessage('Dosya doğrulanırken bir hata oluştu.');
+                    });
+                }
+            });
+        }
+        
+        function showValidationMessage(message, type = 'warning') {
+            validationMessage.textContent = message;
+            validationAlert.classList.remove('hidden', 'alert-warning', 'alert-error', 'alert-success');
+            
+            switch(type) {
+                case 'error':
+                    validationAlert.classList.add('alert-error');
+                    break;
+                case 'success':
+                    validationAlert.classList.add('alert-success');
+                    break;
+                default:
+                    validationAlert.classList.add('alert-warning');
+            }
+        }
+        
+        // Form submit handling
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const submitBtn = form.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                
+                // Dosya seçilmediyse uyarı göster
+                if (fileInput && (!fileInput.files || fileInput.files.length === 0)) {
+                    e.preventDefault();
+                    showValidationMessage('Lütfen bir Excel dosyası seçin.');
+                    return;
+                }
+                
+                // Loading göster
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="loading loading-spinner loading-xs"></span> İşleniyor...';
+                
+                // Normal form submission - sayfayı yenileyecek
+                return true;
+            });
+        }
+    });
+</script>
+{% endblock %}

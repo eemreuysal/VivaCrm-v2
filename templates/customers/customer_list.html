@@ -3,8 +3,125 @@
 
 {% block title %}Müşteriler{% endblock %}
 
+{% block extra_css %}
+    overflow: hidden;
+    padding-right: 10px;
+  }
+  
+  .resizable-table th.sortable {
+    cursor: pointer;
+  }
+  
+  .resizable-table th .resizer {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 5px;
+    height: 100%;
+    background-color: transparent;
+    cursor: col-resize;
+    user-select: none;
+    touch-action: none;
+  }
+  
+  .resizable-table th .resizer:hover,
+  .resizable-table th .resizing {
+    background-color: var(--primary);
+    opacity: 0.5;
+  }
+  
+  /* Badge styles */
+  .status-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+  
+  /* Tooltip styles */
+  .tooltip-container {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .tooltip-text {
+    visibility: hidden;
+    background-color: rgba(0, 0, 0, 0.9);
+    color: white;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 10px;
+    position: absolute;
+    z-index: 99999;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    white-space: nowrap;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    font-size: 0.75rem;
+    pointer-events: none;
+  }
+  
+  /* Ekrandan taşan tooltipleri kontrol et */
+  .tooltip-container:last-child .tooltip-text {
+    left: auto;
+    right: 0;
+    transform: none;
+  }
+  
+  .tooltip-container:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+  }
+  
+  /* Buton hover state düzeltme */
+  .btn-circle.btn-ghost {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .btn-circle.btn-ghost:hover {
+    background-color: var(--fallback-b2, oklch(var(--b2))) !important;
+  }
+  
+  /* İkon ortalama düzeltmesi */
+  .btn-circle.btn-ghost svg {
+    margin: 0;
+    display: block;
+  }
+  
+  /* Tooltip arrow */
+  .tooltip-text::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: rgba(0, 0, 0, 0.9) transparent transparent transparent;
+  }
+  
+  /* Filter toggle button animation */
+  .filter-toggle-active {
+    background-color: rgba(var(--p), 0.2);
+    color: hsl(var(--p));
+    transform: rotate(180deg);
+  }
+  
+  #filter-toggle {
+    transition: all 0.3s ease-in-out;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<div>
+<div class="container mx-auto">
+  <!-- Header and Breadcrumbs -->
   <div class="flex justify-between items-center mb-6">
     <h1 class="text-2xl font-bold">Müşteri Listesi</h1>
     <div class="text-sm breadcrumbs">
@@ -15,66 +132,106 @@
     </div>
   </div>
   
-  <!-- Info Cards -->
+  <!-- Stats Cards -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-    <div class="card bg-base-100 shadow-xl">
-      <div class="card-body">
-        <h2 class="card-title text-sm">Toplam Müşteri</h2>
-        <p class="text-3xl font-bold text-primary">{{ customers.count }}</p>
-        <p class="text-sm text-base-content opacity-60">
-          <span class="text-success">+{{ new_customers|default:0 }}</span> bu ay
+    <div class="stats-card card bg-base-100 shadow-xl hover:shadow-2xl animate-fade-in" style="animation-delay: 0.1s;">
+      <div class="card-body pb-4">
+        <h2 class="card-title text-sm opacity-70">Toplam Müşteri</h2>
+        <div class="flex items-end justify-between">
+          <p class="text-3xl font-bold text-primary">{{ total_customers|default:"0" }}</p>
+          <div class="stat-figure text-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+          </div>
+        </div>
+        <p class="text-sm text-base-content opacity-60 mt-1">
+          <span class="text-success font-medium">+{{ new_customers|default:0 }}</span> son 30 günde
         </p>
+        <div class="mt-4 h-1 w-full bg-base-200 rounded-full overflow-hidden">
+          <div class="bg-primary h-1 rounded-full" style="width: 100%"></div>
+        </div>
       </div>
     </div>
     
-    <div class="card bg-base-100 shadow-xl">
-      <div class="card-body">
-        <h2 class="card-title text-sm">Aktif Müşteriler</h2>
-        <p class="text-3xl font-bold text-primary">{{ active_customers|default:0 }}</p>
-        <p class="text-sm text-base-content opacity-60">
-          Toplam müşterilerin {% widthratio active_customers|default:1 customers.count|default:1 100 %}%'si
+    <div class="stats-card card bg-base-100 shadow-xl hover:shadow-2xl animate-fade-in" style="animation-delay: 0.2s;">
+      <div class="card-body pb-4">
+        <h2 class="card-title text-sm opacity-70">Aktif Müşteriler</h2>
+        <div class="flex items-end justify-between">
+          <p class="text-3xl font-bold text-secondary">{{ active_customers|default:"0" }}</p>
+          <div class="stat-figure text-secondary">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+        </div>
+        <p class="text-sm text-base-content opacity-60 mt-1">
+          Toplam müşterilerin {% widthratio active_customers|default:1 total_customers|default:1 100 %}%'si
         </p>
+        <div class="mt-4 h-1 w-full bg-base-200 rounded-full overflow-hidden">
+          <div class="bg-secondary h-1 rounded-full" style="width: {% widthratio active_customers|default:1 total_customers|default:1 100 %}%"></div>
+        </div>
       </div>
     </div>
     
-    <div class="card bg-base-100 shadow-xl">
-      <div class="card-body">
-        <h2 class="card-title text-sm">Ortalama Sipariş Değeri</h2>
-        <p class="text-3xl font-bold text-primary">{{ avg_order_value|default:"0.00" }} ₺</p>
-        <p class="text-sm text-base-content opacity-60">
-          Müşteri başına
+    <div class="stats-card card bg-base-100 shadow-xl hover:shadow-2xl animate-fade-in" style="animation-delay: 0.3s;">
+      <div class="card-body pb-4">
+        <h2 class="card-title text-sm opacity-70">Toplam Ciro</h2>
+        <div class="flex items-end justify-between">
+          <p class="text-3xl font-bold text-success">{{ total_revenue|floatformat:2 }} ₺</p>
+          <div class="stat-figure text-success">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+        </div>
+        <p class="text-sm text-base-content opacity-60 mt-1">
+          Ortalama: {{ avg_order_value|floatformat:2 }} ₺ / Müşteri
         </p>
+        <div class="mt-4 h-1 w-full bg-base-200 rounded-full overflow-hidden">
+          <div class="bg-success h-1 rounded-full" style="width: 70%"></div>
+        </div>
       </div>
     </div>
   </div>
   
-  <div class="card bg-base-100 shadow-xl mb-6">
-    <div class="card-body">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="card-title">Müşteri Arama</h2>
+  <!-- Action Bar and Filter Panel -->
+  <div class="card bg-base-100 shadow-xl mb-6 overflow-visible">
+    <div class="card-body p-4">
+      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <div class="flex items-center gap-2">
+          <h2 class="card-title">Müşteriler</h2>
+          <button id="filter-toggle-btn" class="btn btn-sm btn-ghost btn-circle" title="Filtreleri Göster/Gizle" type="button" onclick="toggleFilterPanel(event)">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+          </button>
+          <span class="badge badge-primary" id="active-filters-count" style="display: none;">0</span>
+        </div>
+        
         <div class="flex flex-wrap gap-2">
-          <div class="dropdown dropdown-end">
-            <label tabindex="0" class="btn btn-outline btn-success">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div class="dropdown dropdown-end" style="position: relative; z-index: 50;">
+            <label tabindex="0" class="btn btn-outline btn-sm btn-success">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
               </svg>
               Dışa Aktar
             </label>
-            <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
-              <li><a href="{% url 'customers:export_customers' %}?{{ request.GET.urlencode }}">Müşterileri Excel'e Aktar</a></li>
-              <li><a href="{% url 'customers:export_customers' %}?format=csv&{{ request.GET.urlencode }}">Müşterileri CSV'ye Aktar</a></li>
-              <li><a href="{% url 'customers:export_addresses' %}?{{ request.GET.urlencode }}">Adresleri Excel'e Aktar</a></li>
+            <ul tabindex="0" class="dropdown-content z-[1] menu shadow bg-base-100 rounded-box w-52">
+              <li><a href="{% url 'customers:export_customers' %}?{{ request.GET.urlencode }}">Excel'e Aktar (.xlsx)</a></li>
+              <li><a href="{% url 'customers:export_customers' %}?format=csv&{{ request.GET.urlencode }}">CSV'ye Aktar (.csv)</a></li>
+              <li><a href="{% url 'customers:export_addresses' %}?{{ request.GET.urlencode }}">Adresleri Aktar</a></li>
             </ul>
           </div>
           
-          <div class="dropdown dropdown-end">
-            <label tabindex="0" class="btn btn-outline btn-info">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div class="dropdown dropdown-end" style="position: relative; z-index: 50;">
+            <label tabindex="0" class="btn btn-outline btn-sm btn-info">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
               İçe Aktar
             </label>
-            <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+            <ul tabindex="0" class="dropdown-content z-[1] menu shadow bg-base-100 rounded-box w-52">
               <li><a href="{% url 'customers:customer_import' %}">Müşterileri İçe Aktar</a></li>
               <li><a href="{% url 'customers:address_import' %}">Adresleri İçe Aktar</a></li>
               <li><a href="{% url 'customers:generate_customer_template' %}">Müşteri Şablonu İndir</a></li>
@@ -82,8 +239,8 @@
             </ul>
           </div>
           
-          <a href="{% url 'customers:customer-create' %}" class="btn btn-primary">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <a href="{% url 'customers:customer-create' %}" class="btn btn-sm btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
             Yeni Müşteri
@@ -91,131 +248,585 @@
         </div>
       </div>
       
-      <form method="get" class="grid grid-cols-1 md:grid-cols-3 gap-4" hx-get="{% url 'customers:customer-list' %}" hx-target="#customers-table" hx-swap="outerHTML">
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text">Arama</span>
-          </label>
-          <input type="text" name="query" value="{{ form.query.value|default:'' }}" placeholder="İsim, şirket, e-posta..." class="input input-bordered w-full" />
-        </div>
-        
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text">Müşteri Tipi</span>
-          </label>
-          <select name="customer_type" class="select select-bordered w-full">
-            <option value="">Tümü</option>
-            <option value="individual" {% if form.customer_type.value == 'individual' %}selected{% endif %}>Bireysel</option>
-            <option value="corporate" {% if form.customer_type.value == 'corporate' %}selected{% endif %}>Kurumsal</option>
-          </select>
-        </div>
-        
-        <div class="form-control items-end">
-          <label class="label cursor-pointer justify-start">
-            <input type="checkbox" name="is_active" class="checkbox checkbox-primary" {% if form.is_active.value != False %}checked{% endif %} />
-            <span class="label-text ml-2">Sadece aktif müşteriler</span>
-          </label>
+      <!-- Filters Panel -->
+      <div id="filter-panel" class="filter-panel">
+        <form method="get" action="{% url 'customers:customer-list' %}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="customer-search-form">
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Hızlı Arama</span>
+            </label>
+            <input type="text" name="query" value="{{ form.query.value|default:'' }}" placeholder="İsim, şirket, e-posta, telefon..." class="input input-bordered w-full" />
+          </div>
           
-          <button type="submit" class="btn btn-primary mt-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            Ara
-          </button>
-        </div>
-      </form>
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Müşteri Tipi</span>
+            </label>
+            <select name="customer_type" class="select select-bordered w-full">
+              <option value="">Tümü</option>
+              <option value="individual" {% if form.customer_type.value == 'individual' %}selected{% endif %}>Bireysel</option>
+              <option value="corporate" {% if form.customer_type.value == 'corporate' %}selected{% endif %}>Kurumsal</option>
+            </select>
+          </div>
+          
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Kayıt Tarihi</span>
+            </label>
+            <div class="flex space-x-2">
+              <input type="date" name="created_from" value="{{ form.created_from.value|date:'Y-m-d'|default:'' }}" class="input input-bordered w-full" />
+              <span class="self-center">-</span>
+              <input type="date" name="created_to" value="{{ form.created_to.value|date:'Y-m-d'|default:'' }}" class="input input-bordered w-full" />
+            </div>
+          </div>
+          
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Min Sipariş Sayısı</span>
+            </label>
+            <input type="number" name="min_orders" value="{{ form.min_orders.value|default:'' }}" placeholder="Min sipariş" class="input input-bordered w-full" />
+          </div>
+          
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Min Ciro</span>
+            </label>
+            <input type="number" step="0.01" name="min_revenue" value="{{ form.min_revenue.value|default:'' }}" placeholder="Min ciro" class="input input-bordered w-full" />
+          </div>
+          
+          <div class="form-control">
+            <label class="label cursor-pointer">
+              <span class="label-text">Sadece Aktif Müşteriler</span>
+              <input type="checkbox" name="is_active" class="checkbox checkbox-primary" {% if form.is_active.value != False %}checked{% endif %} />
+            </label>
+          </div>
+          
+          <div class="col-span-full flex justify-between items-center mt-2">
+            <button type="button" id="clear-filters" class="btn btn-outline btn-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              Filtreleri Temizle
+            </button>
+            
+            <button type="submit" class="btn btn-primary">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              Ara
+            </button>
+          </div>
+        </form>
+      </div>
+      
+      <!-- Active Filters Display -->
+      <div id="active-filters" class="flex flex-wrap gap-2 mt-4" style="display: none;">
+        <!-- Active filters will be displayed here dynamically -->
+      </div>
     </div>
   </div>
   
-  <div id="customers-table" class="card bg-base-100 shadow-xl overflow-hidden">
-    <div class="overflow-x-auto">
-      <table class="table table-zebra w-full">
-        <thead>
-          <tr>
-            <th>İsim / Şirket</th>
-            <th>Tür</th>
-            <th>E-posta</th>
-            <th>Telefon</th>
-            <th>Durum</th>
-            <th>İşlemler</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for customer in customers %}
-          <tr>
-            <td>
-              <div class="font-bold">{{ customer.name }}</div>
-              {% if customer.company_name %}
-              <div class="text-sm opacity-70">{{ customer.company_name }}</div>
-              {% endif %}
-            </td>
-            <td>{{ customer.get_type_display }}</td>
-            <td>{{ customer.email }}</td>
-            <td>{{ customer.phone }}</td>
-            <td>
-              {% if customer.is_active %}
-              <div class="badge badge-success gap-2">Aktif</div>
-              {% else %}
-              <div class="badge badge-error gap-2">Pasif</div>
-              {% endif %}
-            </td>
-            <td>
-              <div class="flex space-x-2">
-                <a href="{% url 'customers:customer-detail' pk=customer.pk %}" class="btn btn-square btn-sm btn-ghost text-primary">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+  <!-- Customers Table -->
+  <div id="customers-table" class="card bg-base-100 shadow-xl overflow-visible animate-fade-in" style="animation-delay: 0.4s;">
+    <div class="card-body p-0">
+      <div class="overflow-x-auto" style="overflow: visible;">
+        <table class="table table-zebra w-full resizable-table">
+          <thead>
+            <tr>
+              <th class="sortable" data-sort-field="name" {% if sort_by == 'name' %}data-sort-dir="{{ sort_dir }}"{% endif %}>
+                <div class="flex items-center">
+                  <a href="{{ sort_urls.name }}" class="flex-1">İsim / Şirket</a>
+                  {% if sort_by == 'name' %}
+                    <span class="text-primary ml-1">{{ sort_dir|yesno:"↑,↓" }}</span>
+                  {% endif %}
+                </div>
+                <div class="resizer" data-column="0"></div>
+              </th>
+              <th>
+                <div class="flex items-center">
+                  <span>Tür</span>
+                </div>
+                <div class="resizer" data-column="1"></div>
+              </th>
+              <th>
+                <div class="flex items-center">
+                  <span>İletişim</span>
+                </div>
+                <div class="resizer" data-column="2"></div>
+              </th>
+              <th class="sortable" data-sort-field="created_at" {% if sort_by == 'created_at' %}data-sort-dir="{{ sort_dir }}"{% endif %}>
+                <div class="flex items-center">
+                  <a href="{{ sort_urls.created_at }}" class="flex-1">Kayıt Tarihi</a>
+                  {% if sort_by == 'created_at' %}
+                    <span class="text-primary ml-1">{{ sort_dir|yesno:"↑,↓" }}</span>
+                  {% endif %}
+                </div>
+                <div class="resizer" data-column="3"></div>
+              </th>
+              <th class="sortable" data-sort-field="total_orders" {% if sort_by == 'total_orders' %}data-sort-dir="{{ sort_dir }}"{% endif %}>
+                <div class="flex items-center">
+                  <a href="{{ sort_urls.total_orders }}" class="flex-1">Siparişler</a>
+                  {% if sort_by == 'total_orders' %}
+                    <span class="text-primary ml-1">{{ sort_dir|yesno:"↑,↓" }}</span>
+                  {% endif %}
+                </div>
+                <div class="resizer" data-column="4"></div>
+              </th>
+              <th class="sortable" data-sort-field="total_revenue" {% if sort_by == 'total_revenue' %}data-sort-dir="{{ sort_dir }}"{% endif %}>
+                <div class="flex items-center">
+                  <a href="{{ sort_urls.total_revenue }}" class="flex-1">Ciro</a>
+                  {% if sort_by == 'total_revenue' %}
+                    <span class="text-primary ml-1">{{ sort_dir|yesno:"↑,↓" }}</span>
+                  {% endif %}
+                </div>
+                <div class="resizer" data-column="5"></div>
+              </th>
+              <th>
+                <div class="flex items-center">
+                  <span>Durum</span>
+                </div>
+                <div class="resizer" data-column="6"></div>
+              </th>
+              <th>
+                <div class="flex justify-center">İşlemler</div>
+                <div class="resizer" data-column="7"></div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for customer in customers %}
+            <tr>
+              <td>
+                <div class="customer-card">
+                  <div class="customer-avatar">
+                    {{ customer.name|slice:":2"|upper }}
+                  </div>
+                  <div>
+                    <div class="font-bold hover:text-primary transition-colors">
+                      <a href="{% url 'customers:customer-detail' pk=customer.pk %}" class="hover:underline">{{ customer.name }}</a>
+                    </div>
+                    {% if customer.company_name %}
+                    <div class="text-xs opacity-70">{{ customer.company_name }}</div>
+                    {% endif %}
+                  </div>
+                </div>
+              </td>
+              <td>
+                {% if customer.type == 'individual' %}
+                  <div class="badge badge-outline badge-info">Bireysel</div>
+                {% else %}
+                  <div class="badge badge-outline badge-secondary">Kurumsal</div>
+                {% endif %}
+              </td>
+              <td>
+                <div class="text-sm">
+                  {% if customer.email %}
+                    <div class="tooltip-container">
+                      <a href="mailto:{{ customer.email }}" class="text-primary hover:underline">{{ customer.email|truncatechars:25 }}</a>
+                      <span class="tooltip-text">{{ customer.email }}</span>
+                    </div>
+                  {% endif %}
+                  {% if customer.phone %}
+                    <div class="text-xs opacity-70 mt-1">{{ customer.phone }}</div>
+                  {% endif %}
+                </div>
+              </td>
+              <td>
+                <div class="font-medium">{{ customer.created_at|date:"d.m.Y" }}</div>
+                <div class="text-xs opacity-60">{{ customer.created_at|time:"H:i" }}</div>
+              </td>
+              <td>
+                <div class="tooltip-container">
+                  <div class="font-bold">{{ customer.total_order_count|default:"0" }}</div>
+                  <span class="tooltip-text">Toplam {{ customer.total_order_count|default:"0" }} sipariş</span>
+                </div>
+              </td>
+              <td>
+                <div class="tooltip-container">
+                  <div class="font-bold">{{ customer.total_revenue_sum|default:"0"|floatformat:2 }} ₺</div>
+                  <span class="tooltip-text">Toplam {{ customer.total_revenue_sum|default:"0"|floatformat:2 }} ₺ ciro</span>
+                </div>
+              </td>
+              <td>
+                {% if customer.is_active %}
+                  <div class="badge badge-success status-badge">Aktif</div>
+                {% else %}
+                  <div class="badge badge-error status-badge">Pasif</div>
+                {% endif %}
+              </td>
+              <td>
+                <div class="flex justify-center items-center gap-1">
+                  <div class="tooltip-container">
+                    <a href="{% url 'customers:customer-detail' pk=customer.pk %}" class="btn btn-circle btn-sm btn-ghost text-primary">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    </a>
+                    <span class="tooltip-text">Görüntüle</span>
+                  </div>
+                  
+                  <div class="tooltip-container">
+                    <a href="{% url 'customers:customer-update' pk=customer.pk %}" class="btn btn-circle btn-sm btn-ghost text-secondary">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                      </svg>
+                    </a>
+                    <span class="tooltip-text">Düzenle</span>
+                  </div>
+                  
+                  <div class="tooltip-container">
+                    <a href="{% url 'orders:order-create' %}?customer={{ customer.pk }}" class="btn btn-circle btn-sm btn-ghost text-info">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                      </svg>
+                    </a>
+                    <span class="tooltip-text">Yeni Sipariş</span>
+                  </div>
+                  
+                  <div class="tooltip-container">
+                    <a href="{% url 'customers:customer-delete' pk=customer.pk %}" class="btn btn-circle btn-sm btn-ghost text-error">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </a>
+                    <span class="tooltip-text">Sil</span>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="8" class="text-center py-12">
+                <div class="flex flex-col items-center justify-center gap-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-base-content opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                   </svg>
-                </a>
-                
-                <a href="{% url 'customers:customer-update' pk=customer.pk %}" class="btn btn-square btn-sm btn-ghost text-secondary">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                  </svg>
-                </a>
-                
-                <a href="{% url 'customers:customer-delete' pk=customer.pk %}" class="btn btn-square btn-sm btn-ghost text-error">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </a>
-              </div>
-            </td>
-          </tr>
-          {% empty %}
-          <tr>
-            <td colspan="6" class="text-center py-8">
-              <div class="flex flex-col items-center justify-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-base-content opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-                <p class="text-base-content opacity-60">Henüz müşteri kaydı bulunmamaktadır veya arama kriterleriyle eşleşen müşteri yok.</p>
-                <a href="{% url 'customers:customer-create' %}" class="btn btn-primary btn-sm mt-2">Yeni Müşteri Ekle</a>
-              </div>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    
-    {% if is_paginated %}
-    <div class="flex justify-center py-4 border-t border-base-300">
-      <div class="btn-group">
-        {% if page_obj.has_previous %}
-        <a href="?page=1{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.customer_type %}&customer_type={{ request.GET.customer_type }}{% endif %}{% if request.GET.is_active %}&is_active={{ request.GET.is_active }}{% endif %}" class="btn btn-sm">«</a>
-        <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.customer_type %}&customer_type={{ request.GET.customer_type }}{% endif %}{% if request.GET.is_active %}&is_active={{ request.GET.is_active }}{% endif %}" class="btn btn-sm">‹</a>
-        {% endif %}
-        
-        <button class="btn btn-sm">Sayfa {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</button>
-        
-        {% if page_obj.has_next %}
-        <a href="?page={{ page_obj.next_page_number }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.customer_type %}&customer_type={{ request.GET.customer_type }}{% endif %}{% if request.GET.is_active %}&is_active={{ request.GET.is_active }}{% endif %}" class="btn btn-sm">›</a>
-        <a href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.customer_type %}&customer_type={{ request.GET.customer_type }}{% endif %}{% if request.GET.is_active %}&is_active={{ request.GET.is_active }}{% endif %}" class="btn btn-sm">»</a>
-        {% endif %}
+                  <p class="text-lg font-semibold text-base-content opacity-60">Müşteri Bulunamadı</p>
+                  <p class="text-base-content opacity-60 max-w-md text-center">Henüz müşteri kaydı bulunmamaktadır veya arama kriterleriyle eşleşen müşteri yok.</p>
+                  <div class="mt-3 flex gap-3">
+                    <button id="clear-search-empty" class="btn btn-outline btn-sm">Aramayı Temizle</button>
+                    <a href="{% url 'customers:customer-create' %}" class="btn btn-primary btn-sm">Yeni Müşteri Ekle</a>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
+      
+      <!-- Pagination -->
+      {% if is_paginated %}
+      <div class="flex justify-between items-center p-4 border-t border-base-300">
+        <div>
+          <span class="text-sm text-base-content/60">Toplam {{ page_obj.paginator.count }} müşteri, {{ page_obj.paginator.num_pages }} sayfa</span>
+        </div>
+        
+        <div class="btn-group">
+          {% if page_obj.has_previous %}
+          <a href="?page=1{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.customer_type %}&customer_type={{ request.GET.customer_type }}{% endif %}{% if request.GET.is_active %}&is_active={{ request.GET.is_active }}{% endif %}{% if request.GET.created_from %}&created_from={{ request.GET.created_from }}{% endif %}{% if request.GET.created_to %}&created_to={{ request.GET.created_to }}{% endif %}{% if request.GET.min_orders %}&min_orders={{ request.GET.min_orders }}{% endif %}{% if request.GET.min_revenue %}&min_revenue={{ request.GET.min_revenue }}{% endif %}&sort_by={{ request.GET.sort_by|default:'name' }}&sort_dir={{ request.GET.sort_dir|default:'asc' }}" class="btn btn-sm">«</a>
+          <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.customer_type %}&customer_type={{ request.GET.customer_type }}{% endif %}{% if request.GET.is_active %}&is_active={{ request.GET.is_active }}{% endif %}{% if request.GET.created_from %}&created_from={{ request.GET.created_from }}{% endif %}{% if request.GET.created_to %}&created_to={{ request.GET.created_to }}{% endif %}{% if request.GET.min_orders %}&min_orders={{ request.GET.min_orders }}{% endif %}{% if request.GET.min_revenue %}&min_revenue={{ request.GET.min_revenue }}{% endif %}&sort_by={{ request.GET.sort_by|default:'name' }}&sort_dir={{ request.GET.sort_dir|default:'asc' }}" class="btn btn-sm">‹</a>
+          {% endif %}
+          
+          <button class="btn btn-sm">Sayfa {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</button>
+          
+          {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.customer_type %}&customer_type={{ request.GET.customer_type }}{% endif %}{% if request.GET.is_active %}&is_active={{ request.GET.is_active }}{% endif %}{% if request.GET.created_from %}&created_from={{ request.GET.created_from }}{% endif %}{% if request.GET.created_to %}&created_to={{ request.GET.created_to }}{% endif %}{% if request.GET.min_orders %}&min_orders={{ request.GET.min_orders }}{% endif %}{% if request.GET.min_revenue %}&min_revenue={{ request.GET.min_revenue }}{% endif %}&sort_by={{ request.GET.sort_by|default:'name' }}&sort_dir={{ request.GET.sort_dir|default:'asc' }}" class="btn btn-sm">›</a>
+          <a href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.customer_type %}&customer_type={{ request.GET.customer_type }}{% endif %}{% if request.GET.is_active %}&is_active={{ request.GET.is_active }}{% endif %}{% if request.GET.created_from %}&created_from={{ request.GET.created_from }}{% endif %}{% if request.GET.created_to %}&created_to={{ request.GET.created_to }}{% endif %}{% if request.GET.min_orders %}&min_orders={{ request.GET.min_orders }}{% endif %}{% if request.GET.min_revenue %}&min_revenue={{ request.GET.min_revenue }}{% endif %}&sort_by={{ request.GET.sort_by|default:'name' }}&sort_dir={{ request.GET.sort_dir|default:'asc' }}" class="btn btn-sm">»</a>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
     </div>
-    {% endif %}
   </div>
 </div>
+
+{% block extra_js %}
+<script>
+  // Global toggle fonksiyonu
+  function toggleFilterPanel(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const filterPanel = document.getElementById('filter-panel');
+    const filterToggle = event.currentTarget;
+    
+    if (!filterPanel || !filterToggle) return;
+    
+    const isCurrentlyCollapsed = filterPanel.classList.contains('collapsed');
+    
+    console.log('Toggle fonksiyonu çalıştı - mevcut durum:', isCurrentlyCollapsed ? 'Gizli' : 'Görünür');
+    
+    if (isCurrentlyCollapsed) {
+      filterPanel.classList.remove('collapsed');
+      filterToggle.classList.add('filter-toggle-active');
+      filterToggle.setAttribute('title', 'Filtreleri Gizle');
+      console.log('Panel açıldı');
+    } else {
+      filterPanel.classList.add('collapsed');
+      filterToggle.classList.remove('filter-toggle-active');
+      filterToggle.setAttribute('title', 'Filtreleri Göster');
+      console.log('Panel kapandı');
+    }
+  }
+  
+  // Global olarak erişilebilir yap
+  window.toggleFilterPanel = toggleFilterPanel;
+  
+  document.addEventListener('DOMContentLoaded', function() {
+    // Initialize resizable columns
+    initResizableColumns();
+    
+    // Load saved column widths if any
+    loadColumnWidths();
+    
+    // Handle filter panel toggle
+    const filterToggle = document.getElementById('filter-toggle-btn');
+    const filterPanel = document.getElementById('filter-panel');
+    
+    // Check URL parameters and expand filter panel if any filter is active
+    const activeFilterState = hasActiveFilters();
+    
+    // Initialize the filter panel visibility
+    if (!activeFilterState) {
+      filterPanel.classList.add('collapsed');
+    } else {
+      filterToggle.classList.add('filter-toggle-active');
+      updateActiveFiltersDisplay();
+    }
+    
+    // Tooltip position fix
+    document.querySelectorAll('.tooltip-container').forEach(container => {
+      container.addEventListener('mouseenter', function() {
+        const tooltip = this.querySelector('.tooltip-text');
+        if (tooltip) {
+          const rect = this.getBoundingClientRect();
+          const tooltipRect = tooltip.getBoundingClientRect();
+          
+          // Yukarıda yeterli alan var mı kontrol et
+          if (rect.top < tooltipRect.height + 20) {
+            // Altta göster
+            tooltip.style.bottom = 'auto';
+            tooltip.style.top = 'calc(100% + 10px)';
+          } else {
+            // Üstte göster
+            tooltip.style.bottom = 'calc(100% + 10px)';
+            tooltip.style.top = 'auto';
+          }
+        }
+      });
+    });
+    
+    // Handle clear search on empty state
+    const clearSearchEmptyBtn = document.getElementById('clear-search-empty');
+    if (clearSearchEmptyBtn) {
+      clearSearchEmptyBtn.addEventListener('click', function() {
+        window.location.href = '{% url "customers:customer-list" %}';
+      });
+    }
+    
+    // Handle clear filters button
+    document.getElementById('clear-filters').addEventListener('click', function() {
+      const form = document.getElementById('customer-search-form');
+      const inputs = form.querySelectorAll('input:not([type="submit"]), select');
+      
+      inputs.forEach(input => {
+        if (input.type === 'checkbox') {
+          input.checked = false;
+        } else {
+          input.value = '';
+        }
+      });
+      
+      form.submit();
+    });
+    
+    function hasActiveFilters() {
+      const urlParams = new URLSearchParams(window.location.search);
+      let activeFilterCount = 0;
+      
+      // List of filter parameter names to check
+      const filterParams = ['query', 'customer_type', 'created_from', 'created_to', 
+                            'min_orders', 'min_revenue'];
+      
+      filterParams.forEach(param => {
+        if (urlParams.has(param) && urlParams.get(param) !== '') {
+          activeFilterCount++;
+        }
+      });
+      
+      // Update the badge count
+      const countBadge = document.getElementById('active-filters-count');
+      if (activeFilterCount > 0) {
+        countBadge.style.display = 'inline-flex';
+        countBadge.textContent = activeFilterCount;
+      } else {
+        countBadge.style.display = 'none';
+      }
+      
+      return activeFilterCount > 0;
+    }
+    
+    function updateActiveFiltersDisplay() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const activeFiltersContainer = document.getElementById('active-filters');
+      
+      // Clear existing filters
+      activeFiltersContainer.innerHTML = '';
+      
+      // Parameter display names mapping
+      const paramNames = {
+        'query': 'Arama',
+        'customer_type': 'Müşteri Tipi',
+        'created_from': 'Başlangıç',
+        'created_to': 'Bitiş',
+        'min_orders': 'Min Sipariş',
+        'min_revenue': 'Min Ciro'
+      };
+      
+      // Filter parameter names to check
+      const filterParams = ['query', 'customer_type', 'created_from', 'created_to', 
+                           'min_orders', 'min_revenue'];
+      
+      let hasActiveFilter = false;
+      
+      filterParams.forEach(param => {
+        if (urlParams.has(param) && urlParams.get(param) !== '') {
+          hasActiveFilter = true;
+          
+          // Create filter badge
+          const badge = document.createElement('div');
+          badge.className = 'badge badge-outline gap-1';
+          
+          let displayValue = urlParams.get(param);
+          
+          // Special handling for customer type
+          if (param === 'customer_type') {
+            displayValue = displayValue === 'individual' ? 'Bireysel' : 'Kurumsal';
+          }
+          
+          badge.innerHTML = `
+            <span>${paramNames[param]}: ${displayValue}</span>
+            <button class="remove-filter" data-param="${param}">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          `;
+          
+          activeFiltersContainer.appendChild(badge);
+        }
+      });
+      
+      // Show or hide the active filters container
+      if (hasActiveFilter) {
+        activeFiltersContainer.style.display = 'flex';
+      } else {
+        activeFiltersContainer.style.display = 'none';
+      }
+      
+      // Add event listeners to remove filter buttons
+      document.querySelectorAll('.remove-filter').forEach(button => {
+        button.addEventListener('click', function() {
+          const param = this.getAttribute('data-param');
+          const form = document.getElementById('customer-search-form');
+          const input = form.querySelector(`[name="${param}"]`);
+          
+          if (input) {
+            if (input.type === 'checkbox') {
+              input.checked = false;
+            } else {
+              input.value = '';
+            }
+            form.submit();
+          }
+        });
+      });
+    }
+    
+    function initResizableColumns() {
+      const table = document.querySelector('.resizable-table');
+      if (!table) return;
+      
+      const resizers = table.querySelectorAll('th .resizer');
+      
+      let currentResizer;
+      
+      resizers.forEach(resizer => {
+        resizer.addEventListener('mousedown', mouseDownHandler);
+        
+        function mouseDownHandler(e) {
+          currentResizer = e.target;
+          const columnIndex = parseInt(currentResizer.getAttribute('data-column'));
+          const th = currentResizer.closest('th');
+          
+          // Get initial width
+          const initialWidth = th.offsetWidth;
+          const startX = e.clientX;
+          
+          // Add the active class
+          currentResizer.classList.add('resizing');
+          
+          // Add event listeners for mousemove and mouseup
+          document.addEventListener('mousemove', mouseMoveHandler);
+          document.addEventListener('mouseup', mouseUpHandler);
+          
+          function mouseMoveHandler(e) {
+            const widthChange = e.clientX - startX;
+            const newWidth = initialWidth + widthChange;
+            
+            // Minimum width constraint
+            if (newWidth >= 60) {
+              th.style.width = `${newWidth}px`;
+            }
+          }
+          
+          function mouseUpHandler() {
+            // Remove the resizing class
+            currentResizer.classList.remove('resizing');
+            
+            // Save column widths
+            saveColumnWidths();
+            
+            // Remove event listeners
+            document.removeEventListener('mousemove', mouseMoveHandler);
+            document.removeEventListener('mouseup', mouseUpHandler);
+          }
+        }
+      });
+    }
+    
+    function saveColumnWidths() {
+      const table = document.querySelector('.resizable-table');
+      if (!table) return;
+      
+      const headers = table.querySelectorAll('th');
+      const widths = {};
+      
+      headers.forEach((th, index) => {
+        if (th.style.width) {
+          widths[index] = th.style.width;
+        }
+      });
+      
+      localStorage.setItem('customerTableWidths', JSON.stringify(widths));
+    }
+    
+    function loadColumnWidths() {
+      const table = document.querySelector('.resizable-table');
+      if (!table) return;
+      
+      const headers = table.querySelectorAll('th');
+      const widths = JSON.parse(localStorage.getItem('customerTableWidths') || '{}');
+      
+      Object.keys(widths).forEach(index => {
+        if (headers[index]) {
+          headers[index].style.width = widths[index];
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}
 {% endblock %}

@@ -1,0 +1,137 @@
+<!-- 
+Siparişler tablosu komponenti.
+Kullanımı:
+{% include "components/dashboard/orders_table.html" with 
+  orders=recent_orders
+  title="Son Siparişler"
+  description="Son 5 sipariş kaydı"
+%}
+-->
+
+<div class="card bg-base-100 shadow-xl h-full" x-data="ordersTableApp">
+  <div class="card-body p-6">
+    <div class="flex justify-between items-center mb-4">
+      <div>
+        <h3 class="card-title text-lg font-medium">{{ title|default:"Siparişler" }}</h3>
+        {% if description %}
+        <p class="text-sm text-base-content/60 mt-1">{{ description }}</p>
+        {% endif %}
+      </div>
+      
+      {% if show_filters %}
+      <div class="flex items-center space-x-2">
+        <div class="dropdown dropdown-end">
+          <label tabindex="0" class="btn btn-sm btn-outline">
+            <span x-text="filterStatus || 'Tüm Durumlar'"></span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </label>
+          <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52">
+            <li><a @click="applyStatusFilter('')">Tüm Durumlar</a></li>
+            <li><a @click="applyStatusFilter('pending')">Bekliyor</a></li>
+            <li><a @click="applyStatusFilter('processing')">İşleniyor</a></li>
+            <li><a @click="applyStatusFilter('shipped')">Kargoda</a></li>
+            <li><a @click="applyStatusFilter('delivered')">Teslim Edildi</a></li>
+            <li><a @click="applyStatusFilter('completed')">Tamamlandı</a></li>
+            <li><a @click="applyStatusFilter('cancelled')">İptal Edildi</a></li>
+          </ul>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+    
+    <div class="overflow-x-auto">
+      <table class="table w-full">
+        <thead>
+          <tr>
+            <th class="cursor-pointer" @click="sortBy('id')">
+              Sipariş #
+              <span :class="getSortIndicator('id')" class="ml-1"></span>
+            </th>
+            <th class="cursor-pointer" @click="sortBy('customer')">
+              Müşteri
+              <span :class="getSortIndicator('customer')" class="ml-1"></span>
+            </th>
+            <th class="cursor-pointer" @click="sortBy('created_at')">
+              Tarih
+              <span :class="getSortIndicator('created_at')" class="ml-1"></span>
+            </th>
+            <th class="cursor-pointer" @click="sortBy('total_amount')">
+              Tutar
+              <span :class="getSortIndicator('total_amount')" class="ml-1"></span>
+            </th>
+            <th class="cursor-pointer" @click="sortBy('status')">
+              Durum
+              <span :class="getSortIndicator('status')" class="ml-1"></span>
+            </th>
+            <th class="text-right">İşlemler</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in orders %}
+          <tr x-show="!filterStatus || '{{ order.status }}' === filterStatus">
+            <td>
+              <div class="font-medium">#{{ order.id }}</div>
+            </td>
+            <td>
+              <div class="font-medium">{{ order.customer.name }}</div>
+              {% if order.customer.company_name %}
+              <div class="text-xs opacity-70">{{ order.customer.company_name }}</div>
+              {% endif %}
+            </td>
+            <td>
+              <div>{{ order.created_at|date:"d.m.Y" }}</div>
+              <div class="text-xs opacity-70">{{ order.created_at|time:"H:i" }}</div>
+            </td>
+            <td>
+              <div class="font-medium">{{ order.total_amount|currency }}</div>
+              <div class="text-xs opacity-70">{{ order.items.count }} ürün</div>
+            </td>
+            <td>
+              <div class="badge 
+                {% if order.status == 'pending' %}badge-warning{% elif order.status == 'processing' %}badge-primary{% elif order.status == 'shipped' %}badge-info{% elif order.status == 'delivered' %}badge-success{% elif order.status == 'completed' %}badge-success{% elif order.status == 'cancelled' %}badge-error{% else %}badge-ghost{% endif %}">
+                {% if order.status == 'pending' %}Bekliyor
+                {% elif order.status == 'processing' %}İşleniyor
+                {% elif order.status == 'shipped' %}Kargoda
+                {% elif order.status == 'delivered' %}Teslim Edildi
+                {% elif order.status == 'completed' %}Tamamlandı
+                {% elif order.status == 'cancelled' %}İptal Edildi
+                {% else %}{{ order.status }}{% endif %}
+              </div>
+            </td>
+            <td class="text-right">
+              <a href="/orders/{{ order.id }}/" class="btn btn-ghost btn-xs">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="text-center py-8">
+              <div class="flex flex-col items-center justify-center text-base-content/50">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                <p class="text-lg font-medium mb-1">Henüz sipariş yok</p>
+                <p class="text-sm">Bu tarih aralığında hiç sipariş kaydı bulunamadı.</p>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    
+    {% if show_all_link and orders %}
+    <div class="mt-6 flex justify-center">
+      <a href="/orders/" class="btn btn-outline btn-sm">
+        Tüm Siparişleri Görüntüle
+      </a>
+    </div>
+    {% endif %}
+  </div>
+</div>

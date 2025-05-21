@@ -65,3 +65,19 @@ def get_currency_symbol():
     # Get currency from settings or default to USD
     currency = SystemSettings.get_setting('currency_code', 'USD')
     return currency_symbols.get(currency, '$')
+
+
+@register.filter(name='turkish_currency')
+def turkish_currency(value):
+    """Format value as Turkish currency with thousand separators."""
+    try:
+        # Convert to float if it's not already numeric
+        if not isinstance(value, (int, float)):
+            value = float(value)
+        
+        # Format with thousand separators, no decimals for currency
+        formatted_value = "{:,.0f}".format(value)
+        
+        return f"{formatted_value} ₺"
+    except (ValueError, TypeError):
+        return value

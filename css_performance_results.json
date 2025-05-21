@@ -1,0 +1,49 @@
+{
+  "timestamp": "2025-05-19T21:10:09.318594",
+  "results": [
+    {
+      "file": "critical.css",
+      "path": "/Users/emreuysal/Documents/Project/VivaCrm v2/static/css/src/critical.css",
+      "size": 2524,
+      "size_formatted": "2.46 KB",
+      "gzip_size": 1101,
+      "gzip_size_formatted": "1.08 KB",
+      "compression_ratio": "56.4%",
+      "rules": 22,
+      "selectors": 36
+    },
+    {
+      "file": "critical-optimized.css",
+      "path": "/Users/emreuysal/Documents/Project/VivaCrm v2/static/css/src/critical-optimized.css",
+      "size": 1432,
+      "size_formatted": "1.40 KB",
+      "gzip_size": 785,
+      "gzip_size_formatted": "785.00 B",
+      "compression_ratio": "45.2%",
+      "rules": 18,
+      "selectors": 24
+    },
+    {
+      "file": "main.css",
+      "path": "/Users/emreuysal/Documents/Project/VivaCrm v2/static/css/dist/main.css",
+      "size": 344520,
+      "size_formatted": "336.45 KB",
+      "gzip_size": 42853,
+      "gzip_size_formatted": "41.85 KB",
+      "compression_ratio": "87.6%",
+      "rules": 1934,
+      "selectors": 4871
+    },
+    {
+      "file": "main.min.css",
+      "path": "/Users/emreuysal/Documents/Project/VivaCrm v2/static/css/dist/main.min.css",
+      "size": 217325,
+      "size_formatted": "212.23 KB",
+      "gzip_size": 28943,
+      "gzip_size_formatted": "28.26 KB",
+      "compression_ratio": "86.7%",
+      "rules": 1515,
+      "selectors": 4147
+    }
+  ]
+}

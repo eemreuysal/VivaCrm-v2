@@ -1,175 +1,237 @@
-// Main JavaScript file for VivaCRM v2
-document.addEventListener('DOMContentLoaded', function() {
-  initializeApp();
-});
-
-function initializeApp() {
-  setupHtmxExtensions();
-  setupThemeToggle();
-  setupAlpineComponents();
-  setupEventListeners();
-}
-
-// HTMX Extensions and Settings
-function setupHtmxExtensions() {
-  // Load HTMX extensions if needed
-  if (typeof htmx !== 'undefined') {
-    // Set HTMX global configurations
-    htmx.config.useTemplateFragments = true;
-    htmx.config.allowEval = false;
-    htmx.config.historyCacheSize = 10;
-    
-    // Add HTMX global events
-    document.body.addEventListener('htmx:configRequest', function(event) {
-      // Add CSRF token to all HTMX requests
-      event.detail.headers['X-CSRFToken'] = getCsrfToken();
-    });
-    
-    document.body.addEventListener('htmx:afterSwap', function(event) {
-      // Reinitialize any JS components that need it after HTMX content swap
-      reinitializeComponents();
-    });
-    
-    document.body.addEventListener('htmx:responseError', function(event) {
-      // Show error message when HTMX requests fail
-      showToast('Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
-    });
-  }
-}
-
-// Theme Toggle
-function setupThemeToggle() {
-  // Theme toggle if present
-  const themeToggle = document.getElementById('theme-toggle');
-  if (themeToggle) {
-    themeToggle.addEventListener('click', function() {
-      const currentTheme = document.documentElement.getAttribute('data-theme');
-      const newTheme = currentTheme === 'vivacrm' ? 'vivacrmDark' : 'vivacrm';
-      document.documentElement.setAttribute('data-theme', newTheme);
-      localStorage.setItem('vivacrm-theme', newTheme);
-    });
-  }
-  
-  // Apply saved theme from localStorage if any, default to light theme
-  const savedTheme = localStorage.getItem('vivacrm-theme');
-  if (savedTheme) {
-    document.documentElement.setAttribute('data-theme', savedTheme);
-  } else {
-    // Set default theme to light theme (vivacrm)
-    document.documentElement.setAttribute('data-theme', 'vivacrm');
-    localStorage.setItem('vivacrm-theme', 'vivacrm');
-  }
-}
-
-// Alpine.js Components
-function setupAlpineComponents() {
-  if (typeof Alpine !== 'undefined') {
-    // Register Alpine.js components and stores
-    Alpine.store('app', {
-      sidebarOpen: false,
-      toggleSidebar() {
-        this.sidebarOpen = !this.sidebarOpen;
-      }
-    });
-    
-    Alpine.data('dropdown', () => ({
-      open: false,
-      toggle() {
-        this.open = !this.open;
-      },
-      close() {
-        this.open = false;
-      }
-    }));
-    
-    Alpine.data('modal', () => ({
-      visible: false,
-      show() {
-        this.visible = true;
-        document.body.classList.add('overflow-hidden');
-      },
-      hide() {
-        this.visible = false;
-        document.body.classList.remove('overflow-hidden');
-      }
-    }));
-    
-    // Add more Alpine.js components as needed
-  }
-}
-
-// General Event Listeners
-function setupEventListeners() {
-  // Close dropdown menus when clicking outside
-  document.addEventListener('click', function(event) {
-    const dropdowns = document.querySelectorAll('.dropdown.dropdown-open');
-    dropdowns.forEach(function(dropdown) {
-      if (!dropdown.contains(event.target)) {
-        dropdown.classList.remove('dropdown-open');
-      }
-    });
-  });
-  
-  // Setup form enhancements
-  setupFormEnhancements();
-}
-
-// Form Enhancements
-function setupFormEnhancements() {
-  // Auto-resize textareas
-  document.querySelectorAll('textarea[data-autoresize]').forEach(function(textarea) {
-    textarea.addEventListener('input', function() {
-      this.style.height = 'auto';
-      this.style.height = (this.scrollHeight) + 'px';
-    });
-    // Initial resize
-    textarea.style.height = 'auto';
-    textarea.style.height = (textarea.scrollHeight) + 'px';
-  });
-  
-  // Add confirmation to delete forms
-  document.querySelectorAll('form[data-confirm]').forEach(function(form) {
-    form.addEventListener('submit', function(event) {
-      const confirmMessage = this.getAttribute('data-confirm') || 'Bu işlemi gerçekleştirmek istediğinize emin misiniz?';
-      if (!confirm(confirmMessage)) {
-        event.preventDefault();
-      }
-    });
-  });
-}
-
-// Helper Functions
-function showToast(message, type = 'info') {
-  // Implementation depends on your toast library
-  if (typeof Toastify !== 'undefined') {
-    Toastify({
-      text: message,
-      duration: 3000,
-      gravity: "top",
-      position: "right",
-      className: `toast-${type}`
-    }).showToast();
-  } else {
-    console.log(`Toast (${type}): ${message}`);
-  }
-}
-
-function getCsrfToken() {
-  // Get CSRF token from cookie
-  return document.querySelector('input[name="csrfmiddlewaretoken"]')?.value || '';
-}
-
-function reinitializeComponents() {
-  // Reinitialize components after HTMX content swap
-  if (typeof Alpine !== 'undefined') {
-    Alpine.initTree(document.body);
-  }
-  
-  // Re-initialize any other JS components here
-}
-
-// Export any needed functions for other modules to use
-window.vivacrm = {
-  showToast,
-  reinitializeComponents
+// VivaCRM main.js - Dashboard scripts integration
+// Global olarak Alpine ve HTMX'i tanımla
+window.Alpine = window.Alpine || {};
+window.htmx = window.htmx || { 
+    on: function() {}, 
+    off: function() {},
+    trigger: function() {},
+    ajax: function() {}
 };
+
+// Helper fonksiyon - DOM yüklendikten sonra çalıştır
+function onDOMReady(fn) {
+    if (document.readyState !== 'loading') {
+        fn();
+    } else {
+        document.addEventListener('DOMContentLoaded', fn);
+    }
+}
+
+// VivaCRM store ve utilities
+window.vivaCRM = window.vivaCRM || {
+    store: {
+        get: function(key) { return localStorage.getItem('vivacrm-' + key); },
+        set: function(key, value) { localStorage.setItem('vivacrm-' + key, value); },
+        cache: function(key, value, ttl) { 
+            localStorage.setItem('vivacrm-cache-' + key, JSON.stringify({
+                value: value,
+                expires: Date.now() + (ttl || 60000)
+            }));
+        },
+        addNotification: function(notification) {
+            console.log('Notification:', notification);
+        }
+    },
+    utils: {
+        formatDate: function(date) {
+            return new Date(date).toLocaleDateString('tr-TR');
+        },
+        formatCurrency: function(value) {
+            return new Intl.NumberFormat('tr-TR', {
+                style: 'currency',
+                currency: 'TRY'
+            }).format(value);
+        }
+    },
+    createAlpineComponent: function(definition) {
+        return function() {
+            return {
+                init: function() { 
+                    if (definition.init) {
+                        definition.init.call(this);
+                    }
+                },
+                destroy: function() {
+                    if (definition.destroy) {
+                        definition.destroy.call(this);
+                    }
+                },
+                ...definition
+            };
+        };
+    }
+};
+
+// Dashboard sayfasını initialize et
+onDOMReady(function() {
+    if (document.getElementById('dashboard-content')) {
+        console.log('Dashboard sayfası yükleniyor...');
+
+        // Burada dashboard sayfası için özel kodlar çalışabilir
+        if (window.Alpine) {
+            // Bileşenleri tanımla
+            window.ordersTableApp = function() {
+                return {
+                    filterStatus: '',
+                    sortColumn: 'id',
+                    sortDirection: 'asc',
+                    
+                    init() {
+                        console.log('Orders table component initialized');
+                    },
+                    
+                    sortBy(column) {
+                        if (this.sortColumn === column) {
+                            this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+                        } else {
+                            this.sortColumn = column;
+                            this.sortDirection = 'asc';
+                        }
+                    }
+                };
+            };
+
+            window.lowStockApp = function() {
+                return {
+                    showAll: false,
+                    
+                    init() {
+                        console.log('Low stock component initialized');
+                    }
+                };
+            };
+
+            window.dateFilterComponent = function() {
+                return {
+                    showDatePicker: false,
+                    customStartDate: null,
+                    customEndDate: null,
+                    
+                    init() {
+                        console.log('Date filter component initialized');
+                        
+                        if (window.dashboardInitData) {
+                            this.customStartDate = window.dashboardInitData.customStartDate || null;
+                            this.customEndDate = window.dashboardInitData.customEndDate || null;
+                        }
+                    },
+                    
+                    applyCustomDateRange() {
+                        if (!this.customStartDate || !this.customEndDate) {
+                            alert('Lütfen başlangıç ve bitiş tarihlerini seçin');
+                            return;
+                        }
+                        
+                        this.showDatePicker = false;
+                        
+                        if (window.location.href.includes('dashboard')) {
+                            window.location.href = `/dashboard/?period=custom&start_date=${this.customStartDate}&end_date=${this.customEndDate}`;
+                        }
+                    },
+                    
+                    formatDate(dateString) {
+                        if (!dateString) return '';
+                        return new Intl.DateTimeFormat('tr-TR').format(new Date(dateString));
+                    }
+                };
+            };
+
+            window.dashboardComponent = function() {
+                return {
+                    currentPeriod: 'month',
+                    loading: false,
+                    showDatePicker: false,
+                    customStartDate: null,
+                    customEndDate: null,
+                    charts: new Map(),
+                    notificationOpen: false,
+                    darkMode: localStorage.getItem('theme') === 'dark',
+
+                    init() {
+                        if (window.dashboardInitData) {
+                            this.currentPeriod = window.dashboardInitData.currentPeriod || 'month';
+                            this.customStartDate = window.dashboardInitData.customStartDate || null;
+                            this.customEndDate = window.dashboardInitData.customEndDate || null;
+                        }
+                        
+                        this.setupEventListeners();
+                    },
+
+                    toggleTheme() {
+                        if (window.Alpine && window.Alpine.store('theme')) {
+                            window.Alpine.store('theme').toggle();
+                            this.darkMode = window.Alpine.store('theme').darkMode;
+                        } else {
+                            this.darkMode = !this.darkMode;
+                            localStorage.setItem('vivacrm-theme', this.darkMode ? 'dark' : 'light');
+                            document.documentElement.setAttribute('data-theme', this.darkMode ? 'vivacrmDark' : 'vivacrm');
+                            document.documentElement.classList.toggle('dark', this.darkMode);
+                        }
+                    },
+
+                    setPeriod(period) {
+                        this.currentPeriod = period;
+                        this.showDatePicker = false;
+                        this.refreshData();
+                    },
+                    
+                    applyCustomDate(startDate, endDate) {
+                        this.customStartDate = startDate;
+                        this.customEndDate = endDate;
+                        this.refreshData();
+                    },
+
+                    async refreshData() {
+                        this.loading = true;
+
+                        try {
+                            let url = `/dashboard/?period=${this.currentPeriod}`;
+                            
+                            if (this.currentPeriod === 'custom' && this.customStartDate && this.customEndDate) {
+                                url += `&start_date=${this.customStartDate}&end_date=${this.customEndDate}`;
+                            }
+                            
+                            window.location.href = url;
+                        } catch (error) {
+                            console.error('Failed to refresh dashboard data:', error);
+                        }
+                    },
+
+                    setupEventListeners() {
+                        document.addEventListener('htmx:afterSettle', (event) => {
+                            if (event.detail.target.id === 'dashboard-content') {
+                                this.loading = false;
+                            }
+                        });
+                    },
+
+                    formatDate(date) {
+                        return new Intl.DateTimeFormat('tr-TR').format(new Date(date));
+                    },
+
+                    formatCurrency(value) {
+                        return new Intl.NumberFormat('tr-TR', {
+                            style: 'currency',
+                            currency: 'TRY'
+                        }).format(value);
+                    }
+                };
+            };
+
+            // Alpine'ı başlat
+            if (!window.Alpine.initialized) {
+                if (typeof Alpine.data === 'function') {
+                    Alpine.data('dashboardComponent', window.dashboardComponent);
+                    Alpine.data('ordersTableApp', window.ordersTableApp);
+                    Alpine.data('lowStockApp', window.lowStockApp);
+                    Alpine.data('dateFilterComponent', window.dateFilterComponent);
+                }
+                
+                if (typeof Alpine.start === 'function' && !window._alpine_initialized) {
+                    Alpine.start();
+                    window._alpine_initialized = true;
+                }
+            }
+        }
+    }
+});

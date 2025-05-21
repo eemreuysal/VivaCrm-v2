@@ -6,6 +6,102 @@ from crispy_forms.layout import Layout, Submit, Row, Column, Fieldset, HTML, Div
 from .models import Customer, Address, Contact
 
 
+class CustomerExcelImportForm(forms.Form):
+    """
+    Form for importing customers from Excel file.
+    """
+    excel_file = forms.FileField(
+        label=_('Excel Dosyası'),
+        help_text=_('Müşterileri içeren Excel dosyası (.xlsx)'),
+        widget=forms.FileInput(attrs={'accept': '.xlsx', 'class': 'form-control'})
+    )
+    update_existing = forms.BooleanField(
+        label=_('Mevcut müşterileri güncelle'),
+        required=False,
+        initial=True,
+        help_text=_('E-posta adresi aynı olan müşterileri güncelle')
+    )
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.form_id = 'customer-excel-import-form'
+        self.helper.form_class = 'form-horizontal'
+        self.helper.form_enctype = 'multipart/form-data'
+        
+        self.helper.layout = Layout(
+            Fieldset(
+                _('Excel Import'),
+                'excel_file',
+                'update_existing',
+            ),
+            Div(
+                Submit('submit', _('Yükle ve Import Et'), css_class='btn btn-primary'),
+                HTML('<a href="{% url "customers:customer-list" %}" class="btn btn-secondary ml-2">İptal</a>'),
+                HTML('<a href="{% url "customers:customer-excel-template" %}" class="btn btn-info ml-2">Boş Şablon İndir</a>'),
+                css_class='text-right mt-3'
+            )
+        )
+        
+    def clean_excel_file(self):
+        excel_file = self.cleaned_data.get('excel_file')
+        if excel_file:
+            if not excel_file.name.endswith('.xlsx'):
+                raise forms.ValidationError(_('Lütfen geçerli bir Excel dosyası (.xlsx) yükleyin.'))
+            if excel_file.size > 10 * 1024 * 1024:  # 10 MB
+                raise forms.ValidationError(_('Dosya boyutu çok büyük. Maksimum 10 MB.'))
+        return excel_file
+
+
+class AddressExcelImportForm(forms.Form):
+    """
+    Form for importing addresses from Excel file.
+    """
+    excel_file = forms.FileField(
+        label=_('Excel Dosyası'),
+        help_text=_('Adresleri içeren Excel dosyası (.xlsx)'),
+        widget=forms.FileInput(attrs={'accept': '.xlsx', 'class': 'form-control'})
+    )
+    update_existing = forms.BooleanField(
+        label=_('Mevcut adresleri güncelle'),
+        required=False,
+        initial=True,
+        help_text=_('Aynı başlığa sahip adresleri güncelle')
+    )
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.form_id = 'address-excel-import-form'
+        self.helper.form_class = 'form-horizontal'
+        self.helper.form_enctype = 'multipart/form-data'
+        
+        self.helper.layout = Layout(
+            Fieldset(
+                _('Adres Excel Import'),
+                'excel_file',
+                'update_existing',
+            ),
+            Div(
+                Submit('submit', _('Yükle ve Import Et'), css_class='btn btn-primary'),
+                HTML('<a href="{% url "customers:customer-list" %}" class="btn btn-secondary ml-2">İptal</a>'),
+                HTML('<a href="{% url "customers:address-excel-template" %}" class="btn btn-info ml-2">Boş Şablon İndir</a>'),
+                css_class='text-right mt-3'
+            )
+        )
+        
+    def clean_excel_file(self):
+        excel_file = self.cleaned_data.get('excel_file')
+        if excel_file:
+            if not excel_file.name.endswith('.xlsx'):
+                raise forms.ValidationError(_('Lütfen geçerli bir Excel dosyası (.xlsx) yükleyin.'))
+            if excel_file.size > 10 * 1024 * 1024:  # 10 MB
+                raise forms.ValidationError(_('Dosya boyutu çok büyük. Maksimum 10 MB.'))
+        return excel_file
+
+
 class CustomerForm(forms.ModelForm):
     class Meta:
         model = Customer
@@ -150,6 +246,46 @@ class CustomerSearchForm(forms.Form):
         label=_('Sadece Aktif Müşteriler'),
         required=False,
         initial=True
+    )
+    sort_by = forms.ChoiceField(
+        label=_('Sıralama'),
+        required=False,
+        choices=[
+            ('name', _('İsim')),
+            ('created_at', _('Kayıt Tarihi')),
+            ('total_orders', _('Sipariş Sayısı')),
+            ('total_revenue', _('Toplam Ciro')),
+        ],
+        initial='name'
+    )
+    sort_dir = forms.ChoiceField(
+        label=_('Sıralama Yönü'),
+        required=False,
+        choices=[
+            ('asc', _('Artan')),
+            ('desc', _('Azalan')),
+        ],
+        initial='asc'
+    )
+    created_from = forms.DateField(
+        label=_('Oluşturulma Başlangıç'),
+        required=False,
+        widget=forms.DateInput(attrs={'type': 'date'})
+    )
+    created_to = forms.DateField(
+        label=_('Oluşturulma Bitiş'),
+        required=False,
+        widget=forms.DateInput(attrs={'type': 'date'})
+    )
+    min_orders = forms.IntegerField(
+        label=_('Min Sipariş'),
+        required=False,
+        widget=forms.NumberInput(attrs={'placeholder': _('Min sipariş sayısı')})
+    )
+    min_revenue = forms.DecimalField(
+        label=_('Min Ciro'),
+        required=False,
+        widget=forms.NumberInput(attrs={'placeholder': _('Min ciro')})
     )
     
     def __init__(self, *args, **kwargs):

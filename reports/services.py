@@ -1,7 +1,7 @@
 from django.db.models import Sum, Count, Avg, Q, F, ExpressionWrapper, DecimalField, DateTimeField
 from django.db.models.functions import TruncMonth, TruncWeek, TruncDay
 from django.utils import timezone
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, time
 
 from customers.models import Customer
 from products.models import Product, Category
@@ -21,9 +21,17 @@ class ReportService:
         # Default to last 30 days if no date range specified
         if not start_date:
             start_date = timezone.now() - timedelta(days=30)
+        else:
+            # If only date is provided, combine with time to make timezone-aware
+            if not isinstance(start_date, datetime):
+                start_date = timezone.make_aware(datetime.combine(start_date, time.min))
             
         if not end_date:
             end_date = timezone.now()
+        else:
+            # If only date is provided, combine with time to make timezone-aware
+            if not isinstance(end_date, datetime):
+                end_date = timezone.make_aware(datetime.combine(end_date, time.max))
             
         # Base query
         orders = Order.objects.filter(
@@ -67,9 +75,17 @@ class ReportService:
                 start_date = timezone.now() - timedelta(weeks=12)
             else:  # month
                 start_date = timezone.now() - timedelta(days=365)
+        else:
+            # If only date is provided, combine with time to make timezone-aware
+            if not isinstance(start_date, datetime):
+                start_date = timezone.make_aware(datetime.combine(start_date, time.min))
                 
         if not end_date:
             end_date = timezone.now()
+        else:
+            # If only date is provided, combine with time to make timezone-aware
+            if not isinstance(end_date, datetime):
+                end_date = timezone.make_aware(datetime.combine(end_date, time.max))
             
         # Base query
         orders = Order.objects.filter(

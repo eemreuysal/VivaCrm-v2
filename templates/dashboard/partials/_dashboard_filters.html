@@ -1,0 +1,100 @@
+<!-- Dashboard Header -->
+<div class="card bg-base-100 shadow-xl mb-6">
+    <div class="card-body p-4 md:p-6">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-6">
+            <!-- Title Section -->
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold text-base-content mb-2">
+                    Dashboard
+                </h1>
+                <p class="text-base-content/60 text-sm">
+                    <span x-show="currentPeriod === 'today'">Bugünün özeti</span>
+                    <span x-show="currentPeriod === 'week'">Bu haftanın özeti</span>
+                    <span x-show="currentPeriod === 'month'">Bu ayın özeti</span>
+                    <span x-show="currentPeriod === 'year'">Bu yılın özeti</span>
+                    <span x-show="currentPeriod === 'custom'">
+                        <span x-text="formatDate(customStartDate)"></span> - 
+                        <span x-text="formatDate(customEndDate)"></span>
+                    </span>
+                </p>
+            </div>
+            
+            <!-- Period Filter -->
+            <div class="flex flex-wrap items-center gap-2">
+                <div class="btn-group">
+                    <button @click="setPeriod('today')" 
+                            class="btn btn-sm" 
+                            :class="currentPeriod === 'today' ? 'btn-primary' : 'btn-ghost'">
+                        Bugün
+                    </button>
+                    <button @click="setPeriod('week')" 
+                            class="btn btn-sm" 
+                            :class="currentPeriod === 'week' ? 'btn-primary' : 'btn-ghost'">
+                        Hafta
+                    </button>
+                    <button @click="setPeriod('month')" 
+                            class="btn btn-sm" 
+                            :class="currentPeriod === 'month' ? 'btn-primary' : 'btn-ghost'">
+                        Ay
+                    </button>
+                    <button @click="setPeriod('year')" 
+                            class="btn btn-sm" 
+                            :class="currentPeriod === 'year' ? 'btn-primary' : 'btn-ghost'">
+                        Yıl
+                    </button>
+                </div>
+                
+                <!-- Custom Date Picker -->
+                <div x-data="dateFilterComponent()" class="date-filter-container relative">
+                    <button @click="toggleDatePicker()" 
+                            class="btn btn-sm"
+                            :class="$root.currentPeriod === 'custom' ? 'btn-primary' : 'btn-ghost'">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        Özel
+                    </button>
+                    
+                    <div x-show="showDatePicker" 
+                         x-cloak
+                         @click.away="showDatePicker = false"
+                         class="absolute right-0 md:right-auto top-full mt-2 p-4 bg-base-100 shadow-xl rounded-box z-10 w-72 md:w-80">
+                        <div class="space-y-4">
+                            <div class="form-control">
+                                <label class="label text-xs">Başlangıç Tarihi</label>
+                                <input type="date" x-model="startDate" class="input input-sm input-bordered w-full" />
+                            </div>
+                            <div class="form-control">
+                                <label class="label text-xs">Bitiş Tarihi</label>
+                                <input type="date" x-model="endDate" class="input input-sm input-bordered w-full" />
+                            </div>
+                            <div class="flex gap-2 w-full">
+                                <button @click="applyCustomDateRange()" class="btn btn-sm btn-primary flex-1">
+                                    Uygula
+                                </button>
+                                <button @click="toggleDatePicker()" class="btn btn-sm btn-outline flex-1">
+                                    İptal
+                                </button>
+                            </div>
+                            <div class="divider divider-horizontal my-2">veya</div>
+                            <div class="flex gap-2">
+                                <button @click="setLastMonth()" class="btn btn-sm btn-ghost btn-block">Son Ay</button>
+                                <button @click="setLastQuarter()" class="btn btn-sm btn-ghost btn-block">Son 3 Ay</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Refresh Button -->
+                <button @click="refreshData()" 
+                        class="btn btn-sm btn-circle btn-ghost ml-2" 
+                        :disabled="loading"
+                        title="Verileri Yenile">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" :class="{ 'animate-spin': loading }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

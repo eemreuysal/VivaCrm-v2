@@ -1,0 +1,27 @@
+{% load static %}
+{% load humanize %}
+{% load currency_tags %}
+{% load component_tags %}
+
+<!-- Stats Cards Grid with Modern Gradient Effects -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <!-- Toplam Müşteri -->
+    <div class="animate-fade-in" style="animation-delay: 0.05s;">
+        {% include "components/dashboard/stats_card.html" with title="Toplam Müşteri" value=total_customers|intcomma icon="users" color="primary" percent=customer_trend|floatformat:1 trend=customer_trend|yesno:"up,down," period="geçen aya göre" %}
+    </div>
+    
+    <!-- Toplam Ürün -->
+    <div class="animate-fade-in" style="animation-delay: 0.1s;">
+        {% include "components/dashboard/stats_card.html" with title="Toplam Ürün" value=total_products|intcomma icon="box" color="secondary" percent=product_trend|floatformat:1 trend=product_trend|yesno:"up,down," period="geçen aya göre" %}
+    </div>
+    
+    <!-- Toplam Sipariş -->
+    <div class="animate-fade-in" style="animation-delay: 0.15s;">
+        {% include "components/dashboard/stats_card.html" with title="Toplam Sipariş" value=total_orders|intcomma icon="cart" color="accent" percent=order_trend|floatformat:1 trend=order_trend|yesno:"up,down," period="geçen aya göre" %}
+    </div>
+    
+    <!-- Toplam Gelir -->
+    <div class="animate-fade-in" style="animation-delay: 0.2s;">
+        {% include "components/dashboard/stats_card.html" with title="Toplam Gelir" value=total_revenue|currency icon="money" color="success" percent=revenue_trend|floatformat:1 trend=revenue_trend|yesno:"up,down," period="geçen aya göre" %}
+    </div>
+</div>

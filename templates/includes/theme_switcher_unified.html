@@ -1,0 +1,85 @@
+{% comment %}
+    Tema değiştirici bileşeni - Unified sürüm
+    Alpine.js store ile çalışır, mevcut değilse vanilla JS fallback kullanır
+    
+    Kullanımı: {% include 'includes/theme_switcher_unified.html' with button_class="btn btn-ghost btn-circle" %}
+{% endcomment %}
+
+<button class="{{ button_class|default:'btn btn-ghost btn-circle' }} theme-toggle-btn"
+        x-data="{}" 
+        @click="$store.theme ? $store.theme.toggle() : window.VivaCRM.themeManager.toggleTheme()"
+        aria-label="Tema değiştir">
+    <svg x-show="$store.theme && $store.theme.darkMode" 
+         class="h-5 w-5 theme-dark-icon" 
+         xmlns="http://www.w3.org/2000/svg" 
+         fill="none" 
+         viewBox="0 0 24 24" 
+         stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+    </svg>
+    <svg x-show="$store.theme && !$store.theme.darkMode" 
+         class="h-5 w-5 theme-light-icon" 
+         xmlns="http://www.w3.org/2000/svg" 
+         fill="none" 
+         viewBox="0 0 24 24" 
+         stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+    </svg>
+    <script>
+        // Vanilla JS fallback for theme switching
+        document.addEventListener('DOMContentLoaded', function() {
+            // Önce ThemeManager'ı kontrol et
+            const themeManager = window.VivaCRM && window.VivaCRM.themeManager;
+            
+            // Skip if Alpine is handling the theme
+            if (window.Alpine && window.Alpine.store && window.Alpine.store('theme')) {
+                console.log('Theme switcher: Alpine theme store is handling theme switching');
+                return;
+            }
+            
+            // Tema değiştirici düğmelerini ve ikonları seç
+            const darkIcons = document.querySelectorAll('.theme-dark-icon');
+            const lightIcons = document.querySelectorAll('.theme-light-icon');
+            
+            // İkonları başlangıç durumuna göre güncelle
+            const updateIcons = (isDark) => {
+                darkIcons.forEach(icon => {
+                    icon.style.display = isDark ? 'block' : 'none';
+                });
+                lightIcons.forEach(icon => {
+                    icon.style.display = isDark ? 'none' : 'block';
+                });
+            };
+            
+            // İlk durumu ayarla
+            if (themeManager) {
+                updateIcons(themeManager.currentTheme === 'dark');
+                
+                // ThemeManager'dan değişiklikleri dinle
+                themeManager.subscribe((theme) => {
+                    updateIcons(theme === 'dark');
+                });
+                
+                console.log('Theme switcher initialized with ThemeManager');
+            } else {
+                // Fallback: LocalStorage'dan oku
+                const isDark = localStorage.getItem('vivacrm-theme') === 'dark' || 
+                               document.documentElement.classList.contains('dark');
+                updateIcons(isDark);
+                
+                // Değişiklik olaylarını dinle
+                document.addEventListener('vivacrm:theme-changed', (e) => {
+                    if (e.detail) {
+                        if (typeof e.detail.theme === 'string') {
+                            updateIcons(e.detail.theme === 'dark');
+                        } else if (typeof e.detail.darkMode === 'boolean') {
+                            updateIcons(e.detail.darkMode);
+                        }
+                    }
+                });
+                
+                console.warn('Theme switcher initialized with fallback mode (ThemeManager not found)');
+            }
+        });
+    </script>
+</button>

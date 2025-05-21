@@ -9,11 +9,12 @@ from django.http import HttpResponse
 from django.utils.text import slugify
 from django.utils import timezone
 from django.db import transaction
-from django.db.models import Model, QuerySet
+from django.db.models import Model, QuerySet, Manager
 from django.core.exceptions import ValidationError
 import logging
 import io
 from typing import Dict, List, Any, Tuple, Optional, Callable, Type, Union
+from .excel_result import ImportResult
 
 logger = logging.getLogger(__name__)
 
@@ -219,7 +220,8 @@ class ExcelImporter:
                  required_fields: List[str] = None,
                  unique_fields: List[str] = None,
                  validators: Dict[str, Callable] = None,
-                 defaults: Dict[str, Any] = None):
+                 defaults: Dict[str, Any] = None,
+                 preprocess_function: Callable = None):
         """
         Initialize the importer with configuration.
         
@@ -230,6 +232,7 @@ class ExcelImporter:
             unique_fields: List of fields to check for uniqueness
             validators: Dict of field names to validation functions
             defaults: Dict of field names to default values
+            preprocess_function: Optional function to preprocess data before creating/updating
         """
         self.model = model
         self.field_mapping = field_mapping or {}
@@ -237,10 +240,15 @@ class ExcelImporter:
         self.unique_fields = unique_fields or []
         self.validators = validators or {}
         self.defaults = defaults or {}
+        self.preprocess_function = preprocess_function
         
     def _normalize_field_name(self, name: str) -> str:
         """Convert Excel header name to normalized field name."""
-        # Try to find in field mapping
+        # Try to find in field mapping - exact match first
+        if name in self.field_mapping:
+            return self.field_mapping[name]
+            
+        # Try case-insensitive match
         for excel_name, field_name in self.field_mapping.items():
             if excel_name.lower() == name.lower():
                 return field_name
@@ -312,7 +320,9 @@ class ExcelImporter:
     @transaction.atomic
     def import_data(self, file_obj: Union[str, io.BytesIO], 
                     sheet_name: str = 0,
-                    update_existing: bool = True) -> Dict[str, Any]:
+                    update_existing: bool = True,
+                    import_task: 'ImportTask' = None,
+                    user=None) -> ImportResult:
         """
         Import data from an Excel file.
         
@@ -320,13 +330,21 @@ class ExcelImporter:
             file_obj: File path or file-like object containing Excel data
             sheet_name: Name or index of the sheet to import
             update_existing: Whether to update existing records
+            import_task: Import task for detailed reporting
+            user: User instance for tracking who created/updated records
             
         Returns:
-            Dict containing import statistics
+            ImportResult instance containing import statistics
         """
         try:
             # Load data from Excel
-            df = pd.read_excel(file_obj, sheet_name=sheet_name)
+            # Check file size and use chunk reading if needed
+            if hasattr(file_obj, 'size') and file_obj.size > 10 * 1024 * 1024:  # 10MB
+                # For large files, read in chunks
+                chunks = pd.read_excel(file_obj, sheet_name=sheet_name, chunksize=1000)
+                df = pd.concat(chunks, ignore_index=True)
+            else:
+                df = pd.read_excel(file_obj, sheet_name=sheet_name)
             
             # Remove unnamed columns and handle NaN values
             df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
@@ -337,50 +355,139 @@ class ExcelImporter:
             if missing_fields:
                 raise ValidationError(f"Missing required fields: {', '.join(missing_fields)}")
             
-            # Track statistics
-            created_count = 0
-            updated_count = 0
-            error_count = 0
-            error_rows = []
+            # Initialize result tracking
+            result = ImportResult()
+            if import_task:
+                result.initialize_reporter(import_task)
+            
+            # Find any AUTH_USER_MODEL foreign key fields that might need explicit None values
+            auth_user_fields = []
+            for field in self.model._meta.fields:
+                if hasattr(field, 'remote_field') and field.remote_field is not None and \
+                   hasattr(field.remote_field, 'model') and field.remote_field.model.__name__ == 'User':
+                    auth_user_fields.append(field.name)
             
             # Process each row
             for index, row in df.iterrows():
+                row_number = index + 2  # Excel row number (1-based, plus header)
+                row_data = row.to_dict()
+                
+                # Track field-level success
+                fields_succeeded = {}
+                fields_failed = {}
+                partial_data = {}
+                
                 try:
                     # Extract data for this row
                     data = self._process_row(row)
                     
-                    # Check if record exists
-                    lookup_kwargs = self._get_lookup_kwargs(data)
-                    if lookup_kwargs and update_existing:
-                        obj, created = self.model.objects.update_or_create(
-                            defaults=data,
-                            **lookup_kwargs
-                        )
-                        if created:
-                            created_count += 1
+                    # Set all AUTH_USER_MODEL foreign key fields to None if not provided
+                    for field_name in auth_user_fields:
+                        if field_name not in data:
+                            data[field_name] = None
+                            
+                    # Apply preprocessing function if provided
+                    if self.preprocess_function:
+                        data = self.preprocess_function(data)
+                    
+                    # Validate each field individually for partial success tracking
+                    for field_name, value in data.items():
+                        try:
+                            # Validate field value
+                            field = self.model._meta.get_field(field_name)
+                            
+                            # Skip validation for ForeignKey fields if value is a model instance
+                            from django.db.models import ForeignKey
+                            if isinstance(field, ForeignKey) and hasattr(value, 'pk'):
+                                # Value is already a model instance from validator
+                                fields_succeeded[field_name] = True
+                                partial_data[field_name] = value
+                            else:
+                                field.clean(value, None)
+                                fields_succeeded[field_name] = True
+                                partial_data[field_name] = value
+                        except (ValidationError, Exception) as field_error:
+                            fields_failed[field_name] = str(field_error)
+                            fields_succeeded[field_name] = False
+                    
+                    # If some fields succeeded but not all, handle as partial success
+                    if fields_failed and fields_succeeded:
+                        # Only use successfully validated fields
+                        filtered_data = {k: v for k, v in data.items() if fields_succeeded.get(k, False)}
+                        
+                        # Check if we can still create/update with partial data
+                        required_fields_ok = all(fields_succeeded.get(f, False) for f in self.required_fields)
+                        
+                        if required_fields_ok and filtered_data:
+                            lookup_kwargs = self._get_lookup_kwargs(filtered_data)
+                            if lookup_kwargs and update_existing:
+                                obj, created = self.model.objects.update_or_create(
+                                    defaults=filtered_data,
+                                    **lookup_kwargs
+                                )
+                                result.add_partial_success(
+                                    row_num=row_number,
+                                    fields_succeeded=fields_succeeded,
+                                    fields_failed=fields_failed,
+                                    data=row_data,
+                                    instance_id=obj.id
+                                )
+                            else:
+                                # Create with partial data
+                                obj = self.model.objects.create(**filtered_data)
+                                result.add_partial_success(
+                                    row_num=row_number,
+                                    fields_succeeded=fields_succeeded,
+                                    fields_failed=fields_failed,
+                                    data=row_data,
+                                    instance_id=obj.id
+                                )
                         else:
-                            updated_count += 1
+                            # Can't proceed with partial data - required fields missing
+                            result.add_error(
+                                row_num=row_number,
+                                error=f"Missing required fields: {', '.join(fields_failed.keys())}",
+                                data=row_data
+                            )
                     else:
-                        # Create new record
-                        self.model.objects.create(**data)
-                        created_count += 1
+                        # All fields succeeded - normal processing
+                        lookup_kwargs = self._get_lookup_kwargs(data)
+                        if lookup_kwargs and update_existing:
+                            obj, created = self.model.objects.update_or_create(
+                                defaults=data,
+                                **lookup_kwargs
+                            )
+                            result.add_success(
+                                row_num=row_number,
+                                instance_id=obj.id,
+                                is_created=created,
+                                data=row_data,
+                                fields_updated=list(data.keys())
+                            )
+                        else:
+                            # Create new record
+                            obj = self.model.objects.create(**data)
+                            result.add_success(
+                                row_num=row_number,
+                                instance_id=obj.id,
+                                is_created=True,
+                                data=row_data,
+                                fields_updated=list(data.keys())
+                            )
                         
                 except Exception as e:
-                    logger.error(f"Error importing row {index + 2}: {str(e)}")
-                    error_count += 1
-                    error_rows.append({
-                        'row': index + 2,  # Excel row number (1-based, plus header)
-                        'data': row.to_dict(),
-                        'error': str(e)
-                    })
+                    logger.error(f"Error importing row {row_number}: {str(e)}")
+                    result.add_error(
+                        row_num=row_number,
+                        error=str(e),
+                        data=row_data
+                    )
             
-            return {
-                'created': created_count,
-                'updated': updated_count,
-                'error_count': error_count,
-                'error_rows': error_rows,
-                'total': len(df)
-            }
+            # Finalize the import
+            if result.reporter:
+                result.finalize()
+                
+            return result
             
         except Exception as e:
             logger.error(f"Error importing Excel file: {str(e)}")

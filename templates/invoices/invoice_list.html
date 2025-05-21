@@ -21,7 +21,7 @@
         <div class="stats bg-base-200 shadow">
             <div class="stat">
                 <div class="stat-title">{% trans "Toplam Tutar" %}</div>
-                <div class="stat-value">{{ total_amount|floatformat:2 }} ₺</div>
+                <div class="stat-value">{{ total_amount|floatformat:2 }} $</div>
                 <div class="stat-desc">{% trans "Tüm faturalar" %}</div>
             </div>
         </div>
@@ -29,7 +29,7 @@
         <div class="stats bg-base-200 shadow">
             <div class="stat">
                 <div class="stat-title">{% trans "Ödenmemiş Tutar" %}</div>
-                <div class="stat-value text-warning">{{ unpaid_amount|floatformat:2 }} ₺</div>
+                <div class="stat-value text-warning">{{ unpaid_amount|floatformat:2 }} $</div>
                 <div class="stat-desc">{{ draft_count }} {% trans "Taslak" %}, {{ issued_count }} {% trans "Kesilmiş" %}</div>
             </div>
         </div>
@@ -37,7 +37,7 @@
         <div class="stats bg-base-200 shadow">
             <div class="stat">
                 <div class="stat-title">{% trans "Ödenmiş Tutar" %}</div>
-                <div class="stat-value text-success">{{ paid_amount|floatformat:2 }} ₺</div>
+                <div class="stat-value text-success">{{ paid_amount|floatformat:2 }} $</div>
                 <div class="stat-desc">{{ paid_count }} {% trans "Ödenmiş Fatura" %}</div>
             </div>
         </div>
@@ -94,7 +94,7 @@
                                     </a>
                                 </td>
                                 <td>{{ invoice.issue_date|date:"d.m.Y" }}</td>
-                                <td>{{ invoice.total_amount|floatformat:2 }} ₺</td>
+                                <td>{{ invoice.total_amount|floatformat:2 }} $</td>
                                 <td>
                                     <span class="badge {{ invoice.get_status_badge }}">
                                         {{ invoice.get_status_display }}

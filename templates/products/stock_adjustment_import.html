@@ -1,69 +1,208 @@
 {% extends 'base/base_dashboard.html' %}
-{% load static %}
+{% load i18n %}
 
-{% block title %}Import Stock Adjustments{% endblock %}
+{% block title %}Stok Ayarlamaları İçe Aktar{% endblock %}
 
 {% block content %}
-<div class="p-4">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold">Import Stock Adjustments</h1>
-        <div class="flex space-x-2">
-            <a href="{% url 'products:generate_stock_template' %}" class="btn btn-primary">
-                <i class="fas fa-download mr-2"></i> Download Template
+<div class="container mx-auto px-4 py-6">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-primary-content">Stok Ayarlamaları İçe Aktar</h1>
+            <p class="text-base-content/70">Excel dosyasından çoklu stok ayarlamalarını içe aktarın</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+            <a href="{% url 'products:generate-stock-template' %}" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+                Şablon İndir
             </a>
-            <a href="{% url 'products:stock_movement_list' %}" class="btn btn-outline">
-                <i class="fas fa-arrow-left mr-2"></i> Back to Stock Movements
+            <a href="{% url 'products:movement-list' %}" class="btn btn-outline">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                </svg>
+                Stok Hareketlerine Dön
             </a>
         </div>
     </div>
 
-    {% include 'components/card.html' with title="Import Stock Adjustments from Excel" %}
-        <div class="p-6">
-            <div class="mb-6">
-                <h3 class="text-lg font-semibold mb-2">Instructions</h3>
-                <div class="bg-base-200 p-4 rounded-lg">
-                    <ol class="list-decimal list-inside space-y-2">
-                        <li>Download the Excel template using the button above</li>
-                        <li>Fill in the stock adjustment data according to the template headers</li>
-                        <li>Required fields are marked with an asterisk (*)</li>
-                        <li>In the "Movement Type" column, use:
-                            <ul class="list-disc list-inside ml-6 mt-1">
-                                <li><strong>in</strong> - for adding stock (positive number)</li>
-                                <li><strong>out</strong> - for removing stock (positive number)</li>
-                                <li><strong>adjust</strong> - to set stock to a specific value</li>
-                            </ul>
-                        </li>
-                        <li>Upload the completed Excel file using the form below</li>
-                    </ol>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {% if messages %}
+            <div class="lg:col-span-3 mb-0">
+                {% for message in messages %}
+                    <div class="alert {% if message.tags == 'error' %}alert-error{% else %}alert-{{ message.tags }}{% endif %} shadow-lg">
+                        <div>
+                            {% if message.tags == 'error' %}
+                                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            {% elif message.tags == 'success' %}
+                                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            {% elif message.tags == 'warning' %}
+                                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                            {% else %}
+                                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            {% endif %}
+                            <span>{{ message }}</span>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Excel Upload Card -->
+        <div class="lg:col-span-2">
+            <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border-t-4 border-primary">
+                <div class="card-body">
+                    <h2 class="card-title text-xl font-bold flex items-center text-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M8 13h2"></path><path d="M8 17h2"></path><path d="M14 13h2"></path><path d="M14 17h2"></path></svg>
+                        Excel Dosyası Yükle
+                    </h2>
+                    <p class="text-base-content/70">Stok ayarlamalarını içe aktarmak için Excel dosyası yükleyin.</p>
+                    
+                    <form method="post" enctype="multipart/form-data" class="space-y-6 mt-2">
+                        {% csrf_token %}
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-medium">Excel Dosyası</span>
+                                <span class="label-text-alt">Gerekli</span>
+                            </label>
+                            <div class="flex items-center space-x-2">
+                                <input type="file" name="excel_file" accept=".xlsx,.xls" 
+                                       class="file-input file-input-bordered file-input-primary w-full" required />
+                                <div class="tooltip" data-tip="Sadece .xlsx ve .xls dosyaları">
+                                    <button type="button" class="btn btn-circle btn-ghost btn-sm">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="w-5 h-5 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-warning bg-warning/20 border border-warning">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                            <div>
+                                <h3 class="font-bold">Dikkat!</h3>
+                                <div class="text-sm">Bu işlem envanter seviyelerinizi güncelleyecektir. Yüklemeden önce lütfen dosyanızı dikkatlice gözden geçirin.</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-end mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                                Ayarlamaları İçe Aktar
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
-
-            <form method="post" enctype="multipart/form-data" hx-encoding="multipart/form-data">
-                {% csrf_token %}
-                
-                <div class="form-control mb-6">
-                    <label class="label">
-                        <span class="label-text font-semibold">Excel File</span>
-                    </label>
-                    <input type="file" name="excel_file" accept=".xlsx,.xls" class="file-input file-input-bordered w-full" required />
-                    <div class="text-xs text-base-content/70 mt-1">
-                        Accepted formats: .xlsx, .xls
+        </div>
+        
+        <!-- Instructions & Help Card -->
+        <div>
+            <div class="card bg-base-100 shadow-xl overflow-hidden sticky top-4">
+                <div class="card-body">
+                    <h2 class="card-title font-bold flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        Talimatlar & Yardım
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        <div class="border border-base-300 rounded-lg overflow-hidden">
+                            <div class="collapse collapse-arrow">
+                                <input type="checkbox" checked /> 
+                                <div class="collapse-title font-medium flex items-center">
+                                    <span class="badge badge-primary badge-sm mr-2">1</span> Hızlı Adımlar
+                                </div>
+                                <div class="collapse-content bg-base-100">
+                                    <ol class="list-decimal list-inside space-y-2 text-sm">
+                                        <li class="py-1">Yukarıdaki <span class="badge badge-primary badge-sm">Şablon İndir</span> düğmesini kullanarak Excel şablonunu indirin</li>
+                                        <li class="py-1">Şablon başlıklarına göre stok ayarlama verilerini doldurun</li>
+                                        <li class="py-1">Doldurulmuş Excel dosyasını seçin ve yükleyin</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="border border-base-300 rounded-lg overflow-hidden">
+                            <div class="collapse collapse-arrow">
+                                <input type="checkbox" /> 
+                                <div class="collapse-title font-medium flex items-center">
+                                    <span class="badge badge-primary badge-sm mr-2">2</span> Hareket Tipleri
+                                </div>
+                                <div class="collapse-content bg-base-100">
+                                    <div class="space-y-2 text-sm">
+                                        <div class="flex items-start space-x-2">
+                                            <div class="badge badge-success mt-1">in</div>
+                                            <div>Stok eklemek için kullanın. Pozitif sayı girin (örn. 10, 25)</div>
+                                        </div>
+                                        <div class="flex items-start space-x-2">
+                                            <div class="badge badge-error mt-1">out</div>
+                                            <div>Stok çıkarmak için kullanın. Pozitif sayı girin (örn. 5, 15)</div>
+                                        </div>
+                                        <div class="flex items-start space-x-2">
+                                            <div class="badge badge-warning mt-1">adjust</div>
+                                            <div>Stoku belirli bir değere ayarlamak için kullanın (örn. 100)</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="border border-base-300 rounded-lg overflow-hidden">
+                            <div class="collapse collapse-arrow">
+                                <input type="checkbox" /> 
+                                <div class="collapse-title font-medium flex items-center">
+                                    <span class="badge badge-primary badge-sm mr-2">3</span> İpuçları
+                                </div>
+                                <div class="collapse-content bg-base-100">
+                                    <ul class="list-disc list-inside space-y-2 text-sm">
+                                        <li>Gerekli alanlar şablonda yıldız (*) ile işaretlenmiştir</li>
+                                        <li>Stok miktarlarını pozitif tam sayılar olarak girin</li>
+                                        <li>Her satır için ürün kodu veya ürün adı gereklidir</li>
+                                        <li>İşlem açıklaması eklemek isteğe bağlıdır ancak önerilir</li>
+                                        <li>İşlem sonuçları sayfasında hataları kontrol edin</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                
-                <div class="alert alert-warning mb-6">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <span>This action will update your inventory levels. Please review your file carefully before uploading.</span>
-                </div>
-                
-                <div class="flex justify-end space-x-2">
-                    <a href="{% url 'products:stock_movement_list' %}" class="btn btn-outline">Cancel</a>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-upload mr-2"></i> Import Adjustments
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
-    {% include 'components/card_end.html' %}
+    </div>
 </div>
+
+<!-- Include only a small amount of alpine.js to handle the collapsible sections -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Trigger animation for the cards
+        setTimeout(() => {
+            document.querySelectorAll('.card').forEach(card => {
+                card.classList.add('animate-in');
+            });
+        }, 100);
+    });
+</script>
+
+<style>
+    .card {
+        opacity: 0;
+        transform: translateY(10px);
+        transition: opacity 0.3s ease-out, transform 0.3s ease-out, box-shadow 0.3s ease-in-out;
+    }
+    
+    .card.animate-in {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    
+    .badge {
+        transition: all 0.2s ease-in-out;
+    }
+    
+    .collapse-title:hover .badge {
+        transform: scale(1.1);
+    }
+</style>
 {% endblock %}

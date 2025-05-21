@@ -1,0 +1,149 @@
+/**
+ * VivaCRM Effect Utilities - Standardized
+ * Reusable visual effects and shared utility classes
+ */
+
+/* Hover Effects */
+.hover-lift {
+  @apply transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-md;
+}
+
+.hover-scale {
+  @apply transition-transform duration-200 hover:scale-105;
+}
+
+.hover-rotate {
+  @apply transition-transform duration-300 hover:rotate-3;
+}
+
+.hover-glow {
+  @apply transition-all duration-300;
+}
+.hover-glow:hover {
+  @apply shadow-md;
+  box-shadow: 0 0 15px theme('colors.primary.400' / 30%);
+}
+
+/* Glass Effects */
+.glass-effect {
+  @apply backdrop-blur-sm bg-opacity-80 border border-base-300/50;
+}
+
+.glass-card {
+  @apply backdrop-blur-md bg-white/80 dark:bg-gray-900/80 border border-white/20 dark:border-gray-800/30;
+}
+
+.glass-nav {
+  @apply backdrop-blur-md bg-white/90 dark:bg-gray-900/90 border-b border-gray-200/50 dark:border-gray-800/50;
+}
+
+/* Text Effects */
+.text-gradient {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary-focus;
+}
+
+.text-gradient-secondary {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-secondary to-secondary-focus;
+}
+
+.text-shadow {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.text-shadow-lg {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Scrollbar Styling */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 100, 100, 0.4) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(100, 100, 100, 0.4);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 100, 100, 0.6);
+}
+
+/* Global Scrollbar - Remove if you prefer to apply selectively */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 100, 100, 0.4);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 100, 100, 0.6);
+}
+
+/* Focus Effects */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 dark:focus:ring-offset-gray-900;
+}
+
+/* Background Effects */
+.bg-gradient-primary {
+  @apply bg-gradient-to-r from-primary to-primary-focus;
+}
+
+.bg-gradient-secondary {
+  @apply bg-gradient-to-r from-secondary to-secondary-focus;
+}
+
+.bg-gradient-accent {
+  @apply bg-gradient-to-r from-accent to-accent-focus;
+}
+
+/* Card Effects */
+.card-hover {
+  @apply transition-all duration-300 hover:shadow-lg;
+}
+
+.card-border {
+  @apply border border-gray-200 dark:border-gray-800;
+}
+
+/* Animation Effects */
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.slide-in-up {
+  animation: slideInUp 0.3s ease-in-out;
+}
+
+/* Ensure all utilities respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .hover-lift,
+  .hover-scale,
+  .hover-rotate,
+  .hover-glow,
+  .card-hover,
+  .fade-in,
+  .slide-in-up {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+  }
+}

@@ -1,51 +1,256 @@
 {% extends "base/base_auth.html" %}
-{% load crispy_forms_tags %}
 {% load static %}
+
+{% block extra_css %}
+<!-- Ensure Tailwind CSS is loaded -->
+<link rel="stylesheet" href="{% static 'css/dist/main.css' %}">
+{{ block.super }}
+{% endblock %}
 
 {% block title %}Giriş{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center">
-  <div class="max-w-md w-full">
-    <div class="card bg-base-100 shadow-xl">
+<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 auth-page-background">
+  <div class="max-w-md w-full space-y-8 auth-animation">
+    <!-- Logo ve Başlık -->
+    <div class="text-center">
+      <img src="{% static 'img/vivacrm-logo-transparent.png' %}" alt="VivaCRM" class="h-20 mx-auto">
+      <h2 class="mt-6 text-3xl font-extrabold text-base-content">
+        VivaCRM'e Hoş Geldiniz
+      </h2>
+      <p class="mt-2 text-sm text-base-content/70">
+        Hesabınıza giriş yaparak müşteri ilişkilerinizi yönetmeye başlayın
+      </p>
+    </div>
+    
+    <!-- Login Formu -->
+    <div class="card bg-base-100 shadow-xl auth-card">
       <div class="card-body">
-        <div class="text-center mb-6">
-          <img src="{% static 'img/vivacrm-logo.png' %}" alt="VivaCRM" class="h-12 mx-auto" />
-          <h2 class="text-2xl font-bold mt-4">VivaCRM'e Hoş Geldiniz</h2>
-          <p class="text-base-content opacity-70 text-sm mt-1">Hesabınıza giriş yapın</p>
-        </div>
-        
-        <form method="post" hx-boost="false">
-          {% csrf_token %}
-          {{ form|crispy }}
+        <!-- Alpine.js ile form yönetimi - Inline bileşen kullanımı -->
+        <form 
+          x-data="{
+            formData: {
+              username: '',
+              password: '',
+              remember: false
+            },
+            showPassword: false,
+            isSubmitting: false,
+            errorMessage: '',
+            errors: {},
+            
+            init() {
+              // Varsa URL'den hata parametrelerini analiz et
+              const urlParams = new URLSearchParams(window.location.search);
+              if (urlParams.has('error')) {
+                this.errorMessage = decodeURIComponent(urlParams.get('error'));
+              }
+            },
+            
+            // Şifre görünürlüğünü değiştir
+            togglePasswordVisibility() {
+              this.showPassword = !this.showPassword;
+            },
+            
+            // Form gönderme işlemi
+            submitForm() {
+              this.isSubmitting = true;
+              this.errorMessage = '';
+              this.errors = {};
+              
+              // Form verilerini hazırla
+              const form = new FormData();
+              form.append('username', this.formData.username);
+              form.append('password', this.formData.password);
+              if (this.formData.remember) {
+                form.append('remember', 'on');
+              }
+              form.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+              
+              // Fetch API ile form gönder
+              fetch(window.location.href, {
+                method: 'POST',
+                body: form,
+                headers: {
+                  'X-Requested-With': 'XMLHttpRequest'
+                }
+              })
+              .then(response => {
+                if (response.redirected) {
+                  // Başarılı giriş, yönlendirme URL'sine git
+                  window.location.href = response.url;
+                  return;
+                }
+                
+                if (response.headers.get('content-type')?.includes('application/json')) {
+                  // JSON yanıtını parse et
+                  return response.json().then(data => {
+                    // Hata durumunda
+                    if (data.errors) {
+                      this.errors = data.errors;
+                    }
+                    
+                    if (data.error) {
+                      this.errorMessage = data.error;
+                    } else if (data.__all__) {
+                      // Django form genel hataları
+                      this.errorMessage = Array.isArray(data.__all__) ? data.__all__[0] : data.__all__;
+                    }
+                    
+                    // İşlem tamamlandı
+                    this.isSubmitting = false;
+                  });
+                }
+                
+                // HTML yanıtı - normal form gönderimi
+                // Form başarısız oldu, sayfa yeniden yüklenecek
+                document.querySelector('form').submit();
+              })
+              .catch(error => {
+                console.error('Login error:', error);
+                this.errorMessage = 'Giriş sırasında bir hata oluştu. Lütfen tekrar deneyin.';
+                this.isSubmitting = false;
+              });
+            }
+          }"
+          x-init="init"
+          @submit.prevent="submitForm"
+          method="post" 
+          class="space-y-6">
           
-          <div class="form-control mt-6">
-            <button type="submit" class="btn btn-primary w-full">GİRİŞ YAP</button>
+          {% csrf_token %}
+          
+          <!-- Hata Mesajı Alanı -->
+          <div 
+            x-show="errorMessage" 
+            x-transition 
+            class="alert alert-error shadow-lg">
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <span x-text="errorMessage"></span>
+            </div>
           </div>
           
-          <div class="divider text-xs text-base-content opacity-50 my-4">VEYA</div>
+          <!-- Kullanıcı Adı / E-posta -->
+          <div class="form-control">
+            <label for="id_username" class="label">
+              <span class="label-text">Kullanıcı Adı</span>
+            </label>
+            <input 
+              type="text" 
+              id="id_username" 
+              name="username" 
+              x-model="formData.username"
+              autocomplete="username"
+              required 
+              class="input input-bordered w-full"
+              :class="{'input-error': errors.username}">
+            <label class="label" x-show="errors.username">
+              <span class="label-text-alt text-error" x-text="errors.username"></span>
+            </label>
+          </div>
           
-          <div class="space-y-3 mt-2">
-            <div class="text-sm text-center">
-              <a href="{% url 'accounts:password_reset' %}" class="text-primary hover:underline">
+          <!-- Şifre -->
+          <div class="form-control">
+            <label for="id_password" class="label">
+              <span class="label-text">Şifre</span>
+            </label>
+            <div class="relative">
+              <input 
+                :type="showPassword ? 'text' : 'password'" 
+                id="id_password" 
+                name="password"
+                x-model="formData.password"
+                autocomplete="current-password"
+                required 
+                class="input input-bordered w-full pr-10"
+                :class="{'input-error': errors.password}">
+              <button 
+                type="button" 
+                @click="togglePasswordVisibility()" 
+                class="absolute inset-y-0 right-0 pr-3 flex items-center text-base-content/50 hover:text-base-content">
+                <svg x-show="!showPassword" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                <svg x-show="showPassword" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                </svg>
+              </button>
+            </div>
+            <label class="label" x-show="errors.password">
+              <span class="label-text-alt text-error" x-text="errors.password"></span>
+            </label>
+          </div>
+          
+          <!-- Beni Hatırla ve Şifremi Unuttum -->
+          <div class="flex items-start">
+            <div class="flex items-center h-5">
+              <input 
+                id="id_remember" 
+                name="remember"
+                x-model="formData.remember"
+                type="checkbox"
+                class="checkbox checkbox-primary h-4 w-4">
+            </div>
+            <div class="ml-3 text-sm">
+              <label for="id_remember" class="label-text">Beni hatırla</label>
+            </div>
+            <div class="ml-auto text-sm">
+              <a href="{% url 'accounts:password_reset' %}" class="link link-primary">
                 Şifrenizi mi unuttunuz?
               </a>
             </div>
-            
-            <div class="text-sm text-center">
-              Hesabınız yok mu?
-              <a href="{% url 'accounts:register' %}" class="text-primary hover:underline">
-                Kaydolun
-              </a>
-            </div>
+          </div>
+          
+          <!-- Giriş Butonu -->
+          <div class="form-control mt-6">
+            <button 
+              type="submit" 
+              class="btn btn-primary w-full" 
+              :disabled="isSubmitting">
+              <span x-show="isSubmitting" class="loading loading-spinner mr-2"></span>
+              GİRİŞ YAP
+            </button>
+          </div>
+          
+          <!-- Kayıt Ol -->
+          <div class="text-center mt-4">
+            <span class="text-sm text-base-content/70">Hesabınız yok mu?</span>
+            <a href="{% url 'accounts:register' %}" class="text-sm link link-primary ml-1">
+              Hemen Kaydolun
+            </a>
           </div>
         </form>
       </div>
     </div>
     
-    <div class="text-center mt-6 text-xs text-base-content opacity-60">
-      © 2025 VivaCRM | <a href="#" class="hover:underline">Koşullar</a> | <a href="#" class="hover:underline">Gizlilik</a>
+    <!-- Alt Bilgi -->
+    <div class="text-center mt-6">
+      <p class="text-xs text-base-content/60">
+        &copy; {% now "Y" %} VivaCRM | 
+        <a href="#" class="link link-hover">Koşullar</a> | 
+        <a href="#" class="link link-hover">Gizlilik</a>
+      </p>
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Login sayfası için temayı ayarla - light temayı tercih et
+  document.addEventListener('DOMContentLoaded', function() {
+    if (typeof Alpine !== 'undefined' && Alpine.store && Alpine.store('theme')) {
+      // Açık temaya zorla ve temayı uygula
+      Alpine.store('theme').applyTheme('light');
+      
+      // Tema geçiş butonlarını gizle
+      const themeToggles = document.querySelectorAll('.theme-toggle-btn');
+      themeToggles.forEach(toggle => {
+        toggle.style.display = 'none';
+      });
+    }
+  });
+</script>
 {% endblock %}

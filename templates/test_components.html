@@ -1,0 +1,400 @@
+{% extends "base/base_dashboard.html" %}
+{% load static %}
+
+{% block title %}Bileşen Test Sayfası{% endblock %}
+{% block page_title %}VivaCRM Bileşen Testi{% endblock %}
+
+{% block content %}
+<div class="p-4 space-y-8">
+    <!-- Giriş Bölümü -->
+    <section class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h2 class="card-title text-2xl font-bold">
+                <span class="text-primary">VivaCRM</span> Bileşen Test Sayfası
+            </h2>
+            <p class="py-2">
+                Bu sayfa VivaCRM v2 projesindeki bileşenleri ve özellikleri test etmek için tasarlanmıştır. 
+                Alpine.js entegrasyonu, HTMX Ajax işlemleri, tema değiştirme ve format fonksiyonları burada test edilebilir.
+            </p>
+            <div class="card-actions justify-end">
+                <button class="btn btn-primary" @click="$store.theme.toggle()">
+                    <svg x-show="$store.theme.darkMode" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    <svg x-show="!$store.theme.darkMode" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                    <span x-text="$store.theme.darkMode ? 'Açık Tema' : 'Koyu Tema'"></span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tema ve Format Test Bölümü -->
+    <section class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h3 class="card-title text-xl font-bold text-secondary">
+                Tema ve Format Testi
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                <!-- Tema Değiştirme -->
+                <div class="card bg-base-200 shadow-md">
+                    <div class="card-body">
+                        <h4 class="card-title text-lg">Tema Mağazası</h4>
+                        <p class="mb-4">Şu anda <span x-text="$store.theme.darkMode ? 'koyu' : 'açık'" class="font-bold"></span> tema kullanılıyor.</p>
+                        
+                        <div class="flex flex-wrap gap-2">
+                            <button class="btn btn-sm btn-primary" @click="$store.theme.toggle()">Tema Değiştir</button>
+                            <button class="btn btn-sm btn-secondary" @click="$store.theme.useSystemPreference()">Sistem Tercihini Kullan</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Format Fonksiyonları -->
+                <div class="card bg-base-200 shadow-md">
+                    <div class="card-body">
+                        <h4 class="card-title text-lg">Format Fonksiyonları</h4>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="table table-zebra w-full">
+                                <thead>
+                                    <tr>
+                                        <th>Fonksiyon</th>
+                                        <th>Sonuç</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><code>formatNumber(1234.56)</code></td>
+                                        <td x-text="formatNumber(1234.56)"></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>formatCurrency(1234.56)</code></td>
+                                        <td x-text="formatCurrency(1234.56)"></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>formatDate('2025-05-20')</code></td>
+                                        <td x-text="formatDate('2025-05-20')"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Reaktif Bileşenler Test Bölümü -->
+    <section class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h3 class="card-title text-xl font-bold text-secondary">
+                Reaktif Bileşenler
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                <!-- Sayaç Bileşeni -->
+                <div class="card bg-base-200 shadow-md"
+                     x-data="{ count: 0 }">
+                    <div class="card-body">
+                        <h4 class="card-title text-lg">Sayaç Bileşeni</h4>
+                        <p class="mb-4">Şu anki değer: <span class="text-primary font-bold text-xl" x-text="count"></span></p>
+                        
+                        <div class="flex flex-wrap gap-2">
+                            <button class="btn btn-sm btn-primary" @click="count++">Artır</button>
+                            <button class="btn btn-sm btn-error" @click="count--">Azalt</button>
+                            <button class="btn btn-sm btn-neutral" @click="count = 0">Sıfırla</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Modal Bileşeni -->
+                <div class="card bg-base-200 shadow-md"
+                     x-data="{ open: false }">
+                    <div class="card-body">
+                        <h4 class="card-title text-lg">Modal Bileşeni</h4>
+                        <p class="mb-4">Tıklayarak modali açabilirsiniz.</p>
+                        
+                        <button class="btn btn-primary" @click="open = true">Modali Aç</button>
+                        
+                        <!-- Modal -->
+                        <div class="modal" :class="{ 'modal-open': open }">
+                            <div class="modal-box">
+                                <h3 class="font-bold text-lg">VivaCRM Modal</h3>
+                                <p class="py-4">Alpine.js ile çalışan reaktif modal bileşeni.</p>
+                                <div class="modal-action">
+                                    <button class="btn" @click="open = false">Kapat</button>
+                                </div>
+                            </div>
+                            <div class="modal-backdrop" @click="open = false"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Form ve HTMX Test Bölümü -->
+    <section class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h3 class="card-title text-xl font-bold text-secondary">
+                Form ve HTMX Testi
+            </h3>
+            
+            <div x-data="{ 
+                formData: {
+                    name: '',
+                    email: '',
+                    phone: '',
+                    message: ''
+                },
+                errors: {},
+                submitted: false,
+                loading: false,
+                
+                submitForm() {
+                    this.loading = true;
+                    this.errors = {};
+                    
+                    // Form doğrulama
+                    if (!this.formData.name) this.errors.name = 'İsim gerekli';
+                    if (!this.formData.email) this.errors.email = 'E-posta gerekli';
+                    if (!this.formData.email.includes('@')) this.errors.email = 'Geçerli bir e-posta adresi girin';
+                    
+                    // Hata varsa gönderimi iptal et
+                    if (Object.keys(this.errors).length > 0) {
+                        this.loading = false;
+                        return;
+                    }
+                    
+                    // Gerçek bir form gönderimi simüle et
+                    setTimeout(() => {
+                        this.submitted = true;
+                        this.loading = false;
+                    }, 1500);
+                }
+            }">
+                <!-- Form -->
+                <div x-show="!submitted">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">İsim</span>
+                            </label>
+                            <input type="text" class="input input-bordered w-full" x-model="formData.name">
+                            <span class="text-error text-sm mt-1" x-show="errors.name" x-text="errors.name"></span>
+                        </div>
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">E-posta</span>
+                            </label>
+                            <input type="email" class="input input-bordered w-full" x-model="formData.email">
+                            <span class="text-error text-sm mt-1" x-show="errors.email" x-text="errors.email"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 gap-4 mb-4">
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Telefon</span>
+                            </label>
+                            <input type="tel" class="input input-bordered w-full" x-model="formData.phone">
+                        </div>
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Mesaj</span>
+                            </label>
+                            <textarea class="textarea textarea-bordered h-24" x-model="formData.message"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end mt-4">
+                        <button class="btn btn-primary" @click="submitForm()" :disabled="loading">
+                            <span x-show="loading" class="loading loading-spinner loading-sm mr-2"></span>
+                            Gönder
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Başarılı Gönderim Mesajı -->
+                <div x-show="submitted" class="bg-success/10 p-6 rounded-box">
+                    <div class="flex flex-col items-center text-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-success mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <h4 class="text-xl font-bold mb-2">Form Başarıyla Gönderildi!</h4>
+                        <p class="mb-4">Teşekkürler, form verileriniz başarıyla işlendi.</p>
+                        <button class="btn btn-primary" @click="submitted = false; formData = {name: '', email: '', phone: '', message: ''}">
+                            Yeni Form
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- HTMX Örneği -->
+            <div class="card bg-base-200 shadow-md mt-6">
+                <div class="card-body">
+                    <h4 class="card-title text-lg">HTMX Dinamik İçerik</h4>
+                    <p class="mb-4">Aşağıdaki buton ile HTMX kullanarak içeriği güncelleyebilirsiniz.</p>
+                    
+                    <div class="flex gap-2 mb-4">
+                        <button class="btn btn-primary"
+                                hx-get="/dashboard/content/"
+                                hx-trigger="click"
+                                hx-target="#htmx-content"
+                                hx-swap="innerHTML">
+                            İçeriği Güncelle
+                        </button>
+                        <div class="dropdown">
+                            <div tabindex="0" role="button" class="btn">Filtre Seç</div>
+                            <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                                <li><a hx-get="/dashboard/content/?period=week" hx-target="#htmx-content">Haftalık</a></li>
+                                <li><a hx-get="/dashboard/content/?period=month" hx-target="#htmx-content">Aylık</a></li>
+                                <li><a hx-get="/dashboard/content/?period=year" hx-target="#htmx-content">Yıllık</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div id="htmx-content" class="bg-base-300 p-4 rounded-box min-h-16 animate-pulse">
+                        <div class="text-center py-4">
+                            <p class="opacity-70">İçerik yüklemek için "İçeriği Güncelle" butonuna tıklayın.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Kartlar ve İstatistikler -->
+    <section class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h3 class="card-title text-xl font-bold text-secondary">
+                Kartlar ve İstatistikler
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                <!-- İstatistik Kartı 1 -->
+                <div class="stat bg-base-200 rounded-box shadow">
+                    <div class="stat-figure text-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                        </svg>
+                    </div>
+                    <div class="stat-title">Toplam Satış</div>
+                    <div class="stat-value text-primary">₺25.6K</div>
+                    <div class="stat-desc">21% daha fazla</div>
+                </div>
+                
+                <!-- İstatistik Kartı 2 -->
+                <div class="stat bg-base-200 rounded-box shadow">
+                    <div class="stat-figure text-secondary">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                    </div>
+                    <div class="stat-title">Yeni Müşteriler</div>
+                    <div class="stat-value text-secondary">2,580</div>
+                    <div class="stat-desc">14% daha fazla</div>
+                </div>
+                
+                <!-- İstatistik Kartı 3 -->
+                <div class="stat bg-base-200 rounded-box shadow">
+                    <div class="stat-figure text-accent">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                    </div>
+                    <div class="stat-title">Siparişler</div>
+                    <div class="stat-value text-accent">1,732</div>
+                    <div class="stat-desc">45 sipariş beklemede</div>
+                </div>
+            </div>
+            
+            <!-- Daraltılabilir Kart -->
+            <div class="collapse collapse-arrow bg-base-200 mt-6">
+                <input type="checkbox" /> 
+                <div class="collapse-title text-xl font-medium flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    Satış Raporları
+                </div>
+                <div class="collapse-content"> 
+                    <div class="overflow-x-auto">
+                        <table class="table table-zebra w-full">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Ürün</th>
+                                    <th>Miktar</th>
+                                    <th>Toplam</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th>1</th>
+                                    <td>Notebook</td>
+                                    <td>124</td>
+                                    <td>₺310,000</td>
+                                </tr>
+                                <tr>
+                                    <th>2</th>
+                                    <td>Akıllı Telefon</td>
+                                    <td>253</td>
+                                    <td>₺189,750</td>
+                                </tr>
+                                <tr>
+                                    <th>3</th>
+                                    <td>Tablet</td>
+                                    <td>189</td>
+                                    <td>₺141,750</td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th colspan="3" class="text-right">Toplam</th>
+                                    <th>₺641,500</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Test sayfası için özel JavaScript -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Test sayfası yüklendi');
+        
+        // HTMX yüklü mü kontrol et
+        if (window.htmx) {
+            console.log('HTMX yüklü: ✅');
+        } else {
+            console.error('HTMX yüklü değil! ❌');
+        }
+        
+        // Alpine.js yüklü mü kontrol et
+        if (window.Alpine) {
+            console.log('Alpine.js yüklü: ✅');
+            console.log('Alpine.js store mevcut: ' + (Alpine.store('theme') ? '✅' : '❌'));
+        } else {
+            console.error('Alpine.js yüklü değil! ❌');
+        }
+        
+        // Format fonksiyonları yüklü mü kontrol et
+        if (window.formatCurrency && window.formatNumber && window.formatDate) {
+            console.log('Format fonksiyonları yüklü: ✅');
+        } else {
+            console.error('Format fonksiyonları yüklü değil! ❌');
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% comment %}
+    Menu İtem Bileşeni
+    Kullanım: {% include 'components/menu_item.html' with url=url title=title icon=icon active=active %}
+{% endcomment %}
+
+<li>
+    <a href="{{ url }}"
+       class="{% if active %}bg-primary text-primary-content{% endif %} hover-lift">
+        {% if icon %}
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            {{ icon|safe }}
+        </svg>
+        {% endif %}
+        {{ title }}
+    </a>
+</li>

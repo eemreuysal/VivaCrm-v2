@@ -1,0 +1,58 @@
+{% load static %}
+{% comment %}
+    Optimize edilmiş CSS Include şablonu
+    - Geliştirme/Üretim ortamı ayrımı
+    - Font preloading
+    - Font Awesome geciktirilmiş yükleme
+    - Kritik CSS için inline stiller
+    - Tema değişkenleri
+{% endcomment %}
+
+{% if use_critical_css %}
+<!-- Font Preload -->
+<link rel="preload" href="{% static 'fonts/inter-var.woff2' %}" as="font" type="font/woff2" crossorigin>
+{% endif %}
+
+<!-- Core CSS -->
+{% if debug %}
+    <!-- Development Mode: Build edilmiş dosyayı yükle -->
+    <link rel="stylesheet" href="{% static 'css/dist/main.css' %}">
+{% else %}
+    <!-- Production Mode: Minified dosyayı yükle -->
+    <link rel="stylesheet" href="{% static 'css/dist/main.min.css' %}">
+{% endif %}
+
+<!-- Font Awesome - Defer load -->
+<link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+      crossorigin="anonymous" referrerpolicy="no-referrer"
+      onload="this.onload=null;this.rel='stylesheet'">
+<noscript>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</noscript>
+
+<!-- Optional CSS Libraries -->
+{% block optional_css %}{% endblock %}
+
+{% if use_critical_css %}
+<!-- Inline Critical CSS for Dynamic Elements -->
+<style>
+    /* Dynamic theme colors */
+    [data-theme="vivacrm"] {
+        color-scheme: light;
+    }
+    
+    [data-theme="vivacrmDark"] {
+        color-scheme: dark;
+    }
+    
+    /* Font loading states */
+    .fonts-loading body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .fonts-loaded body {
+        font-family: 'Inter var', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+</style>
+{% endif %}

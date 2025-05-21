@@ -1,5 +1,6 @@
 {% extends "base/base_dashboard.html" %}
 {% load crispy_forms_tags %}
+{% load static %}
 
 {% block title %}Ürünler{% endblock %}
 
@@ -95,9 +96,9 @@
               İçe Aktar
             </label>
             <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
-              <li><a href="{% url 'products:product_import' %}">Ürünleri İçe Aktar</a></li>
-              <li><a href="{% url 'products:stock_adjustment_import' %}">Stok Ayarlamalarını İçe Aktar</a></li>
-              <li><a href="{% url 'products:generate_product_template' %}">Ürün Şablonu İndir</a></li>
+              <li><a href="{% url 'products:product-import' %}">Ürünleri İçe Aktar</a></li>
+              <li><a href="{% url 'products:stock-adjustment-import' %}">Stok Ayarlamalarını İçe Aktar</a></li>
+              <li><a href="{% url 'products:generate-product-template' %}">Ürün Şablonu İndir</a></li>
             </ul>
           </div>
           

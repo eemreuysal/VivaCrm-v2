@@ -9,6 +9,7 @@ psycopg2-binary==2.9.9
 redis==5.0.1
 django-redis==5.4.0
 hiredis==2.2.3
+# redis-py-sentinel==0.3.0 # Kaldırıldı: uyumluluk sorunları
 
 # Monitoring & Logging
 sentry-sdk==2.7.0
@@ -25,6 +26,9 @@ bleach==6.1.0
 celery==5.5.2
 django-celery-beat==2.6.0
 django-celery-results==2.5.1
+
+# WebSocket & Real-time
+channels==4.2.2
 
 # Search
 django-filter==24.2

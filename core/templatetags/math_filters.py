@@ -51,3 +51,16 @@ def abs_value(value):
         return abs(float(value))
     except (ValueError, TypeError):
         return 0
+
+
+@register.filter(name='intcomma')
+def intcomma(value):
+    """Format a number with thousand separators."""
+    try:
+        # Convert to float first, then to int for integer formatting
+        val = float(value)
+        if val.is_integer():
+            val = int(val)
+        return "{:,}".format(val)
+    except (ValueError, TypeError):
+        return value

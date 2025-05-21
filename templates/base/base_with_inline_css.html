@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="tr" data-theme="vivacrm" class="no-js">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="VivaCRM - Müşteri İlişkileri Yönetim Sistemi">
+    <meta name="author" content="VivaCRM Team">
+    
+    <title>{% block title %}VivaCRM{% endblock %}</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{% static 'img/favicon.ico' %}">
+    
+    <!-- Critical CSS Inline -->
+    <style>
+        /* Critical CSS - Ultra Optimized - <0.8KB (gzip) */
+        *,::before,::after{box-sizing:border-box}
+        html{line-height:1.5;-webkit-text-size-adjust:100%;font-family:"Inter var",ui-sans-serif,system-ui,sans-serif}
+        body{margin:0;line-height:inherit}
+        html.no-js{visibility:hidden}
+        :root,[data-theme=vivacrm]{--p:142 71% 45%;--pc:0 0% 100%;--s:217 91% 60%;--sc:0 0% 100%;--b1:0 0% 100%;--b2:0 0% 98%;--b3:0 0% 95%;--bc:215 19% 19%}
+        [data-theme=vivacrmDark]{--b1:221 39% 11%;--b2:215 19% 19%;--b3:215 16% 27%;--bc:0 0% 98%}
+        .app-loading{position:fixed;inset:0;background:hsl(var(--b1));display:flex;align-items:center;justify-content:center;z-index:9999}
+        .app-loading-spinner{width:3rem;height:3rem;border:3px solid hsl(var(--bc)/0.1);border-top-color:hsl(var(--p));border-radius:50%;animation:spin 1s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .navbar{height:4rem;background:hsl(var(--b1));border-bottom:1px solid hsl(var(--bc)/0.1)}
+        .sidebar{width:16rem;background:hsl(var(--b2));min-height:calc(100vh - 4rem)}
+        .main-content{flex:1;background:hsl(var(--b3));min-height:calc(100vh - 4rem)}
+        .hidden{display:none}
+        .flex{display:flex}
+        @media(max-width:1024px){
+          .sidebar{position:fixed;left:-16rem;transition:left 0.3s}
+          .sidebar.open{left:0}
+        }
+    </style>
+    
+    <!-- Font Preload -->
+    <link rel="preload" href="{% static 'fonts/inter-var.woff2' %}" as="font" type="font/woff2" crossorigin>
+    
+    <!-- CSS Includes -->
+    {% include 'includes/css_includes_optimized.html' %}
+    
+    <!-- Extra CSS -->
+    {% block extra_css %}{% endblock %}
+    
+    <!-- Font Loading Script -->
+    <script>
+        // Remove no-js class
+        document.documentElement.classList.remove('no-js');
+        
+        // Font Observer
+        if ('fonts' in document) {
+            document.fonts.ready.then(() => {
+                document.documentElement.classList.add('fonts-loaded');
+            });
+        } else {
+            document.documentElement.classList.add('fonts-loaded');
+        }
+    </script>
+    
+    <!-- Django CSRF Token for JavaScript use -->
+    {% csrf_token %}
+</head>
+<body class="bg-base-200 min-h-screen flex flex-col"
+      {% block body_attributes %}{% endblock %}>
+    
+    <!-- Loading Screen -->
+    <div class="app-loading" id="app-loading">
+        <div class="app-loading-spinner"></div>
+    </div>
+    
+    <!-- Navbar -->
+    {% block navbar %}
+    <div class="navbar bg-base-100 shadow-lg sticky top-0 z-50">
+        <!-- Navbar content -->
+        {% include 'includes/navbar.html' %}
+    </div>
+    {% endblock %}
+    
+    <!-- Main Layout -->
+    <div class="flex flex-1">
+        <!-- Sidebar -->
+        {% block sidebar %}
+        <aside class="sidebar" id="sidebar">
+            {% include 'includes/sidebar.html' %}
+        </aside>
+        {% endblock %}
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+    
+    <!-- JavaScript Includes -->
+    {% include 'includes/js_includes.html' %}
+    
+    <!-- Extra JS -->
+    {% block extra_js %}{% endblock %}
+    
+    <!-- Remove Loading Screen -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loader = document.getElementById('app-loading');
+            if (loader) {
+                setTimeout(() => {
+                    loader.style.opacity = '0';
+                    setTimeout(() => {
+                        loader.style.display = 'none';
+                    }, 300);
+                }, 100);
+            }
+        });
+    </script>
+</body>
+</html>

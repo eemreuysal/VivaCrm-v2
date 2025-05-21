@@ -24,16 +24,16 @@
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-3xl font-bold text-gray-800">{{ title }}</h1>
         <div class="space-x-2">
-            <a href="{% url 'core:validation_builder' %}" class="btn btn-info">
+            <a href="{% url 'core_validation:validation_builder' %}" class="btn btn-info">
                 <i class="fas fa-hammer mr-2"></i>{% trans "Kural Oluşturucu" %}
             </a>
-            <a href="{% url 'core:test_validation' %}" class="btn btn-warning">
+            <a href="{% url 'core_validation:test_validation' %}" class="btn btn-warning">
                 <i class="fas fa-vial mr-2"></i>{% trans "Test Aracı" %}
             </a>
-            <a href="{% url 'core:create_validation_rule' %}" class="btn btn-primary">
+            <a href="{% url 'core_validation:create_validation_rule' %}" class="btn btn-primary">
                 <i class="fas fa-plus mr-2"></i>{% trans "Yeni Kural" %}
             </a>
-            <a href="{% url 'core:create_rule_set' %}" class="btn btn-primary">
+            <a href="{% url 'core_validation:create_rule_set' %}" class="btn btn-primary">
                 <i class="fas fa-folder-plus mr-2"></i>{% trans "Yeni Kural Seti" %}
             </a>
         </div>
@@ -88,7 +88,7 @@
                     </div>
                     
                     <div class="card-actions justify-end mt-4">
-                        <a href="{% url 'core:edit_validation_rule' rule.pk %}" 
+                        <a href="{% url 'core_validation:edit_validation_rule' rule.pk %}" 
                            class="btn btn-sm btn-ghost">
                             <i class="fas fa-edit"></i>
                         </a>
@@ -105,7 +105,7 @@
         {% if not rules %}
         <div class="text-center py-8">
             <p class="text-gray-500">{% trans "Henüz doğrulama kuralı oluşturulmamış." %}</p>
-            <a href="{% url 'core:create_validation_rule' %}" class="btn btn-primary mt-4">
+            <a href="{% url 'core_validation:create_validation_rule' %}" class="btn btn-primary mt-4">
                 <i class="fas fa-plus mr-2"></i>{% trans "İlk Kuralı Oluştur" %}
             </a>
         </div>
@@ -151,7 +151,7 @@
                         </td>
                         <td>
                             <div class="btn-group">
-                                <a href="{% url 'core:edit_rule_set' rule_set.pk %}" 
+                                <a href="{% url 'core_validation:edit_rule_set' rule_set.pk %}" 
                                    class="btn btn-sm btn-ghost">
                                     <i class="fas fa-edit"></i>
                                 </a>
@@ -170,7 +170,7 @@
         {% if not rule_sets %}
         <div class="text-center py-8">
             <p class="text-gray-500">{% trans "Henüz kural seti oluşturulmamış." %}</p>
-            <a href="{% url 'core:create_rule_set' %}" class="btn btn-primary mt-4">
+            <a href="{% url 'core_validation:create_rule_set' %}" class="btn btn-primary mt-4">
                 <i class="fas fa-folder-plus mr-2"></i>{% trans "İlk Kural Setini Oluştur" %}
             </a>
         </div>
@@ -181,7 +181,7 @@
     <div id="logs-tab" class="tab-content" style="display: none;">
         <div class="text-center py-8">
             <p class="text-gray-500">{% trans "Doğrulama logları yakında eklenecek." %}</p>
-            <a href="{% url 'core:validation_logs' %}" class="btn btn-primary mt-4">
+            <a href="{% url 'core_validation:validation_logs' %}" class="btn btn-primary mt-4">
                 <i class="fas fa-history mr-2"></i>{% trans "Tüm Logları Görüntüle" %}
             </a>
         </div>
