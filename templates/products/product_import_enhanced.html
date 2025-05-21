@@ -1,0 +1,196 @@
+{% extends "base/base_dashboard.html" %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title }} - Smart Import{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div class="container mx-auto px-4 py-6">
+        <!-- Header -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800">{{ title }}</h1>
+                    <p class="text-gray-600 mt-2">Ürünleri Excel dosyasından içe aktarın</p>
+                </div>
+                <div class="flex space-x-3">
+                    <a href="{% url 'products:generate-product-template' %}" 
+                       class="btn btn-outline btn-primary">
+                        <i class="fas fa-download mr-2"></i>
+                        Şablon İndir
+                    </a>
+                    <a href="{% url 'products:product-list' %}" 
+                       class="btn btn-secondary">
+                        <i class="fas fa-list mr-2"></i>
+                        Ürün Listesi
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Info -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded">
+                <div class="flex items-center">
+                    <i class="fas fa-check-circle text-green-500 text-2xl mr-3"></i>
+                    <div>
+                        <h3 class="font-semibold text-green-900">Otomatik Kategori</h3>
+                        <p class="text-green-700 text-sm">Eksik kategoriler otomatik oluşturulur</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                <div class="flex items-center">
+                    <i class="fas fa-magic text-blue-500 text-2xl mr-3"></i>
+                    <div>
+                        <h3 class="font-semibold text-blue-900">Akıllı Düzeltme</h3>
+                        <p class="text-blue-700 text-sm">Kod ve fiyat hataları otomatik düzeltilir</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-purple-50 border-l-4 border-purple-500 p-4 rounded">
+                <div class="flex items-center">
+                    <i class="fas fa-memory text-purple-500 text-2xl mr-3"></i>
+                    <div>
+                        <h3 class="font-semibold text-purple-900">Bellek Yönetimi</h3>
+                        <p class="text-purple-700 text-sm">Büyük dosyalar optimum şekilde işlenir</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Import Form -->
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+            <form method="post" enctype="multipart/form-data" class="space-y-6">
+                {% csrf_token %}
+                
+                <div class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-blue-400 transition-colors">
+                    <i class="fas fa-cloud-upload-alt text-6xl text-gray-400 mb-4"></i>
+                    <h3 class="text-xl font-semibold text-gray-700 mb-2">Excel Dosyası Seçin</h3>
+                    <p class="text-gray-500 mb-4">Dosyanızı sürükleyin veya seçmek için tıklayın</p>
+                    
+                    <input type="file" 
+                           name="file" 
+                           accept=".xlsx,.xls" 
+                           class="file-input file-input-bordered w-full max-w-xs mx-auto"
+                           required>
+                </div>
+
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <h4 class="font-semibold text-yellow-900 mb-2">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        Desteklenen Özellikler
+                    </h4>
+                    <ul class="text-sm text-yellow-800 space-y-1">
+                        <li><i class="fas fa-check mr-2 text-green-600"></i>Excel formatı: .xlsx, .xls</li>
+                        <li><i class="fas fa-check mr-2 text-green-600"></i>Otomatik kategori oluşturma</li>
+                        <li><i class="fas fa-check mr-2 text-green-600"></i>Eksik kod otomatik üretimi</li>
+                        <li><i class="fas fa-check mr-2 text-green-600"></i>Fiyat ondalık düzeltmesi</li>
+                        <li><i class="fas fa-check mr-2 text-green-600"></i>Büyük dosya desteği</li>
+                    </ul>
+                </div>
+
+                <div class="flex justify-between items-center">
+                    <a href="{% url 'products:product-list' %}" 
+                       class="btn btn-ghost">
+                        İptal
+                    </a>
+                    <button type="submit" 
+                            class="btn btn-primary btn-lg">
+                        <i class="fas fa-upload mr-2"></i>
+                        İçe Aktar
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Instructions -->
+        <div class="mt-6 bg-white rounded-2xl shadow-lg p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                <i class="fas fa-question-circle mr-2"></i>
+                Kullanım Talimatları
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-medium text-gray-700 mb-2">Zorunlu Alanlar</h4>
+                    <ul class="text-sm text-gray-600 space-y-1">
+                        <li>• Ürün Adı</li>
+                        <li>• Fiyat</li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-medium text-gray-700 mb-2">Opsiyonel Alanlar</h4>
+                    <ul class="text-sm text-gray-600 space-y-1">
+                        <li>• Ürün Kodu (otomatik üretilir)</li>
+                        <li>• Kategori (varsayılan: Genel)</li>
+                        <li>• Stok, SKU, Barkod</li>
+                        <li>• Açıklama, Maliyet, İndirimli Fiyat</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// File drag and drop enhancement
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.querySelector('input[type="file"]');
+    const dropZone = fileInput.closest('.border-dashed');
+    
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, highlight, false);
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, unhighlight, false);
+    });
+    
+    function highlight(e) {
+        dropZone.classList.add('border-blue-400', 'bg-blue-50');
+    }
+    
+    function unhighlight(e) {
+        dropZone.classList.remove('border-blue-400', 'bg-blue-50');
+    }
+    
+    dropZone.addEventListener('drop', handleDrop, false);
+    
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        
+        fileInput.files = files;
+        updateFileName();
+    }
+    
+    dropZone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', updateFileName);
+    
+    function updateFileName() {
+        if (fileInput.files.length > 0) {
+            const fileName = fileInput.files[0].name;
+            const fileInfo = dropZone.querySelector('p');
+            fileInfo.textContent = `Seçilen dosya: ${fileName}`;
+            fileInfo.classList.add('text-blue-600', 'font-medium');
+        }
+    }
+});
+</script>
+{% endblock %}

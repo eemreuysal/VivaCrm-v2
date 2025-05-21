@@ -1,0 +1,277 @@
+{% extends 'base/base_dashboard.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Import Detayları" %} - VivaCRM{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">{% trans "Import Detayları" %}</h1>
+        <a href="{% url 'orders:import-task-list' %}" class="btn btn-outline">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            {% trans "Geri Dön" %}
+        </a>
+    </div>
+
+    <!-- Import Task Info -->
+    <div class="card bg-base-100 shadow mb-6">
+        <div class="card-body">
+            <h2 class="card-title">{% trans "Import Bilgileri" %}</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <p class="text-sm text-gray-600">{% trans "Dosya Adı" %}</p>
+                    <p class="font-semibold">{{ import_task.file_name }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">{% trans "Durum" %}</p>
+                    <p>
+                        {% if import_task.status == 'completed' %}
+                            <span class="badge badge-success">{% trans "Tamamlandı" %}</span>
+                        {% elif import_task.status == 'partial' %}
+                            <span class="badge badge-warning">{% trans "Kısmi Başarılı" %}</span>
+                        {% elif import_task.status == 'failed' %}
+                            <span class="badge badge-error">{% trans "Başarısız" %}</span>
+                        {% elif import_task.status == 'processing' %}
+                            <span class="badge badge-info">{% trans "İşleniyor" %}</span>
+                        {% else %}
+                            <span class="badge">{% trans "Bekliyor" %}</span>
+                        {% endif %}
+                    </p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">{% trans "Oluşturulma Tarihi" %}</p>
+                    <p class="font-semibold">{{ import_task.created_at|date:"d.m.Y H:i:s" }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">{% trans "Tamamlanma Tarihi" %}</p>
+                    <p class="font-semibold">
+                        {% if import_task.completed_at %}
+                            {{ import_task.completed_at|date:"d.m.Y H:i:s" }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">{% trans "İşlem Yapan" %}</p>
+                    <p class="font-semibold">{{ import_task.created_by.get_full_name|default:import_task.created_by.username }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">{% trans "İlerleme" %}</p>
+                    <div class="flex items-center">
+                        <progress class="progress progress-primary w-32" value="{{ import_task.progress }}" max="100"></progress>
+                        <span class="ml-2">{{ import_task.progress }}%</span>
+                    </div>
+                </div>
+            </div>
+
+            {% if import_task.error_message %}
+            <div class="alert alert-error mt-4">
+                <svg class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>{{ import_task.error_message }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Summary Stats -->
+    {% if summary %}
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+        <div class="stats shadow">
+            <div class="stat">
+                <div class="stat-title">{% trans "Toplam Satır" %}</div>
+                <div class="stat-value">{{ summary.total_rows }}</div>
+            </div>
+        </div>
+        <div class="stats shadow">
+            <div class="stat">
+                <div class="stat-title">{% trans "Başarılı" %}</div>
+                <div class="stat-value text-success">{{ summary.successful_rows }}</div>
+            </div>
+        </div>
+        <div class="stats shadow">
+            <div class="stat">
+                <div class="stat-title">{% trans "Güncellenen" %}</div>
+                <div class="stat-value text-info">{{ summary.updated_rows }}</div>
+            </div>
+        </div>
+        <div class="stats shadow">
+            <div class="stat">
+                <div class="stat-title">{% trans "Başarısız" %}</div>
+                <div class="stat-value text-error">{{ summary.failed_rows }}</div>
+            </div>
+        </div>
+        <div class="stats shadow">
+            <div class="stat">
+                <div class="stat-title">{% trans "Atlanan" %}</div>
+                <div class="stat-value text-warning">{{ summary.skipped_rows }}</div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Results Tabs -->
+    <div class="card bg-base-100 shadow">
+        <div class="card-body">
+            <div class="tabs tabs-boxed mb-4">
+                <a class="tab tab-active" data-tab="created">
+                    {% trans "Oluşturulan" %} 
+                    <span class="badge badge-success ml-2">{{ results_by_status.created.count }}</span>
+                </a>
+                <a class="tab" data-tab="updated">
+                    {% trans "Güncellenen" %}
+                    <span class="badge badge-info ml-2">{{ results_by_status.updated.count }}</span>
+                </a>
+                <a class="tab" data-tab="failed">
+                    {% trans "Başarısız" %}
+                    <span class="badge badge-error ml-2">{{ results_by_status.failed.count }}</span>
+                </a>
+                <a class="tab" data-tab="skipped">
+                    {% trans "Atlanan" %}
+                    <span class="badge badge-warning ml-2">{{ results_by_status.skipped.count }}</span>
+                </a>
+            </div>
+
+            <!-- Created Results -->
+            <div id="created" class="tab-content">
+                <div class="overflow-x-auto">
+                    <table class="table table-compact">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Satır" %}</th>
+                                <th>{% trans "Sipariş No" %}</th>
+                                <th>{% trans "Müşteri" %}</th>
+                                <th>{% trans "Tarih" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for result in results_by_status.created %}
+                            <tr>
+                                <td>{{ result.row_number }}</td>
+                                <td>{{ result.data.SIPARIŞ_NO|default:"-" }}</td>
+                                <td>{{ result.data.MÜŞTERI_ISMI|default:"-" }}</td>
+                                <td>{{ result.data.SIPARIŞ_TARIHI_VE_SAATI|default:"-" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Updated Results -->
+            <div id="updated" class="tab-content hidden">
+                <div class="overflow-x-auto">
+                    <table class="table table-compact">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Satır" %}</th>
+                                <th>{% trans "Sipariş No" %}</th>
+                                <th>{% trans "Müşteri" %}</th>
+                                <th>{% trans "Güncellenen Alanlar" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for result in results_by_status.updated %}
+                            <tr>
+                                <td>{{ result.row_number }}</td>
+                                <td>{{ result.data.SIPARIŞ_NO|default:"-" }}</td>
+                                <td>{{ result.data.MÜŞTERI_ISMI|default:"-" }}</td>
+                                <td>
+                                    {% if result.fields_updated %}
+                                        {{ result.fields_updated|join:", " }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Failed Results -->
+            <div id="failed" class="tab-content hidden">
+                <div class="overflow-x-auto">
+                    <table class="table table-compact">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Satır" %}</th>
+                                <th>{% trans "Sipariş No" %}</th>
+                                <th>{% trans "Müşteri" %}</th>
+                                <th>{% trans "Hata Mesajı" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for result in results_by_status.failed %}
+                            <tr>
+                                <td>{{ result.row_number }}</td>
+                                <td>{{ result.data.SIPARIŞ_NO|default:"-" }}</td>
+                                <td>{{ result.data.MÜŞTERI_ISMI|default:"-" }}</td>
+                                <td class="text-error">{{ result.error_message }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Skipped Results -->
+            <div id="skipped" class="tab-content hidden">
+                <div class="overflow-x-auto">
+                    <table class="table table-compact">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Satır" %}</th>
+                                <th>{% trans "Sipariş No" %}</th>
+                                <th>{% trans "Müşteri" %}</th>
+                                <th>{% trans "Sebep" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for result in results_by_status.skipped %}
+                            <tr>
+                                <td>{{ result.row_number }}</td>
+                                <td>{{ result.data.SIPARIŞ_NO|default:"-" }}</td>
+                                <td>{{ result.data.MÜŞTERI_ISMI|default:"-" }}</td>
+                                <td>{{ result.error_message|default:"-" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Tab switching
+    const tabs = document.querySelectorAll('.tab');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            const targetTab = this.getAttribute('data-tab');
+            
+            // Remove active class from all tabs
+            tabs.forEach(t => t.classList.remove('tab-active'));
+            // Add active to clicked tab
+            this.classList.add('tab-active');
+            
+            // Hide all tab contents
+            tabContents.forEach(content => content.classList.add('hidden'));
+            // Show target content
+            document.getElementById(targetTab).classList.remove('hidden');
+        });
+    });
+});
+</script>
+{% endblock %}

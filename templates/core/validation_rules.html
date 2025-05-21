@@ -1,0 +1,251 @@
+{% extends "base/base_dashboard.html" %}
+{% load i18n static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .rule-card {
+        transition: transform 0.2s;
+    }
+    .rule-card:hover {
+        transform: translateY(-2px);
+    }
+    .rule-type-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">{{ title }}</h1>
+        <div class="space-x-2">
+            <a href="{% url 'core:validation_builder' %}" class="btn btn-info">
+                <i class="fas fa-hammer mr-2"></i>{% trans "Kural Oluşturucu" %}
+            </a>
+            <a href="{% url 'core:test_validation' %}" class="btn btn-warning">
+                <i class="fas fa-vial mr-2"></i>{% trans "Test Aracı" %}
+            </a>
+            <a href="{% url 'core:create_validation_rule' %}" class="btn btn-primary">
+                <i class="fas fa-plus mr-2"></i>{% trans "Yeni Kural" %}
+            </a>
+            <a href="{% url 'core:create_rule_set' %}" class="btn btn-primary">
+                <i class="fas fa-folder-plus mr-2"></i>{% trans "Yeni Kural Seti" %}
+            </a>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs tabs-bordered mb-6">
+        <a class="tab tab-active" data-tab="rules">
+            <i class="fas fa-gavel mr-2"></i>{% trans "Kurallar" %}
+        </a>
+        <a class="tab" data-tab="rule-sets">
+            <i class="fas fa-folder mr-2"></i>{% trans "Kural Setleri" %}
+        </a>
+        <a class="tab" data-tab="logs">
+            <i class="fas fa-history mr-2"></i>{% trans "Loglar" %}
+        </a>
+    </div>
+
+    <!-- Rules Tab -->
+    <div id="rules-tab" class="tab-content">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for rule in rules %}
+            <div class="card bg-base-100 shadow-xl rule-card">
+                <div class="card-body">
+                    <div class="flex justify-between items-start">
+                        <h2 class="card-title text-lg">{{ rule.name }}</h2>
+                        <span class="badge badge-primary rule-type-badge">
+                            {{ rule.get_rule_type_display }}
+                        </span>
+                    </div>
+                    
+                    <div class="mt-2">
+                        {% if rule.error_message %}
+                        <p class="text-sm text-gray-600">
+                            <i class="fas fa-exclamation-circle mr-1"></i>
+                            {{ rule.error_message }}
+                        </p>
+                        {% endif %}
+                        
+                        {% if rule.parameters %}
+                        <div class="mt-2">
+                            <p class="text-xs font-semibold text-gray-500">{% trans "Parametreler:" %}</p>
+                            <div class="text-xs text-gray-600">
+                                {% for key, value in rule.parameters.items %}
+                                <span class="inline-block mr-2">
+                                    <strong>{{ key }}:</strong> {{ value }}
+                                </span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="card-actions justify-end mt-4">
+                        <a href="{% url 'core:edit_validation_rule' rule.pk %}" 
+                           class="btn btn-sm btn-ghost">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <button onclick="deleteRule({{ rule.pk }})" 
+                                class="btn btn-sm btn-ghost text-error">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        {% if not rules %}
+        <div class="text-center py-8">
+            <p class="text-gray-500">{% trans "Henüz doğrulama kuralı oluşturulmamış." %}</p>
+            <a href="{% url 'core:create_validation_rule' %}" class="btn btn-primary mt-4">
+                <i class="fas fa-plus mr-2"></i>{% trans "İlk Kuralı Oluştur" %}
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Rule Sets Tab -->
+    <div id="rule-sets-tab" class="tab-content" style="display: none;">
+        <div class="overflow-x-auto">
+            <table class="table table-zebra">
+                <thead>
+                    <tr>
+                        <th>{% trans "Ad" %}</th>
+                        <th>{% trans "Model" %}</th>
+                        <th>{% trans "Alan" %}</th>
+                        <th>{% trans "Kural Sayısı" %}</th>
+                        <th>{% trans "Durum" %}</th>
+                        <th>{% trans "İşlemler" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rule_set in rule_sets %}
+                    <tr>
+                        <td>
+                            <div class="font-bold">{{ rule_set.name }}</div>
+                            {% if rule_set.description %}
+                            <div class="text-sm text-gray-500">{{ rule_set.description|truncatechars:50 }}</div>
+                            {% endif %}
+                        </td>
+                        <td>{{ rule_set.model_name }}</td>
+                        <td>{{ rule_set.field_name }}</td>
+                        <td>
+                            <span class="badge badge-info">
+                                {{ rule_set.rules.count }} kural
+                            </span>
+                        </td>
+                        <td>
+                            {% if rule_set.is_active %}
+                            <span class="badge badge-success">{% trans "Aktif" %}</span>
+                            {% else %}
+                            <span class="badge badge-ghost">{% trans "Pasif" %}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{% url 'core:edit_rule_set' rule_set.pk %}" 
+                                   class="btn btn-sm btn-ghost">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button onclick="deleteRuleSet({{ rule_set.pk }})" 
+                                        class="btn btn-sm btn-ghost text-error">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if not rule_sets %}
+        <div class="text-center py-8">
+            <p class="text-gray-500">{% trans "Henüz kural seti oluşturulmamış." %}</p>
+            <a href="{% url 'core:create_rule_set' %}" class="btn btn-primary mt-4">
+                <i class="fas fa-folder-plus mr-2"></i>{% trans "İlk Kural Setini Oluştur" %}
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Logs Tab -->
+    <div id="logs-tab" class="tab-content" style="display: none;">
+        <div class="text-center py-8">
+            <p class="text-gray-500">{% trans "Doğrulama logları yakında eklenecek." %}</p>
+            <a href="{% url 'core:validation_logs' %}" class="btn btn-primary mt-4">
+                <i class="fas fa-history mr-2"></i>{% trans "Tüm Logları Görüntüle" %}
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Tab handling
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('tab-active'));
+            this.classList.add('tab-active');
+            
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            
+            // Show selected tab content
+            const tabName = this.getAttribute('data-tab');
+            document.getElementById(tabName + '-tab').style.display = 'block';
+        });
+    });
+
+    // Delete functions
+    function deleteRule(ruleId) {
+        if (confirm('{% trans "Bu kuralı silmek istediğinizden emin misiniz?" %}')) {
+            fetch(`/core/validation/rules/${ruleId}/delete/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                }
+            });
+        }
+    }
+
+    function deleteRuleSet(ruleSetId) {
+        if (confirm('{% trans "Bu kural setini silmek istediğinizden emin misiniz?" %}')) {
+            fetch(`/core/validation/rule-sets/${ruleSetId}/delete/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                }
+            });
+        }
+    }
+</script>
+{% endblock %}

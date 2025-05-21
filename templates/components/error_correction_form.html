@@ -1,0 +1,350 @@
+{% load static %}
+
+<div class="error-correction-form" x-data="errorCorrectionComponent()">
+    <!-- Hata Özeti -->
+    <div class="bg-base-200 p-6 rounded-lg mb-6">
+        <h3 class="text-lg font-semibold mb-4">Hata Özeti</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="stat bg-base-100 rounded-lg">
+                <div class="stat-title">Toplam Hata</div>
+                <div class="stat-value text-error" x-text="totalErrors"></div>
+            </div>
+            <div class="stat bg-base-100 rounded-lg">
+                <div class="stat-title">Düzeltilebilir</div>
+                <div class="stat-value text-warning" x-text="correctableErrors"></div>
+            </div>
+            <div class="stat bg-base-100 rounded-lg">
+                <div class="stat-title">Otomatik Düzeltilebilir</div>
+                <div class="stat-value text-success" x-text="autoCorrectableErrors"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Otomatik Düzeltme Seçenekleri -->
+    <div class="bg-base-100 p-6 rounded-lg mb-6" x-show="autoCorrectableErrors > 0">
+        <h3 class="text-lg font-semibold mb-4">Otomatik Düzeltme</h3>
+        <p class="text-sm text-base-content/70 mb-4">
+            Aşağıdaki hata türleri otomatik olarak düzeltilebilir:
+        </p>
+        
+        <form id="auto-correction-form" 
+              hx-post="{{ correction_url }}" 
+              hx-target="#correction-results"
+              hx-swap="innerHTML">
+            {% csrf_token %}
+            <input type="hidden" name="file_session_id" value="{{ file_session_id }}">
+            <input type="hidden" name="correction_type" value="auto">
+            
+            <div class="space-y-3">
+                <template x-for="errorType in autoCorrectionTypes" :key="errorType.key">
+                    <label class="flex items-start gap-3 p-3 bg-base-200 rounded-lg hover:bg-base-300 cursor-pointer">
+                        <input type="checkbox" 
+                               :name="'auto_correct_' + errorType.key"
+                               :value="errorType.key"
+                               class="checkbox checkbox-primary"
+                               x-model="selectedAutoCorrections">
+                        <div class="flex-1">
+                            <div class="font-medium" x-text="errorType.label"></div>
+                            <div class="text-sm text-base-content/70" x-text="errorType.description"></div>
+                            <div class="text-sm text-info mt-1">
+                                <span x-text="errorType.count"></span> adet hata
+                            </div>
+                        </div>
+                    </label>
+                </template>
+            </div>
+            
+            <div class="mt-6 flex gap-3">
+                <button type="submit" 
+                        class="btn btn-primary"
+                        :disabled="selectedAutoCorrections.length === 0">
+                    <i class="fas fa-magic mr-2"></i>
+                    Seçilenleri Otomatik Düzelt
+                </button>
+                <button type="button" 
+                        class="btn btn-ghost"
+                        @click="selectAllAutoCorrections">
+                    Tümünü Seç
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Manuel Düzeltme -->
+    <div class="bg-base-100 p-6 rounded-lg mb-6">
+        <h3 class="text-lg font-semibold mb-4">Manuel Düzeltme</h3>
+        
+        <div class="tabs tabs-boxed mb-4">
+            <template x-for="errorType in errorTypes" :key="errorType.key">
+                <a class="tab" 
+                   :class="{ 'tab-active': activeTab === errorType.key }"
+                   @click="activeTab = errorType.key"
+                   x-text="errorType.label + ' (' + errorType.errors.length + ')'">
+                </a>
+            </template>
+        </div>
+
+        <div class="overflow-x-auto">
+            <form id="manual-correction-form"
+                  hx-post="{{ correction_url }}"
+                  hx-target="#correction-results">
+                {% csrf_token %}
+                <input type="hidden" name="file_session_id" value="{{ file_session_id }}">
+                <input type="hidden" name="correction_type" value="manual">
+                
+                <table class="table table-zebra">
+                    <thead>
+                        <tr>
+                            <th>Satır</th>
+                            <th>Sütun</th>
+                            <th>Mevcut Değer</th>
+                            <th>Önerilen Düzeltme</th>
+                            <th>Yeni Değer</th>
+                            <th>İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template x-for="error in getCurrentErrors()" :key="error.id">
+                            <tr>
+                                <td x-text="error.row"></td>
+                                <td x-text="error.column"></td>
+                                <td>
+                                    <div class="font-mono text-sm" x-text="error.value"></div>
+                                    <div class="text-xs text-error mt-1" x-text="error.message"></div>
+                                </td>
+                                <td>
+                                    <div x-show="error.correction_suggestion" 
+                                         class="text-sm text-success">
+                                        <i class="fas fa-lightbulb mr-1"></i>
+                                        <span x-text="error.correction_suggestion"></span>
+                                    </div>
+                                    <div x-show="error.correction_hint" 
+                                         class="text-xs text-base-content/70 mt-1"
+                                         x-text="error.correction_hint">
+                                    </div>
+                                </td>
+                                <td>
+                                    <input type="text" 
+                                           :name="'correction_' + error.id"
+                                           :value="error.suggested_value || ''"
+                                           class="input input-bordered input-sm w-full"
+                                           x-model="error.new_value">
+                                </td>
+                                <td>
+                                    <div class="flex gap-2">
+                                        <button type="button"
+                                                class="btn btn-success btn-sm"
+                                                @click="acceptSuggestion(error)"
+                                                x-show="error.correction_suggestion">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button type="button"
+                                                class="btn btn-error btn-sm"
+                                                @click="skipError(error)">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+                
+                <div class="mt-6 flex justify-between">
+                    <div class="flex gap-3">
+                        <button type="submit" 
+                                class="btn btn-primary"
+                                :disabled="!hasManualCorrections()">
+                            <i class="fas fa-save mr-2"></i>
+                            Düzeltmeleri Kaydet
+                        </button>
+                        <button type="button" 
+                                class="btn btn-ghost"
+                                @click="resetCorrections">
+                            <i class="fas fa-undo mr-2"></i>
+                            Sıfırla
+                        </button>
+                    </div>
+                    
+                    <div class="flex gap-3">
+                        <button type="button" 
+                                class="btn btn-warning"
+                                @click="skipAllInTab">
+                            <i class="fas fa-forward mr-2"></i>
+                            Bu Sekmedeki Tümünü Atla
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Düzeltme Sonuçları -->
+    <div id="correction-results"></div>
+    
+    <!-- İlerleme Modal -->
+    <dialog id="correction-progress-modal" class="modal">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg mb-4">Düzeltmeler Uygulanıyor</h3>
+            <div class="flex flex-col items-center">
+                <div class="radial-progress text-primary" 
+                     style="--value:70" 
+                     x-bind:style="`--value:${progressPercent}`">
+                    <span x-text="progressPercent + '%'"></span>
+                </div>
+                <p class="mt-4 text-center" x-text="progressMessage"></p>
+            </div>
+        </div>
+    </dialog>
+</div>
+
+<script>
+function errorCorrectionComponent() {
+    return {
+        errors: {{ errors|safe }},
+        totalErrors: {{ error_summary.total_errors }},
+        correctableErrors: {{ error_summary.correctable_errors }},
+        autoCorrectableErrors: {{ error_summary.auto_correctable_errors|default:0 }},
+        activeTab: '',
+        selectedAutoCorrections: [],
+        progressPercent: 0,
+        progressMessage: '',
+        
+        autoCorrectionTypes: [
+            {
+                key: 'price_format',
+                label: 'Fiyat Formatı',
+                description: 'Virgülleri noktalara çevir, para birimlerini kaldır',
+                count: 0
+            },
+            {
+                key: 'date_format',
+                label: 'Tarih Formatı',
+                description: 'Farklı tarih formatlarını standartlaştır',
+                count: 0
+            },
+            {
+                key: 'sku_format',
+                label: 'SKU Formatı',
+                description: 'Boşlukları kaldır, özel karakterleri düzelt',
+                count: 0
+            },
+            {
+                key: 'invalid_stock',
+                label: 'Stok Değerleri',
+                description: 'Geçersiz stok değerlerini düzelt',
+                count: 0
+            }
+        ],
+        
+        errorTypes: [],
+        
+        init() {
+            // Hataları türlerine göre grupla
+            this.groupErrorsByType();
+            
+            // İlk sekmeyi aktif yap
+            if (this.errorTypes.length > 0) {
+                this.activeTab = this.errorTypes[0].key;
+            }
+            
+            // Otomatik düzeltilebilir hataları say
+            this.countAutoCorrectableErrors();
+        },
+        
+        groupErrorsByType() {
+            const grouped = {};
+            
+            this.errors.forEach(error => {
+                if (!grouped[error.error_key]) {
+                    grouped[error.error_key] = {
+                        key: error.error_key,
+                        label: this.getErrorLabel(error.error_key),
+                        errors: []
+                    };
+                }
+                
+                // Her hataya benzersiz ID ekle
+                error.id = `${error.error_key}_${error.row}_${error.column}`;
+                grouped[error.error_key].errors.push(error);
+            });
+            
+            this.errorTypes = Object.values(grouped);
+        },
+        
+        countAutoCorrectableErrors() {
+            this.autoCorrectionTypes.forEach(type => {
+                const count = this.errors.filter(e => 
+                    e.error_key === type.key && e.auto_correction_available
+                ).length;
+                type.count = count;
+            });
+            
+            // 0 olan türleri filtrele
+            this.autoCorrectionTypes = this.autoCorrectionTypes.filter(t => t.count > 0);
+        },
+        
+        getErrorLabel(key) {
+            const labels = {
+                'price_format': 'Fiyat Formatı',
+                'date_format': 'Tarih Formatı',
+                'sku_format': 'SKU Formatı',
+                'invalid_stock': 'Geçersiz Stok',
+                'missing_required': 'Zorunlu Alan Eksik',
+                'duplicate_sku': 'Mükerrer SKU',
+                'invalid_tax_rate': 'Geçersiz KDV Oranı'
+            };
+            return labels[key] || key;
+        },
+        
+        getCurrentErrors() {
+            const currentType = this.errorTypes.find(t => t.key === this.activeTab);
+            return currentType ? currentType.errors : [];
+        },
+        
+        acceptSuggestion(error) {
+            if (error.correction_suggestion) {
+                error.new_value = error.correction_suggestion;
+            }
+        },
+        
+        skipError(error) {
+            error.new_value = null;
+            error.skip = true;
+        },
+        
+        skipAllInTab() {
+            const currentErrors = this.getCurrentErrors();
+            currentErrors.forEach(error => {
+                error.new_value = null;
+                error.skip = true;
+            });
+        },
+        
+        hasManualCorrections() {
+            return this.errors.some(error => error.new_value && !error.skip);
+        },
+        
+        selectAllAutoCorrections() {
+            this.selectedAutoCorrections = this.autoCorrectionTypes.map(t => t.key);
+        },
+        
+        resetCorrections() {
+            this.errors.forEach(error => {
+                error.new_value = null;
+                error.skip = false;
+            });
+            this.selectedAutoCorrections = [];
+        },
+        
+        showProgress(message) {
+            this.progressMessage = message;
+            document.getElementById('correction-progress-modal').showModal();
+        },
+        
+        hideProgress() {
+            document.getElementById('correction-progress-modal').close();
+        }
+    }
+}
+</script>

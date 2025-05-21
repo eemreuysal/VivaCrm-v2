@@ -1,0 +1,257 @@
+{% extends 'base/base_dashboard.html' %}
+{% load static %}
+
+{% block title %}İçe Aktarım İlerlemesi{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">İçe Aktarım İlerlemesi</h1>
+        <p class="text-gray-600 dark:text-gray-300 mt-2">Excel dosyası içe aktarılıyor...</p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <!-- İlerleme Çubuğu -->
+        <div class="mb-6">
+            <div class="flex justify-between mb-2">
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">İlerleme</span>
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300" id="progress-text">0%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- İstatistikler -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                <div class="text-sm text-gray-600 dark:text-gray-400">Toplam Satır</div>
+                <div class="text-2xl font-bold text-gray-900 dark:text-white" id="total-rows">0</div>
+            </div>
+            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                <div class="text-sm text-gray-600 dark:text-gray-400">İşlenen</div>
+                <div class="text-2xl font-bold text-gray-900 dark:text-white" id="processed-rows">0</div>
+            </div>
+            <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
+                <div class="text-sm text-green-600 dark:text-green-400">Başarılı</div>
+                <div class="text-2xl font-bold text-green-700 dark:text-green-300" id="success-count">0</div>
+            </div>
+            <div class="bg-red-50 dark:bg-red-900/20 rounded-lg p-4">
+                <div class="text-sm text-red-600 dark:text-red-400">Hatalı</div>
+                <div class="text-2xl font-bold text-red-700 dark:text-red-300" id="error-count">0</div>
+            </div>
+        </div>
+
+        <!-- Durum Mesajı -->
+        <div id="status-message" class="p-4 mb-4 text-sm rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300">
+            <span class="font-medium">Durum:</span> <span id="status-text">Bekliyor...</span>
+        </div>
+
+        <!-- Hata Listesi -->
+        <div id="error-section" class="hidden">
+            <h3 class="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Hatalar</h3>
+            <div id="error-list" class="max-h-64 overflow-y-auto">
+                <!-- Hatalar buraya JavaScript ile eklenecek -->
+            </div>
+        </div>
+
+        <!-- Kontrol Butonları -->
+        <div class="flex justify-end gap-3 mt-6">
+            <button id="cancel-btn" class="btn btn-outline-danger">
+                <i class="fas fa-times mr-2"></i>İptal Et
+            </button>
+            <button id="close-btn" class="btn btn-primary hidden">
+                <i class="fas fa-check mr-2"></i>Kapat
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// WebSocket bağlantısı
+const importJobId = '{{ import_job_id }}';
+const websocketUrl = `ws://${window.location.host}/ws/imports/${importJobId}/`;
+let socket = null;
+
+// DOM elementleri
+const progressBar = document.getElementById('progress-bar');
+const progressText = document.getElementById('progress-text');
+const totalRows = document.getElementById('total-rows');
+const processedRows = document.getElementById('processed-rows');
+const successCount = document.getElementById('success-count');
+const errorCount = document.getElementById('error-count');
+const statusText = document.getElementById('status-text');
+const statusMessage = document.getElementById('status-message');
+const errorSection = document.getElementById('error-section');
+const errorList = document.getElementById('error-list');
+const cancelBtn = document.getElementById('cancel-btn');
+const closeBtn = document.getElementById('close-btn');
+
+// WebSocket bağlantısını kur
+function connectWebSocket() {
+    socket = new WebSocket(websocketUrl);
+    
+    socket.onopen = function(e) {
+        console.log('WebSocket bağlantısı kuruldu');
+        // Mevcut durumu iste
+        socket.send(JSON.stringify({ command: 'get_status' }));
+    };
+    
+    socket.onmessage = function(e) {
+        const message = JSON.parse(e.data);
+        handleWebSocketMessage(message);
+    };
+    
+    socket.onclose = function(e) {
+        console.log('WebSocket bağlantısı kapatıldı');
+        if (e.code !== 1000) {
+            // Normal olmayan kapanma, yeniden bağlanmayı dene
+            setTimeout(connectWebSocket, 5000);
+        }
+    };
+    
+    socket.onerror = function(error) {
+        console.error('WebSocket hatası:', error);
+    };
+}
+
+// WebSocket mesajlarını işle
+function handleWebSocketMessage(message) {
+    switch (message.type) {
+        case 'initial_status':
+        case 'status_update':
+        case 'progress_update':
+            updateUI(message.data);
+            break;
+        case 'completed':
+            updateUI(message.data);
+            showCompletion();
+            break;
+        case 'failed':
+            updateUI(message.data);
+            showFailure(message.data.error_message);
+            break;
+        case 'cancelled':
+            showCancellation();
+            break;
+    }
+}
+
+// UI'yi güncelle
+function updateUI(data) {
+    // İlerleme
+    const progress = Math.round(data.progress || 0);
+    progressBar.style.width = `${progress}%`;
+    progressText.textContent = `${progress}%`;
+    
+    // İstatistikler
+    totalRows.textContent = data.total_rows || 0;
+    processedRows.textContent = data.processed_rows || 0;
+    successCount.textContent = data.success_count || 0;
+    errorCount.textContent = data.error_count || 0;
+    
+    // Durum
+    statusText.textContent = getStatusText(data.status);
+    updateStatusStyle(data.status);
+    
+    // Hatalar varsa göster
+    if (data.error_count > 0) {
+        errorSection.classList.remove('hidden');
+        // Hata listesini güncelle (varsa)
+        if (data.errors && data.errors.length > 0) {
+            updateErrorList(data.errors);
+        }
+    }
+}
+
+// Durum metnini al
+function getStatusText(status) {
+    const statusTexts = {
+        'pending': 'Bekliyor',
+        'processing': 'İşleniyor',
+        'completed': 'Tamamlandı',
+        'failed': 'Başarısız',
+        'cancelled': 'İptal Edildi'
+    };
+    return statusTexts[status] || status;
+}
+
+// Durum stilini güncelle
+function updateStatusStyle(status) {
+    statusMessage.className = 'p-4 mb-4 text-sm rounded-lg';
+    
+    switch (status) {
+        case 'processing':
+            statusMessage.classList.add('bg-blue-100', 'text-blue-700', 'dark:bg-blue-900/20', 'dark:text-blue-300');
+            break;
+        case 'completed':
+            statusMessage.classList.add('bg-green-100', 'text-green-700', 'dark:bg-green-900/20', 'dark:text-green-300');
+            break;
+        case 'failed':
+            statusMessage.classList.add('bg-red-100', 'text-red-700', 'dark:bg-red-900/20', 'dark:text-red-300');
+            break;
+        case 'cancelled':
+            statusMessage.classList.add('bg-yellow-100', 'text-yellow-700', 'dark:bg-yellow-900/20', 'dark:text-yellow-300');
+            break;
+        default:
+            statusMessage.classList.add('bg-gray-100', 'text-gray-700', 'dark:bg-gray-900/20', 'dark:text-gray-300');
+    }
+}
+
+// Hata listesini güncelle
+function updateErrorList(errors) {
+    errorList.innerHTML = '';
+    errors.forEach(error => {
+        const errorItem = document.createElement('div');
+        errorItem.className = 'p-3 mb-2 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded';
+        errorItem.innerHTML = `
+            <div class="font-medium text-red-700 dark:text-red-300">Satır ${error.row_number}</div>
+            <div class="text-sm text-red-600 dark:text-red-400">${error.error_message}</div>
+        `;
+        errorList.appendChild(errorItem);
+    });
+}
+
+// Tamamlanma durumu
+function showCompletion() {
+    cancelBtn.classList.add('hidden');
+    closeBtn.classList.remove('hidden');
+    socket.close(1000);
+}
+
+// Hata durumu
+function showFailure(errorMessage) {
+    cancelBtn.classList.add('hidden');
+    closeBtn.classList.remove('hidden');
+    socket.close(1000);
+    
+    if (errorMessage) {
+        statusText.textContent = `Hata: ${errorMessage}`;
+    }
+}
+
+// İptal durumu
+function showCancellation() {
+    cancelBtn.classList.add('hidden');
+    closeBtn.classList.remove('hidden');
+    socket.close(1000);
+}
+
+// İptal butonu
+cancelBtn.addEventListener('click', function() {
+    if (confirm('İçe aktarım işlemini iptal etmek istediğinize emin misiniz?')) {
+        socket.send(JSON.stringify({ command: 'cancel' }));
+    }
+});
+
+// Kapat butonu
+closeBtn.addEventListener('click', function() {
+    window.location.href = '{{ success_url|default:"/products/" }}';
+});
+
+// WebSocket bağlantısını başlat
+connectWebSocket();
+</script>
+{% endblock %}

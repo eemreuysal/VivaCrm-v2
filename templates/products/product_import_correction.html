@@ -1,0 +1,165 @@
+{% extends "base/base_dashboard.html" %}
+{% load static %}
+
+{% block title %}Ürün İçe Aktarma - Hata Düzeltme{% endblock %}
+
+{% block extra_css %}
+<style>
+    .error-correction-form {
+        max-height: 600px;
+        overflow-y: auto;
+    }
+    
+    .error-table {
+        font-size: 0.875rem;
+    }
+    
+    .correction-input {
+        width: 100%;
+        min-width: 150px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="page-header">
+        <div class="row align-items-end">
+            <div class="col-lg-8">
+                <div class="page-header-title">
+                    <div class="d-inline">
+                        <h4>Ürün İçe Aktarma - Hata Düzeltme</h4>
+                        <span>{{ file_name }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <nav class="breadcrumb-container" aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'dashboard:dashboard' %}"><i class="fas fa-home"></i></a>
+                        </li>
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'products:product-list' %}">Ürünler</a>
+                        </li>
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'products:product-import' %}">İçe Aktar</a>
+                        </li>
+                        <li class="breadcrumb-item active" aria-current="page">
+                            Hata Düzeltme
+                        </li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    {% if has_errors %}
+    <div class="alert alert-error alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle mr-2"></i>
+        <strong>Kritik Hatalar!</strong> Aşağıdaki kritik hatalar düzeltilmeden devam edilemez.
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+    
+    <!-- Kategori bilgisi kaldırıldı çünkü artık otomatik oluşturuluyor -->
+
+    {% if has_warnings %}
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-triangle mr-2"></i>
+        <strong>Uyarılar!</strong> Aşağıdaki uyarıları kontrol edin ve gerektiğinde düzeltin.
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
+    <!-- Hata Düzeltme Formu -->
+    {% include "components/error_correction_form.html" %}
+    
+    <!-- Aksiyon Butonları -->
+    <div class="card mt-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <a href="{% url 'products:product-import' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Geri Dön
+                    </a>
+                </div>
+                <div class="col-md-6 text-right">
+                    {% if not has_errors %}
+                    <button type="button" id="continue-import" class="btn btn-primary">
+                        <i class="fas fa-check mr-2"></i>
+                        Düzeltmeleri Uygula ve Devam Et
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Progress Modal -->
+<div class="modal fade" id="progressModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center py-5">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Yükleniyor...</span>
+                </div>
+                <h5 id="progressMessage">İşlem devam ediyor...</h5>
+                <div class="progress mt-3">
+                    <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                         role="progressbar" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // HTMX event listeners
+    document.body.addEventListener('htmx:beforeRequest', function(event) {
+        if (event.detail.elt.matches('#auto-correction-form') || 
+            event.detail.elt.matches('#manual-correction-form')) {
+            document.getElementById('progressModal').classList.add('show');
+            document.getElementById('progressMessage').textContent = 'Düzeltmeler uygulanıyor...';
+        }
+    });
+    
+    document.body.addEventListener('htmx:afterRequest', function(event) {
+        document.getElementById('progressModal').classList.remove('show');
+    });
+    
+    // Continue import button
+    const continueBtn = document.getElementById('continue-import');
+    if (continueBtn) {
+        continueBtn.addEventListener('click', function() {
+            fetch('{% url "products:product-import" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: 'file_session_id={{ file_session_id }}&continue_import=true&csrfmiddlewaretoken={{ csrf_token }}'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = data.redirect_url;
+                } else {
+                    alert(data.message || 'Bir hata oluştu');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Bir hata oluştu');
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,280 @@
+{% extends "base/base_dashboard.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Kategori Sil: {{ category.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Animation */
+  @keyframes pulse-error {
+    0% { box-shadow: 0 0 0 0 rgba(248, 68, 73, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(248, 68, 73, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(248, 68, 73, 0); }
+  }
+  
+  .pulse-error {
+    animation: pulse-error 2s infinite;
+  }
+  
+  .delete-card {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+  }
+  
+  .delete-card.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  /* Warning badge */
+  .warning-badge {
+    transition: all 0.3s ease;
+  }
+  
+  .warning-badge:hover {
+    transform: scale(1.1);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-error">Kategori Sil: {{ category.name }}</h1>
+      <p class="text-base-content/70">Bu işlem kalıcıdır ve geri alınamaz</p>
+    </div>
+    <div class="text-sm breadcrumbs">
+      <ul>
+        <li><a href="{% url 'dashboard:dashboard' %}">VivaCRM</a></li>
+        <li><a href="{% url 'products:product-list' %}">Ürünler</a></li>
+        <li><a href="{% url 'products:category-list' %}">Kategoriler</a></li>
+        <li><a href="{% url 'products:category-detail' slug=category.slug %}">{{ category.name }}</a></li>
+        <li>Sil</li>
+      </ul>
+    </div>
+  </div>
+  
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <!-- Warning card -->
+    <div class="lg:col-span-8">
+      <div class="card bg-base-100 shadow-xl overflow-hidden border-t-4 border-error delete-card" id="warning-card">
+        <div class="card-body">
+          <h2 class="card-title text-xl font-bold flex items-center text-error">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            Silme Onayı
+          </h2>
+          
+          <div class="divider my-1"></div>
+          
+          <div class="alert alert-error bg-error/20 border border-error pulse-error">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <div>
+              <h3 class="font-bold">{{ category.name }} kategorisini silmek istediğinizden emin misiniz?</h3>
+              <div class="text-sm">Bu işlem geri alınamaz ve kategori ile ilişkili tüm verileri etkileyebilir.</div>
+            </div>
+          </div>
+          
+          <div class="space-y-4 mt-4">
+            <!-- Critical warnings -->
+            {% if category.products.exists or category.children.exists %}
+            <div class="card bg-base-200 shadow-md">
+              <div class="card-body p-4">
+                <h3 class="font-bold flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Kritik Uyarılar
+                </h3>
+                
+                <div class="space-y-3 text-sm">
+                  {% if category.products.exists %}
+                  <div class="flex items-start gap-2 p-2 rounded-lg bg-warning/10">
+                    <span class="warning-badge badge badge-warning badge-sm mt-1">!</span>
+                    <div>
+                      <span class="font-semibold">Bu kategoride {{ category.products.count }} ürün bulunmaktadır!</span>
+                      <p class="text-base-content/70">Kategoriyi sildiğinizde, ilişkili ürünler kategorisiz kalacaktır.</p>
+                    </div>
+                  </div>
+                  {% endif %}
+                  
+                  {% if category.children.exists %}
+                  <div class="flex items-start gap-2 p-2 rounded-lg bg-warning/10">
+                    <span class="warning-badge badge badge-warning badge-sm mt-1">!</span>
+                    <div>
+                      <span class="font-semibold">Bu kategori {{ category.children.count }} alt kategoriye sahiptir!</span>
+                      <p class="text-base-content/70">Kategoriyi sildiğinizde, alt kategoriler ve bunların içerdiği ürünler de etkilenecektir.</p>
+                    </div>
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            {% endif %}
+            
+            <!-- Kategori bilgileri -->
+            <div>
+              <h3 class="text-lg font-semibold mb-3 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Silinecek Kategori Bilgileri
+              </h3>
+              
+              <div class="overflow-x-auto">
+                <table class="table table-zebra w-full">
+                  <tbody>
+                    <tr>
+                      <th class="bg-base-200/80">Kategori Adı:</th>
+                      <td class="font-medium">{{ category.name }}</td>
+                    </tr>
+                    <tr>
+                      <th class="bg-base-200/80">Üst Kategori:</th>
+                      <td>
+                        {% if category.parent %}
+                        <a href="{% url 'products:category-detail' slug=category.parent.slug %}" class="link link-hover link-primary">
+                          {{ category.parent.name }}
+                        </a>
+                        {% else %}
+                        <span class="italic text-base-content/60">Ana Kategori</span>
+                        {% endif %}
+                      </td>
+                    </tr>
+                    <tr>
+                      <th class="bg-base-200/80">Durum:</th>
+                      <td>
+                        {% if category.is_active %}
+                        <div class="badge badge-success gap-2">Aktif</div>
+                        {% else %}
+                        <div class="badge badge-error gap-2">Pasif</div>
+                        {% endif %}
+                      </td>
+                    </tr>
+                    <tr>
+                      <th class="bg-base-200/80">Ürün Sayısı:</th>
+                      <td>
+                        {% if category.products.count > 0 %}
+                        <span class="font-bold text-warning">{{ category.products.count }}</span>
+                        {% else %}
+                        <span>0</span>
+                        {% endif %}
+                      </td>
+                    </tr>
+                    <tr>
+                      <th class="bg-base-200/80">Alt Kategori Sayısı:</th>
+                      <td>
+                        {% if category.children.count > 0 %}
+                        <span class="font-bold text-warning">{{ category.children.count }}</span>
+                        {% else %}
+                        <span>0</span>
+                        {% endif %}
+                      </td>
+                    </tr>
+                    <tr>
+                      <th class="bg-base-200/80">Oluşturulma Tarihi:</th>
+                      <td>{{ category.created_at|date:"d.m.Y H:i" }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          
+          <form method="post" class="mt-6">
+            {% csrf_token %}
+            <div class="flex flex-col sm:flex-row justify-end gap-3">
+              <a href="{% url 'products:category-detail' slug=category.slug %}" class="btn btn-outline btn-md gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                İşlemi İptal Et
+              </a>
+              <button type="submit" class="btn btn-error btn-md gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Kalıcı Olarak Sil
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Info card -->
+    <div class="lg:col-span-4">
+      <div class="card bg-base-100 shadow-xl overflow-hidden sticky top-4 delete-card" id="info-card">
+        <div class="card-body">
+          <h2 class="card-title font-bold flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Silme İşlemi Hakkında
+          </h2>
+          
+          <div class="divider my-1"></div>
+          
+          <div class="space-y-4 text-sm">
+            <div class="p-3 bg-base-200 rounded-lg">
+              <h3 class="font-medium mb-1">Silme İşlemi Etkileri:</h3>
+              <ul class="list-disc list-inside space-y-2">
+                <li>Kategori tamamen veritabanından silinecektir</li>
+                <li>Bu işlem geri alınamaz</li>
+                <li>Silme işlemi sadece kategoriyi siler, ürünleri silmez</li>
+                <li>Ürünleriniz kategorisiz kalacaktır</li>
+              </ul>
+            </div>
+            
+            <div class="p-3 bg-base-200 rounded-lg">
+              <h3 class="font-medium mb-1">Alternatifleri Değerlendirin:</h3>
+              <ul class="list-disc list-inside space-y-2">
+                <li>Kategoriyi silmek yerine pasif duruma getirmek</li>
+                <li>Ürünleri başka bir kategoriye taşımak</li>
+                <li>Üst kategoriyi silmek yerine alt kategorileri taşımak</li>
+              </ul>
+            </div>
+            
+            <div class="alert alert-info bg-info/20 border border-info">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              <div>
+                <h3 class="font-bold">Tavsiye</h3>
+                <div class="text-xs">Kategori silme işlemi yerine, önce kategoriyi pasif duruma getirmeyi deneyebilirsiniz.</div>
+              </div>
+            </div>
+            
+            <div class="flex flex-col gap-2">
+              <a href="{% url 'products:category-update' slug=category.slug %}" class="btn btn-outline btn-sm gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+                Düzenle
+              </a>
+              <a href="{% url 'products:category-list' %}" class="btn btn-outline btn-sm gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                </svg>
+                Kategori Listesine Dön
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Animate cards
+    setTimeout(() => {
+      document.getElementById('warning-card').classList.add('show');
+      setTimeout(() => {
+        document.getElementById('info-card').classList.add('show');
+      }, 200);
+    }, 100);
+  });
+</script>
+{% endblock %}

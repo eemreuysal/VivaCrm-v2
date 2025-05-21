@@ -1,0 +1,696 @@
+{% extends 'base/base_dashboard.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}Toplu Sipariş İçe Aktar{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* File Upload Styling */
+  .file-upload-area {
+    border: 2px dashed var(--fallback-b3, oklch(var(--b3)));
+    border-radius: 0.5rem;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    position: relative;
+    cursor: pointer;
+  }
+  
+  .file-upload-area:hover {
+    border-color: var(--fallback-p, oklch(var(--p)));
+    background-color: var(--fallback-p, oklch(var(--p)/0.05));
+  }
+  
+  .file-upload-area.dragging {
+    border-color: var(--fallback-p, oklch(var(--p)));
+    background-color: var(--fallback-p, oklch(var(--p)/0.1));
+  }
+  
+  .file-upload-area input[type="file"] {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  
+  .file-preview {
+    display: none;
+    align-items: center;
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background-color: var(--fallback-b2, oklch(var(--b2)));
+    border-radius: 0.5rem;
+    animation: fadeIn 0.3s ease;
+  }
+  
+  .file-preview.active {
+    display: flex;
+  }
+  
+  /* Animation */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease forwards;
+  }
+  
+  /* Step indicators */
+  .import-steps {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    margin-bottom: 2rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .import-steps::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: var(--fallback-b3, oklch(var(--b3)));
+    transform: translateY(-50%);
+    z-index: 1;
+  }
+  
+  .step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+  }
+  
+  .step-number {
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    background-color: var(--fallback-b3, oklch(var(--b3)));
+    color: var(--fallback-bc, oklch(var(--bc)));
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+  
+  .step.active .step-number {
+    background-color: var(--fallback-p, oklch(var(--p)));
+    color: var(--fallback-pc, oklch(var(--pc)));
+  }
+  
+  .step.completed .step-number {
+    background-color: var(--fallback-s, oklch(var(--s)));
+    color: var(--fallback-sc, oklch(var(--sc)));
+  }
+  
+  .step-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+  
+  /* Accordion */
+  .accordion-item {
+    border: 1px solid var(--fallback-b3, oklch(var(--b3)));
+    border-radius: 0.5rem;
+    margin-bottom: 0.5rem;
+    overflow: hidden;
+  }
+  
+  .accordion-header {
+    background-color: var(--fallback-b1, oklch(var(--b1)));
+    padding: 1rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .accordion-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+  }
+  
+  .accordion-item.open .accordion-content {
+    max-height: 1000px;
+  }
+  
+  .accordion-icon {
+    transform: rotate(0deg);
+    transition: transform 0.3s ease;
+  }
+  
+  .accordion-item.open .accordion-icon {
+    transform: rotate(180deg);
+  }
+
+  /* Excel table preview */
+  .excel-preview-table {
+    overflow: hidden;
+    border-radius: 0.5rem;
+    border: 1px solid var(--fallback-b3, oklch(var(--b3)));
+  }
+  
+  .excel-preview-table th {
+    background-color: var(--fallback-b2, oklch(var(--b2)));
+    color: var(--fallback-bc, oklch(var(--bc)));
+    font-weight: 600;
+    text-align: left;
+    padding: 0.75rem 1rem;
+  }
+  
+  .excel-preview-table td {
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--fallback-b3, oklch(var(--b3)/0.5));
+  }
+  
+  .excel-preview-table tbody tr:nth-child(even) {
+    background-color: var(--fallback-b1, oklch(var(--b1)/0.3));
+  }
+
+  /* Loading animation */
+  .loading-spinner {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .loading-active .loading-spinner {
+    display: block;
+  }
+
+  .loading-active .upload-content {
+    opacity: 0.3;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">Toplu Sipariş İçe Aktarma</h1>
+    <div class="flex space-x-2">
+      <a href="{% url 'orders:generate-order-template' %}" class="btn btn-outline btn-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg>
+        Şablon İndir
+      </a>
+      <a href="{% url 'orders:order-list' %}" class="btn btn-outline">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+        </svg>
+        Siparişlere Dön
+      </a>
+    </div>
+  </div>
+  
+  <!-- Process Steps -->
+  <div class="import-steps mb-8">
+    <div class="step active">
+      <div class="step-number">1</div>
+      <div class="step-label">Şablon İndir</div>
+    </div>
+    <div class="step">
+      <div class="step-number">2</div>
+      <div class="step-label">Veri Hazırla</div>
+    </div>
+    <div class="step">
+      <div class="step-number">3</div>
+      <div class="step-label">Dosya Yükle</div>
+    </div>
+    <div class="step">
+      <div class="step-number">4</div>
+      <div class="step-label">Sonuçları Gör</div>
+    </div>
+  </div>
+  
+  {% if error_details %}
+  <div class="mb-6 p-4 bg-error/10 border border-error text-error rounded-lg animate-fade-in">
+    <h3 class="font-bold mb-2">Hata Detayları:</h3>
+    <pre class="text-xs overflow-auto max-h-64 p-4 bg-base-100 rounded">{{ error_details }}</pre>
+  </div>
+  {% endif %}
+  
+  {% if messages %}
+  <div class="mb-6 animate-fade-in">
+    {% for message in messages %}
+    <div class="alert {% if message.tags == 'error' %}alert-error{% else %}alert-{{ message.tags }}{% endif %}">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+        {% if message.tags == 'error' %}
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        {% else %}
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        {% endif %}
+      </svg>
+      <span>{{ message }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if errors %}
+    <!-- Dosya yükleme aşamasında oluşan hatalar -->
+    <div class="mb-6">
+        {% include 'components/excel_errors.html' %}
+    </div>
+  {% endif %}
+  
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <!-- Left Column: File Upload Area -->
+    <div class="lg:col-span-5 space-y-6">
+      <div class="card bg-base-100 shadow-xl animate-fade-in">
+        <div class="card-body">
+          <h2 class="card-title flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Excel Dosyası Yükle
+          </h2>
+          
+          <form method="post" enctype="multipart/form-data" class="space-y-6" id="importForm">
+            {% csrf_token %}
+            
+            <div class="file-upload-area" id="dropArea">
+              <input type="file" name="excel_file" id="excelFile" accept=".xlsx,.xls" required />
+              <div class="upload-content">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto mb-3 text-base-content/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p class="text-lg font-medium mb-2">Excel Dosyası Sürükle & Bırak</p>
+                <p class="text-sm text-base-content/60 mb-4">veya dosya seçmek için tıklayın</p>
+                <p class="text-xs text-base-content/60">Desteklenen formatlar: .xlsx, .xls</p>
+              </div>
+              <div class="loading-spinner">
+                <span class="loading loading-spinner loading-lg"></span>
+              </div>
+            </div>
+            
+            <div class="file-preview" id="filePreview">
+              <div class="bg-success/10 p-3 rounded-lg flex items-center w-full">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-success mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div class="flex-1">
+                  <p class="font-medium" id="selectedFileName">filename.xlsx</p>
+                  <p class="text-xs" id="selectedFileSize">1.2 MB</p>
+                </div>
+                <button type="button" class="btn btn-ghost btn-sm btn-circle" id="removeFile">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+            <div class="form-control">
+              <label class="label cursor-pointer justify-start">
+                <input type="checkbox" name="update_existing" id="updateExisting" class="checkbox checkbox-primary mr-2" />
+                <div>
+                  <span class="label-text font-medium">Mevcut siparişleri güncelle</span>
+                  <p class="text-xs text-base-content/70 mt-1">
+                    İşaretlenirse, aynı sipariş numarası ile eşleşen mevcut siparişler güncellenecektir. Aksi takdirde sadece yeni siparişler oluşturulacaktır.
+                  </p>
+                </div>
+              </label>
+            </div>
+            
+            <div class="form-control mt-4">
+              <button type="submit" class="btn btn-primary w-full" id="submitBtn" disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                İçe Aktar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+      
+      <!-- Quick Help Card -->
+      <div class="card bg-base-100 shadow-xl animate-fade-in" style="animation-delay: 0.1s;">
+        <div class="card-body">
+          <h3 class="card-title flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Hızlı Rehber
+          </h3>
+          
+          <ol class="space-y-3 mt-2">
+            <li class="flex items-start">
+              <span class="bg-base-200 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mr-2 mt-0.5 flex-shrink-0">1</span>
+              <span><span class="font-medium">İlk olarak şablonu indirin</span> ve sipariş bilgilerinizi Excel'de doldurun</span>
+            </li>
+            <li class="flex items-start">
+              <span class="bg-base-200 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mr-2 mt-0.5 flex-shrink-0">2</span>
+              <span><span class="font-medium">Zorunlu alanları doldurun:</span> Müşteri Adı, SKU, Ürün İsmi, Adet ve Birim Fiyat</span>
+            </li>
+            <li class="flex items-start">
+              <span class="bg-base-200 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mr-2 mt-0.5 flex-shrink-0">3</span>
+              <span><span class="font-medium">Tarih formatına dikkat edin:</span> GG.AA.YYYY SS:DD (Örn: 15.03.2024 14:30)</span>
+            </li>
+            <li class="flex items-start">
+              <span class="bg-base-200 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mr-2 mt-0.5 flex-shrink-0">4</span>
+              <span><span class="font-medium">Dosyayı sürükle-bırak</span> ile yükleyebilir veya dosya seçebilirsiniz</span>
+            </li>
+            <li class="flex items-start">
+              <span class="bg-base-200 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mr-2 mt-0.5 flex-shrink-0">5</span>
+              <span><span class="font-medium">İçe aktar butonuna tıklayın</span> ve sonuçları görün</span>
+            </li>
+          </ol>
+          
+          <div class="alert alert-warning mt-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <div>
+              <h3 class="font-medium">Önemli Not</h3>
+              <p class="text-sm">Sipariş numaraları otomatik oluşturulacaktır. Excel'deki sipariş numaralarını referans olarak kullanabilirsiniz.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Right Column: Format Guidelines -->
+    <div class="lg:col-span-7">
+      <div class="card bg-base-100 shadow-xl animate-fade-in" style="animation-delay: 0.2s;">
+        <div class="card-body">
+          <h2 class="card-title flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            Excel Dosya Formatı
+          </h2>
+          
+          <div class="accordion-item mt-4 open">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+              <h3 class="font-semibold">Excel Sütunları ve Açıklamaları</h3>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 accordion-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+            <div class="accordion-content p-4">
+              <div class="overflow-x-auto">
+                <table class="table table-zebra w-full">
+                  <thead>
+                    <tr>
+                      <th>Sütun Adı</th>
+                      <th>Açıklama</th>
+                      <th>Gerekli</th>
+                      <th>Örnek</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="font-medium">SIPARIŞ TARIHI VE SAATI</td>
+                      <td>Sipariş tarihi ve saati</td>
+                      <td>
+                        <div class="badge badge-error">Evet</div>
+                      </td>
+                      <td><code>15.03.2024 14:30</code></td>
+                    </tr>
+                    <tr>
+                      <td class="font-medium">SIPARIŞ NO</td>
+                      <td>Benzersiz sipariş numarası</td>
+                      <td>
+                        <div class="badge badge-ghost">Hayır</div>
+                      </td>
+                      <td><code>ORD-2024-0001</code></td>
+                    </tr>
+                    <tr>
+                      <td class="font-medium">MÜŞTERI ISMI</td>
+                      <td>Müşteri adı soyadı</td>
+                      <td>
+                        <div class="badge badge-error">Evet</div>
+                      </td>
+                      <td><code>Ahmet Yılmaz</code></td>
+                    </tr>
+                    <tr>
+                      <td>EYALET</td>
+                      <td>Müşteri eyaleti/ili</td>
+                      <td>
+                        <div class="badge badge-ghost">Hayır</div>
+                      </td>
+                      <td><code>İstanbul</code></td>
+                    </tr>
+                    <tr>
+                      <td>ŞEHIR</td>
+                      <td>Müşteri şehri/ilçesi</td>
+                      <td>
+                        <div class="badge badge-ghost">Hayır</div>
+                      </td>
+                      <td><code>Kadıköy</code></td>
+                    </tr>
+                    <tr>
+                      <td class="font-medium">SKU</td>
+                      <td>Ürün kodu</td>
+                      <td>
+                        <div class="badge badge-error">Evet</div>
+                      </td>
+                      <td><code>ABC-123</code></td>
+                    </tr>
+                    <tr>
+                      <td>GTIN</td>
+                      <td>Ürün barkod numarası</td>
+                      <td>
+                        <div class="badge badge-ghost">Hayır</div>
+                      </td>
+                      <td><code>978020137962</code></td>
+                    </tr>
+                    <tr>
+                      <td class="font-medium">ÜRÜN ISMI</td>
+                      <td>Ürün adı</td>
+                      <td>
+                        <div class="badge badge-error">Evet</div>
+                      </td>
+                      <td><code>Bluetooth Kulaklık</code></td>
+                    </tr>
+                    <tr>
+                      <td class="font-medium">ADET</td>
+                      <td>Sipariş adedi</td>
+                      <td>
+                        <div class="badge badge-error">Evet</div>
+                      </td>
+                      <td><code>2</code></td>
+                    </tr>
+                    <tr>
+                      <td class="font-medium">BIRIM FIYAT</td>
+                      <td>Ürün birim fiyatı (virgül ile ayrılmış)</td>
+                      <td>
+                        <div class="badge badge-error">Evet</div>
+                      </td>
+                      <td><code>199,90</code></td>
+                    </tr>
+                    <tr>
+                      <td>BIRIM INDIRIM</td>
+                      <td>Ürüne uygulanan indirim (virgül ile ayrılmış)</td>
+                      <td>
+                        <div class="badge badge-ghost">Hayır</div>
+                      </td>
+                      <td><code>20,00</code></td>
+                    </tr>
+                    <tr>
+                      <td>SATIR FIYAT</td>
+                      <td>Toplam satır tutarı</td>
+                      <td>
+                        <div class="badge badge-ghost">Hayır</div>
+                      </td>
+                      <td><code>359,80</code></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          
+          <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+              <h3 class="font-semibold">Örnek Excel Verisi</h3>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 accordion-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+            <div class="accordion-content">
+              <div class="p-4">
+                <div class="excel-preview-table">
+                  <table class="w-full">
+                    <thead>
+                      <tr>
+                        <th>SIPARIŞ TARIHI VE SAATI</th>
+                        <th>MÜŞTERI ISMI</th>
+                        <th>SKU</th>
+                        <th>ÜRÜN ISMI</th>
+                        <th>ADET</th>
+                        <th>BIRIM FIYAT</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>15.03.2024 14:30</td>
+                        <td>Ahmet Yılmaz</td>
+                        <td>BT-X200</td>
+                        <td>Bluetooth Kulaklık</td>
+                        <td>2</td>
+                        <td>199,90</td>
+                      </tr>
+                      <tr>
+                        <td>15.03.2024 15:45</td>
+                        <td>Ayşe Demir</td>
+                        <td>SP-P100</td>
+                        <td>Akıllı Kalem</td>
+                        <td>1</td>
+                        <td>49,90</td>
+                      </tr>
+                      <tr>
+                        <td>16.03.2024 09:00</td>
+                        <td>Mehmet Kaya</td>
+                        <td>KBD-W10</td>
+                        <td>Kablosuz Klavye</td>
+                        <td>3</td>
+                        <td>149,99</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="mt-4 text-center">
+                  <p class="text-sm text-base-content/70">Bu tablo yalnızca örnek olarak gösterilmiştir. Tam şablon indirmek için <a href="{% url 'orders:generate-order-template' %}" class="link link-primary">buraya tıklayın</a>.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+              <h3 class="font-semibold">İyi Uygulamalar ve Önlemler</h3>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 accordion-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+            <div class="accordion-content">
+              <div class="p-4 space-y-4">
+                <ul class="list-disc list-inside space-y-2">
+                  <li><span class="font-medium">Şablonu olduğu gibi kullanın:</span> Sütunları yeniden adlandırmayın veya kaldırmayın, bu hatalara neden olabilir.</li>
+                  <li><span class="font-medium">Tarih formatı:</span> Tarihleri GG.AA.YYYY SS:DD formatında (Örn: 15.03.2024 14:30) girin.</li>
+                  <li><span class="font-medium">Benzersiz SKU'lar:</span> Sistemde kayıtlı olan geçerli ürün kodlarını kullanın.</li>
+                  <li><span class="font-medium">Müşteri bilgileri:</span> Müşteri ismi eşleşmezse yeni müşteri kaydı oluşturulur.</li>
+                  <li><span class="font-medium">Fiyat formatı:</span> Birim fiyat ve indirim tutarları virgül ile ayrılmış ondalık sayı formatında olmalıdır (Örn: 199,90).</li>
+                  <li><span class="font-medium">Büyük veri setleri:</span> 1000'den fazla sipariş içe aktarıyorsanız, işlemin tamamlanması biraz zaman alabilir.</li>
+                </ul>
+                
+                <div class="alert alert-info mt-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div>
+                    <h3 class="font-medium">İpucu</h3>
+                    <p class="text-sm">İlk olarak küçük bir örnek dosya ile sistemi test edin. Tüm siparişlerinizi toplu olarak içe aktarmadan önce sistemin verileri doğru şekilde işlediğinden emin olun.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Troubleshooting Card -->
+      <div class="card bg-base-100 shadow-xl mt-6 animate-fade-in" style="animation-delay: 0.3s;">
+        <div class="card-body">
+          <h2 class="card-title flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Sorun Giderme
+          </h2>
+          
+          <div class="space-y-4 mt-2">
+            <div class="collapse collapse-arrow border border-base-300 bg-base-100 rounded-box">
+              <input type="checkbox" /> 
+              <div class="collapse-title font-medium">
+                "Geçersiz dosya formatı" hatası alıyorum
+              </div>
+              <div class="collapse-content">
+                <p>Yüklenen dosya geçerli bir Excel dosyası olmalıdır (.xlsx veya .xls uzantılı). Dosyanızın doğru formatta olduğundan ve bozuk olmadığından emin olun.</p>
+              </div>
+            </div>
+            
+            <div class="collapse collapse-arrow border border-base-300 bg-base-100 rounded-box">
+              <input type="checkbox" /> 
+              <div class="collapse-title font-medium">
+                "Gerekli sütunlar eksik" hatası alıyorum
+              </div>
+              <div class="collapse-content">
+                <p>Excel dosyanızda MÜŞTERI ISMI, SKU, ÜRÜN ISMI, ADET ve BIRIM FIYAT sütunları bulunmalıdır. Sütun başlıklarının tam olarak bu şekilde yazıldığından emin olun.</p>
+              </div>
+            </div>
+            
+            <div class="collapse collapse-arrow border border-base-300 bg-base-100 rounded-box">
+              <input type="checkbox" /> 
+              <div class="collapse-title font-medium">
+                "Geçersiz tarih formatı" hatası alıyorum
+              </div>
+              <div class="collapse-content">
+                <p>Tarihler GG.AA.YYYY SS:DD formatında girilmelidir. Örnek: 15.03.2024 14:30. Excel'de hücre formatını kontrol edin ve doğru tarih formatını kullandığınızdan emin olun.</p>
+              </div>
+            </div>
+            
+            <div class="collapse collapse-arrow border border-base-300 bg-base-100 rounded-box">
+              <input type="checkbox" /> 
+              <div class="collapse-title font-medium">
+                "Ürün bulunamadı" hatası alıyorum
+              </div>
+              <div class="collapse-content">
+                <p>SKU sütunundaki ürün kodlarının sistemde kayıtlı ürünlerle eşleştiğinden emin olun. Ürün listesini kontrol ederek doğru SKU değerlerini kullanın.</p>
+              </div>
+            </div>
+            
+            <div class="collapse collapse-arrow border border-base-300 bg-base-100 rounded-box">
+              <input type="checkbox" /> 
+              <div class="collapse-title font-medium">
+                İçe aktarma işlemi çok uzun sürüyor
+              </div>
+              <div class="collapse-content">
+                <p>Çok sayıda sipariş içe aktarırken işlem biraz zaman alabilir. Büyük dosyalar için, verileri 500-1000 sipariş içeren daha küçük dosyalara bölerek grup halinde içe aktarmayı deneyin.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- File Preview Modal (Hidden by default) -->
+<div id="filePreviewModal" class="modal">
+  <div class="modal-box w-11/12 max-w-5xl">
+    <h3 class="font-bold text-lg mb-4">Excel Dosya Önizleme</h3>
+    <div id="filePreviewContent" class="overflow-x-auto">
+      <!-- Preview table will be inserted here -->
+    </div>
+    <div class="modal-action">
+      <button class="btn btn-ghost" onclick="closePreviewModal()">Kapat</button>
+      <button class="btn btn-primary" onclick="confirmImport()">İçe Aktarmaya Devam Et</button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/order-import.js' %}"></script>
+{% endblock %}

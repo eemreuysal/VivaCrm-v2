@@ -1,0 +1,198 @@
+/**
+ * VivaCRM Tasarım Sistemi
+ * Dokümantasyon: vivacrm-dev-doc.md
+ */
+
+:root {
+  /* Primary Colors (Green Tones) */
+  --viva-primary-50: #f0fdf4;   /* Very light green */
+  --viva-primary-100: #dcfce7;  /* Light green */
+  --viva-primary-200: #bbf7d0;  
+  --viva-primary-300: #86efac;  
+  --viva-primary-400: #4ade80;  
+  --viva-primary-500: #22c55e;  /* Main green */
+  --viva-primary-600: #16a34a;  
+  --viva-primary-700: #15803d;  
+  --viva-primary-800: #166534;  
+  --viva-primary-900: #14532d;  /* Dark green */
+  --viva-primary-950: #052e16;
+  
+  /* Secondary Colors (Blue Tones) */
+  --viva-secondary-50: #eff6ff;   /* Very light blue */
+  --viva-secondary-100: #dbeafe;  /* Light blue */
+  --viva-secondary-200: #bfdbfe;  
+  --viva-secondary-300: #93c5fd;  
+  --viva-secondary-400: #60a5fa;  
+  --viva-secondary-500: #3b82f6;  /* Main blue */
+  --viva-secondary-600: #2563eb;  
+  --viva-secondary-700: #1d4ed8;  
+  --viva-secondary-800: #1e40af;  
+  --viva-secondary-900: #1e3a8a;  /* Dark blue */
+  --viva-secondary-950: #172554;
+  
+  /* Accent Colors (Amber/Orange Tones) */
+  --viva-accent-50: #fffbeb;    /* Very light amber */
+  --viva-accent-100: #fef3c7;   /* Light amber */
+  --viva-accent-200: #fde68a;   
+  --viva-accent-300: #fcd34d;   
+  --viva-accent-400: #fbbf24;   
+  --viva-accent-500: #f59e0b;   /* Main amber */
+  --viva-accent-600: #d97706;   
+  --viva-accent-700: #b45309;   
+  --viva-accent-800: #92400e;   
+  --viva-accent-900: #78350f;   /* Dark amber */
+  --viva-accent-950: #451a03;
+  
+  /* Neutral Colors (Gray Tones) */
+  --viva-gray-50: #f9fafb;    /* Very light gray */
+  --viva-gray-100: #f3f4f6;   /* Light gray */
+  --viva-gray-200: #e5e7eb;   
+  --viva-gray-300: #d1d5db;   
+  --viva-gray-400: #9ca3af;   
+  --viva-gray-500: #6b7280;   /* Main gray */
+  --viva-gray-600: #4b5563;   
+  --viva-gray-700: #374151;   
+  --viva-gray-800: #1f2937;   
+  --viva-gray-900: #111827;   /* Dark gray */
+  --viva-gray-950: #030712;
+  
+  /* Semantic Colors */
+  --viva-success: #22c55e;  /* Success - Green */
+  --viva-warning: #f59e0b;  /* Warning - Amber */
+  --viva-error: #ef4444;    /* Error - Red */
+  --viva-info: #3b82f6;     /* Info - Blue */
+  
+  /* Typography */
+  --viva-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --viva-font-mono: 'Fira Code', 'Courier New', monospace;
+  
+  /* Spacing */
+  --viva-spacing-px: 1px;
+  --viva-spacing-0: 0;
+  --viva-spacing-0_5: 0.125rem;  /* 2px */
+  --viva-spacing-1: 0.25rem;     /* 4px */
+  --viva-spacing-1_5: 0.375rem;  /* 6px */
+  --viva-spacing-2: 0.5rem;      /* 8px */
+  --viva-spacing-2_5: 0.625rem;  /* 10px */
+  --viva-spacing-3: 0.75rem;     /* 12px */
+  --viva-spacing-3_5: 0.875rem;  /* 14px */
+  --viva-spacing-4: 1rem;        /* 16px */
+  --viva-spacing-5: 1.25rem;     /* 20px */
+  --viva-spacing-6: 1.5rem;      /* 24px */
+  --viva-spacing-7: 1.75rem;     /* 28px */
+  --viva-spacing-8: 2rem;        /* 32px */
+  --viva-spacing-9: 2.25rem;     /* 36px */
+  --viva-spacing-10: 2.5rem;     /* 40px */
+  --viva-spacing-12: 3rem;       /* 48px */
+  --viva-spacing-14: 3.5rem;     /* 56px */
+  --viva-spacing-16: 4rem;       /* 64px */
+  --viva-spacing-20: 5rem;       /* 80px */
+  --viva-spacing-24: 6rem;       /* 96px */
+  --viva-spacing-28: 7rem;       /* 112px */
+  --viva-spacing-32: 8rem;       /* 128px */
+  --viva-spacing-36: 9rem;       /* 144px */
+  --viva-spacing-40: 10rem;      /* 160px */
+  --viva-spacing-44: 11rem;      /* 176px */
+  --viva-spacing-48: 12rem;      /* 192px */
+  --viva-spacing-52: 13rem;      /* 208px */
+  --viva-spacing-56: 14rem;      /* 224px */
+  --viva-spacing-60: 15rem;      /* 240px */
+  --viva-spacing-64: 16rem;      /* 256px */
+  --viva-spacing-72: 18rem;      /* 288px */
+  --viva-spacing-80: 20rem;      /* 320px */
+  --viva-spacing-96: 24rem;      /* 384px */
+  
+  /* Border Radius */
+  --viva-radius-none: 0;
+  --viva-radius-sm: 0.125rem;     /* 2px */
+  --viva-radius-default: 0.25rem; /* 4px */
+  --viva-radius-md: 0.375rem;     /* 6px */
+  --viva-radius-lg: 0.5rem;       /* 8px */
+  --viva-radius-xl: 0.75rem;      /* 12px */
+  --viva-radius-2xl: 1rem;        /* 16px */
+  --viva-radius-3xl: 1.5rem;      /* 24px */
+  --viva-radius-full: 9999px;
+  
+  /* Box Shadows */
+  --viva-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --viva-shadow-default: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --viva-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --viva-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --viva-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --viva-shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  --viva-shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+  --viva-shadow-none: none;
+  
+  /* Font Sizes */
+  --viva-text-xs: 0.75rem;      /* 12px */
+  --viva-text-sm: 0.875rem;     /* 14px */
+  --viva-text-base: 1rem;       /* 16px */
+  --viva-text-lg: 1.125rem;     /* 18px */
+  --viva-text-xl: 1.25rem;      /* 20px */
+  --viva-text-2xl: 1.5rem;      /* 24px */
+  --viva-text-3xl: 1.875rem;    /* 30px */
+  --viva-text-4xl: 2.25rem;     /* 36px */
+  --viva-text-5xl: 3rem;        /* 48px */
+  --viva-text-6xl: 3.75rem;     /* 60px */
+  
+  /* Line Heights */
+  --viva-leading-none: 1;
+  --viva-leading-tight: 1.25;
+  --viva-leading-snug: 1.375;
+  --viva-leading-normal: 1.5;
+  --viva-leading-relaxed: 1.625;
+  --viva-leading-loose: 2;
+  
+  /* Z-Index */
+  --viva-z-0: 0;
+  --viva-z-10: 10;
+  --viva-z-20: 20;
+  --viva-z-30: 30;
+  --viva-z-40: 40;
+  --viva-z-50: 50;
+}
+
+/* Dark Theme Colors */
+[data-theme="vivacrmDark"] {
+  --viva-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.25);
+  --viva-shadow-default: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.26);
+  --viva-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.26);
+  --viva-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.25);
+  --viva-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.24);
+  --viva-shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+/* Utility Classes */
+
+/* Typography */
+.viva-text-xs { font-size: var(--viva-text-xs); }
+.viva-text-sm { font-size: var(--viva-text-sm); }
+.viva-text-base { font-size: var(--viva-text-base); }
+.viva-text-lg { font-size: var(--viva-text-lg); }
+.viva-text-xl { font-size: var(--viva-text-xl); }
+.viva-text-2xl { font-size: var(--viva-text-2xl); }
+.viva-text-3xl { font-size: var(--viva-text-3xl); }
+.viva-text-4xl { font-size: var(--viva-text-4xl); }
+.viva-text-5xl { font-size: var(--viva-text-5xl); }
+.viva-text-6xl { font-size: var(--viva-text-6xl); }
+
+/* Shadows */
+.viva-shadow-sm { box-shadow: var(--viva-shadow-sm); }
+.viva-shadow { box-shadow: var(--viva-shadow-default); }
+.viva-shadow-md { box-shadow: var(--viva-shadow-md); }
+.viva-shadow-lg { box-shadow: var(--viva-shadow-lg); }
+.viva-shadow-xl { box-shadow: var(--viva-shadow-xl); }
+.viva-shadow-2xl { box-shadow: var(--viva-shadow-2xl); }
+.viva-shadow-inner { box-shadow: var(--viva-shadow-inner); }
+.viva-shadow-none { box-shadow: var(--viva-shadow-none); }
+
+/* Border Radius */
+.viva-rounded-none { border-radius: var(--viva-radius-none); }
+.viva-rounded-sm { border-radius: var(--viva-radius-sm); }
+.viva-rounded { border-radius: var(--viva-radius-default); }
+.viva-rounded-md { border-radius: var(--viva-radius-md); }
+.viva-rounded-lg { border-radius: var(--viva-radius-lg); }
+.viva-rounded-xl { border-radius: var(--viva-radius-xl); }
+.viva-rounded-2xl { border-radius: var(--viva-radius-2xl); }
+.viva-rounded-3xl { border-radius: var(--viva-radius-3xl); }
+.viva-rounded-full { border-radius: var(--viva-radius-full); }

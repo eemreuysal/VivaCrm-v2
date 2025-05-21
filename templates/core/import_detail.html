@@ -1,0 +1,473 @@
+{% extends "base/base_dashboard.html" %}
+{% load static %}
+{% load currency_tags %}
+
+{% block title %}{{ import_history.file_name }} - Import Detayı | VivaCRM{% endblock %}
+
+{% block extra_css %}
+<style>
+    .info-box {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        border: 1px solid #dee2e6;
+        margin-bottom: 1rem;
+    }
+    .info-label {
+        font-weight: 600;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+    }
+    .info-value {
+        color: #212529;
+        font-size: 1.1rem;
+    }
+    .status-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .status-processing {
+        background-color: rgba(59, 130, 246, 0.1);
+        color: rgb(59, 130, 246);
+    }
+    .status-completed {
+        background-color: rgba(34, 197, 94, 0.1);
+        color: rgb(34, 197, 94);
+    }
+    .status-failed {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: rgb(239, 68, 68);
+    }
+    .stat-box {
+        text-align: center;
+        padding: 1.5rem;
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+    }
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    .timeline-item {
+        position: relative;
+        padding-left: 3rem;
+        padding-bottom: 1.5rem;
+    }
+    .timeline-item:before {
+        content: '';
+        position: absolute;
+        left: 1rem;
+        top: 1.5rem;
+        bottom: 0;
+        width: 2px;
+        background-color: #e5e7eb;
+    }
+    .timeline-item:last-child:before {
+        display: none;
+    }
+    .timeline-dot {
+        position: absolute;
+        left: 0.5rem;
+        top: 0.5rem;
+        width: 1rem;
+        height: 1rem;
+        border-radius: 50%;
+        background-color: #6b7280;
+    }
+    .timeline-dot.success {
+        background-color: #22c55e;
+    }
+    .timeline-dot.error {
+        background-color: #ef4444;
+    }
+    .log-viewer {
+        background-color: #1f2937;
+        color: #e5e7eb;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        font-family: monospace;
+        font-size: 0.875rem;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    .error-box {
+        background-color: #fef2f2;
+        border-left: 4px solid #ef4444;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    .related-item {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        margin-bottom: 0.5rem;
+        transition: all 0.2s ease;
+    }
+    .related-item:hover {
+        background-color: #f9fafb;
+        border-color: #3b82f6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Başlık -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-0">
+                            <li class="breadcrumb-item"><a href="{% url 'core:import-history' %}">Import Geçmişi</a></li>
+                            <li class="breadcrumb-item active">{{ import_history.file_name }}</li>
+                        </ol>
+                    </nav>
+                    <h2 class="fs-4 fw-bold text-dark mt-2">
+                        <i class="bi bi-file-earmark-excel me-2"></i>{{ import_history.file_name }}
+                    </h2>
+                </div>
+                <div>
+                    {% if import_history.file_path %}
+                    <a href="{% url 'core:import-download' import_history.pk %}" class="btn btn-outline-success">
+                        <i class="bi bi-download me-1"></i>
+                        İndir
+                    </a>
+                    {% endif %}
+                    {% if import_history.status == 'completed' %}
+                    <form method="post" action="{% url 'core:import-reload' import_history.pk %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-warning">
+                            <i class="bi bi-arrow-clockwise me-1"></i>
+                            Yeniden Yükle
+                        </button>
+                    </form>
+                    {% endif %}
+                    <a href="{% url 'core:import-history' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>
+                        Geri
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Sol Kolon - Detaylar -->
+        <div class="col-lg-4">
+            <!-- Durum Kartı -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body text-center">
+                    <span class="status-badge status-{{ import_history.status }}">
+                        {% if import_history.status == 'processing' %}
+                            <i class="bi bi-hourglass-split me-1"></i>İşleniyor
+                        {% elif import_history.status == 'completed' %}
+                            <i class="bi bi-check-circle me-1"></i>Tamamlandı
+                        {% else %}
+                            <i class="bi bi-x-circle me-1"></i>Başarısız
+                        {% endif %}
+                    </span>
+                    
+                    {% if import_history.completed_at %}
+                    <p class="text-muted mt-3 mb-0">
+                        {{ import_history.completed_at|date:"d.m.Y H:i:s" }}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Temel Bilgiler -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="bi bi-info-circle me-2"></i>Temel Bilgiler
+                    </h5>
+                    
+                    <div class="info-box">
+                        <div class="info-label">Modül</div>
+                        <div class="info-value">{{ import_history.module|capfirst }}</div>
+                    </div>
+                    
+                    <div class="info-box">
+                        <div class="info-label">Kullanıcı</div>
+                        <div class="info-value">
+                            <i class="bi bi-person me-1"></i>
+                            {{ import_history.created_by.get_full_name|default:import_history.created_by.username }}
+                        </div>
+                    </div>
+                    
+                    <div class="info-box">
+                        <div class="info-label">Oluşturulma</div>
+                        <div class="info-value">{{ import_history.created_at|date:"d.m.Y H:i:s" }}</div>
+                    </div>
+                    
+                    {% if import_history.parent_import %}
+                    <div class="info-box">
+                        <div class="info-label">Yeniden Yükleme</div>
+                        <div class="info-value">
+                            <a href="{% url 'core:import-history-detail' import_history.parent_import.pk %}">
+                                {{ import_history.parent_import.file_name }}
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Parametreler -->
+            {% if import_history.import_params %}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="bi bi-gear me-2"></i>Import Parametreleri
+                    </h5>
+                    <pre class="bg-light p-3 rounded">{{ import_history.import_params|default:"{}" }}</pre>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sağ Kolon - Sonuçlar -->
+        <div class="col-lg-8">
+            <!-- İstatistikler -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="stat-box">
+                        <div class="stat-number">{{ import_history.total_count|default:"0" }}</div>
+                        <div class="text-muted">Toplam Kayıt</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-box">
+                        <div class="stat-number text-success">{{ import_history.success_count|default:"0" }}</div>
+                        <div class="text-muted">Başarılı</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-box">
+                        <div class="stat-number text-info">{{ import_history.processed_count|default:"0" }}</div>
+                        <div class="text-muted">İşlenen</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-box">
+                        <div class="stat-number text-danger">{{ import_history.error_count|default:"0" }}</div>
+                        <div class="text-muted">Başarısız</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hata Mesajı -->
+            {% if import_history.error_details.general_error %}
+            <div class="error-box">
+                <h5 class="text-danger mb-2">
+                    <i class="bi bi-exclamation-triangle me-1"></i>Hata
+                </h5>
+                <p class="mb-0">{{ import_history.error_details.general_error }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Detaylı Sonuçlar -->
+            {% if import_history.error_details.rows or import_history.success_details.rows %}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="bi bi-list-check me-2"></i>Detaylı Sonuçlar
+                    </h5>
+                    
+                    {% if import_history.error_details.rows %}
+                    <div class="accordion mb-3" id="errorsAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#errorsCollapse">
+                                    <i class="bi bi-x-circle text-danger me-2"></i>
+                                    Hatalar ({{ import_history.error_details.rows|length }})
+                                </button>
+                            </h2>
+                            <div id="errorsCollapse" class="accordion-collapse collapse" data-bs-parent="#errorsAccordion">
+                                <div class="accordion-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Satır</th>
+                                                    <th>Hata</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for row_num, error in import_history.error_details.rows.items %}
+                                                <tr>
+                                                    <td>{{ row_num }}</td>
+                                                    <td>{{ error.message }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if import_history.result_details.warnings %}
+                    <div class="accordion mb-3" id="warningsAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#warningsCollapse">
+                                    <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+                                    Uyarılar ({{ import_history.result_details.warnings|length }})
+                                </button>
+                            </h2>
+                            <div id="warningsCollapse" class="accordion-collapse collapse" data-bs-parent="#warningsAccordion">
+                                <div class="accordion-body">
+                                    <ul>
+                                        {% for warning in import_history.result_details.warnings %}
+                                        <li>{{ warning }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- İlgili Kayıtlar -->
+            {% if related_products or related_orders %}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="bi bi-link-45deg me-2"></i>İlgili Kayıtlar
+                    </h5>
+                    
+                    {% if related_products %}
+                    <h6>Ürünler</h6>
+                    {% for product in related_products %}
+                    <a href="{% url 'products:product-detail' product.pk %}" class="text-decoration-none">
+                        <div class="related-item">
+                            <i class="bi bi-box-seam me-3 text-primary"></i>
+                            <div>
+                                <div class="fw-bold">{{ product.name }}</div>
+                                <small class="text-muted">{{ product.sku }}</small>
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                    {% endif %}
+                    
+                    {% if related_orders %}
+                    <h6 class="mt-3">Siparişler</h6>
+                    {% for order in related_orders %}
+                    <a href="{% url 'orders:order-detail' order.pk %}" class="text-decoration-none">
+                        <div class="related-item">
+                            <i class="bi bi-cart me-3 text-success"></i>
+                            <div>
+                                <div class="fw-bold">{{ order.order_number }}</div>
+                                <small class="text-muted">{{ order.customer.get_full_name }}</small>
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Log Görüntüleyici -->
+            {% if log_content %}
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="bi bi-terminal me-2"></i>İşlem Günlüğü
+                    </h5>
+                    <div class="log-viewer">{{ log_content }}</div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Dosya Önizleme Modal -->
+<div class="modal fade" id="filePreviewModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Dosya Önizleme</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="previewContent"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Dosya önizleme
+function previewFile() {
+    const modal = new bootstrap.Modal(document.getElementById('filePreviewModal'));
+    modal.show();
+    
+    fetch(`{% url 'core:import-file-preview' import_history.pk %}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                document.getElementById('previewContent').innerHTML = `
+                    <div class="alert alert-danger">${data.error}</div>
+                `;
+                return;
+            }
+            
+            let html = '<div class="table-responsive"><table class="table table-striped table-sm">';
+            html += '<thead><tr>';
+            
+            data.columns.forEach(col => {
+                html += `<th>${col}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+            
+            data.rows.forEach(row => {
+                html += '<tr>';
+                row.forEach(cell => {
+                    html += `<td>${cell !== null ? cell : ''}</td>`;
+                });
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table></div>';
+            
+            if (data.total_rows > 20) {
+                html += `<p class="text-muted text-center mt-2">İlk 20 satır gösteriliyor (Toplam: ${data.total_rows})</p>`;
+            }
+            
+            document.getElementById('previewContent').innerHTML = html;
+        })
+        .catch(error => {
+            document.getElementById('previewContent').innerHTML = `
+                <div class="alert alert-danger">Önizleme yüklenemedi: ${error}</div>
+            `;
+        });
+}
+
+// Otomatik yenileme (işlem devam ediyorsa)
+{% if import_history.status == 'processing' %}
+setTimeout(() => {
+    location.reload();
+}, 5000);
+{% endif %}
+</script>
+{% endblock %}

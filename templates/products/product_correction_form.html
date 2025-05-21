@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load i18n static %}
+
+{% block title %}Ürün İçe Aktarma - Hata Düzeltme{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">
+            <i class="fas fa-file-excel mr-2 text-green-600"></i>
+            Ürün İçe Aktarma - Hata Düzeltme
+        </h1>
+        <div class="breadcrumbs text-sm mt-2">
+            <ul>
+                <li><a href="{% url 'dashboard' %}">Ana Sayfa</a></li>
+                <li><a href="{% url 'products:product-list' %}">Ürünler</a></li>
+                <li><a href="{% url 'products:import_excel' %}">İçe Aktar</a></li>
+                <li class="text-primary">Hata Düzeltme</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Hata Düzeltme Formu -->
+    {% include 'components/error_correction_form.html' %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Tooltip için
+document.querySelectorAll('[data-tooltip]').forEach(el => {
+    el.addEventListener('mouseenter', function() {
+        const tooltip = document.createElement('div');
+        tooltip.className = 'tooltip tooltip-top tooltip-open';
+        tooltip.innerHTML = `<span class="tooltip-text">${this.dataset.tooltip}</span>`;
+        this.appendChild(tooltip);
+    });
+    
+    el.addEventListener('mouseleave', function() {
+        const tooltip = this.querySelector('.tooltip');
+        if (tooltip) {
+            tooltip.remove();
+        }
+    });
+});
+</script>
+{% endblock %}

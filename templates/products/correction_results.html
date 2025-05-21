@@ -1,0 +1,64 @@
+{% if success %}
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+    <i class="fas fa-check-circle mr-2"></i>
+    <strong>Başarılı!</strong> {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+
+<div class="mt-3">
+    <p>Düzeltmeler başarıyla uygulandı. Şimdi:</p>
+    <ul>
+        <li>{{ corrections_applied }} adet düzeltme yapıldı</li>
+        <li>Verileri tekrar kontrol edin</li>
+        <li>Kalan hataları manuel olarak düzeltin</li>
+    </ul>
+    
+    <div class="mt-4">
+        <button type="button" class="btn btn-primary" onclick="location.reload()">
+            <i class="fas fa-sync-alt mr-2"></i>
+            Sayfayı Yenile
+        </button>
+        <button type="button" class="btn btn-success" onclick="continueImport()">
+            <i class="fas fa-arrow-right mr-2"></i>
+            İçe Aktarmaya Devam Et
+        </button>
+    </div>
+</div>
+
+<script>
+function continueImport() {
+    // Submit form to continue import
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{% url "products:product-import" %}';
+    
+    const fileSessionId = document.createElement('input');
+    fileSessionId.type = 'hidden';
+    fileSessionId.name = 'file_session_id';
+    fileSessionId.value = '{{ file_session_id }}';
+    
+    const continueFlag = document.createElement('input');
+    continueFlag.type = 'hidden';
+    continueFlag.name = 'continue_import';
+    continueFlag.value = 'true';
+    
+    const csrfToken = document.createElement('input');
+    csrfToken.type = 'hidden';
+    csrfToken.name = 'csrfmiddlewaretoken';
+    csrfToken.value = '{{ csrf_token }}';
+    
+    form.appendChild(fileSessionId);
+    form.appendChild(continueFlag);
+    form.appendChild(csrfToken);
+    document.body.appendChild(form);
+    form.submit();
+}
+</script>
+
+{% else %}
+<div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <i class="fas fa-exclamation-circle mr-2"></i>
+    <strong>Hata!</strong> {{ error|default:message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}

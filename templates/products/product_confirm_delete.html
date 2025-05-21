@@ -1,0 +1,334 @@
+{% extends "base/base_dashboard.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Ürün Sil: {{ product.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Animation */
+  @keyframes pulse-error {
+    0% { box-shadow: 0 0 0 0 rgba(248, 68, 73, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(248, 68, 73, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(248, 68, 73, 0); }
+  }
+  
+  .pulse-error {
+    animation: pulse-error 2s infinite;
+  }
+  
+  .delete-card {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+  }
+  
+  .delete-card.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  /* Warning badge */
+  .warning-badge {
+    transition: all 0.3s ease;
+  }
+  
+  .warning-badge:hover {
+    transform: scale(1.1);
+  }
+  
+  /* Product preview image */
+  .product-image {
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+  }
+  
+  .product-image:hover {
+    transform: scale(1.05);
+    border-color: var(--fallback-error, oklch(var(--er)));
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-error">Ürün Sil: {{ product.name }}</h1>
+      <p class="text-base-content/70">Bu işlem kalıcıdır ve geri alınamaz</p>
+    </div>
+    <div class="text-sm breadcrumbs">
+      <ul>
+        <li><a href="{% url 'dashboard:dashboard' %}">VivaCRM</a></li>
+        <li><a href="{% url 'products:product-list' %}">Ürünler</a></li>
+        <li><a href="{% url 'products:product-detail' slug=product.slug %}">{{ product.name }}</a></li>
+        <li>Sil</li>
+      </ul>
+    </div>
+  </div>
+  
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <!-- Warning card -->
+    <div class="lg:col-span-8">
+      <div class="card bg-base-100 shadow-xl overflow-hidden border-t-4 border-error delete-card" id="warning-card">
+        <div class="card-body">
+          <h2 class="card-title text-xl font-bold flex items-center text-error">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            Silme Onayı
+          </h2>
+          
+          <div class="divider my-1"></div>
+          
+          <div class="alert alert-error bg-error/20 border border-error pulse-error">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <div>
+              <h3 class="font-bold">"{{ product.name }}" ürününü silmek istediğinizden emin misiniz?</h3>
+              <div class="text-sm">Bu işlem geri alınamaz ve ürün ile ilişkili tüm verileri etkileyebilir.</div>
+            </div>
+          </div>
+          
+          <div class="space-y-4 mt-4">
+            <!-- Product Image Preview (if available) -->
+            {% if product.primary_image %}
+            <div class="flex justify-center p-2 bg-base-200 rounded-lg">
+              <div class="relative overflow-hidden rounded-lg product-image">
+                <img src="{{ product.primary_image.image.url }}" alt="{{ product.name }}" class="max-h-40 object-contain bg-white p-2" />
+                <div class="absolute bottom-0 inset-x-0 bg-error/70 text-white text-xs font-bold text-center py-1">
+                  Silinecek
+                </div>
+              </div>
+            </div>
+            {% endif %}
+          
+            <!-- Critical warnings -->
+            {% if product.stock_movements.exists or product.images.exists %}
+            <div class="card bg-base-200 shadow-md">
+              <div class="card-body p-4">
+                <h3 class="font-bold flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Kritik Uyarılar
+                </h3>
+                
+                <div class="space-y-3 text-sm">
+                  {% if product.stock_movements.exists %}
+                  <div class="flex items-start gap-2 p-2 rounded-lg bg-warning/10">
+                    <span class="warning-badge badge badge-warning badge-sm mt-1">!</span>
+                    <div>
+                      <span class="font-semibold">Bu ürün için stok hareketleri mevcut!</span>
+                      <p class="text-base-content/70">Ürünü sildiğinizde, ilişkili tüm stok hareketleri de silinecektir.</p>
+                    </div>
+                  </div>
+                  {% endif %}
+                  
+                  {% if product.images.exists %}
+                  <div class="flex items-start gap-2 p-2 rounded-lg bg-warning/10">
+                    <span class="warning-badge badge badge-warning badge-sm mt-1">!</span>
+                    <div>
+                      <span class="font-semibold">Bu ürüne ait {{ product.images.count }} görsel bulunmaktadır!</span>
+                      <p class="text-base-content/70">Ürünü sildiğinizde, ilişkili tüm görseller de medya kitaplığından silinecektir.</p>
+                    </div>
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            {% endif %}
+            
+            <!-- Ürün bilgileri tablosu -->
+            <div>
+              <h3 class="text-lg font-semibold mb-3 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Silinecek Ürün Bilgileri
+              </h3>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="overflow-x-auto">
+                  <table class="table table-zebra w-full">
+                    <tbody>
+                      <tr>
+                        <th class="bg-base-200/80">Ürün Kodu:</th>
+                        <td class="font-mono">{{ product.code }}</td>
+                      </tr>
+                      <tr>
+                        <th class="bg-base-200/80">Ürün Adı:</th>
+                        <td class="font-medium">{{ product.name }}</td>
+                      </tr>
+                      <tr>
+                        <th class="bg-base-200/80">SKU:</th>
+                        <td>{{ product.sku|default:"-" }}</td>
+                      </tr>
+                      <tr>
+                        <th class="bg-base-200/80">Barkod:</th>
+                        <td>{{ product.barcode|default:"-" }}</td>
+                      </tr>
+                      <tr>
+                        <th class="bg-base-200/80">Kategori:</th>
+                        <td>
+                          {% if product.category %}
+                          <a href="{% url 'products:category-detail' slug=product.category.slug %}" class="link link-hover link-primary">
+                            {{ product.category.name }}
+                          </a>
+                          {% else %}
+                          <span class="italic text-base-content/60">-</span>
+                          {% endif %}
+                        </td>
+                      </tr>
+                      <tr>
+                        <th class="bg-base-200/80">Ürün Ailesi:</th>
+                        <td>{{ product.family|default:"-" }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                
+                <div class="overflow-x-auto">
+                  <table class="table table-zebra w-full">
+                    <tbody>
+                      <tr>
+                        <th class="bg-base-200/80">Fiyat:</th>
+                        <td class="font-medium">{{ product.price }} ₺</td>
+                      </tr>
+                      <tr>
+                        <th class="bg-base-200/80">İndirimli Fiyat:</th>
+                        <td>{{ product.discount_price|default:"-" }}</td>
+                      </tr>
+                      <tr>
+                        <th class="bg-base-200/80">Stok Durumu:</th>
+                        <td>
+                          {% if product.is_physical %}
+                            {% if product.stock <= 0 %}
+                              <div class="badge badge-error animated-badge">Stokta Yok (0)</div>
+                            {% elif product.stock <= product.threshold_stock %}
+                              <div class="badge badge-warning animated-badge">Kritik Stok: {{ product.stock }}</div>
+                            {% else %}
+                              <div class="badge badge-success animated-badge">{{ product.stock }}</div>
+                            {% endif %}
+                          {% else %}
+                            <div class="badge badge-info animated-badge">Fiziksel Değil</div>
+                          {% endif %}
+                        </td>
+                      </tr>
+                      <tr>
+                        <th class="bg-base-200/80">Durum:</th>
+                        <td>
+                          <div class="badge {% if product.status == 'available' %}badge-success{% elif product.status == 'unavailable' %}badge-error{% else %}badge-warning{% endif %} animated-badge gap-2">
+                            {{ product.get_status_display }}
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <th class="bg-base-200/80">Oluşturulma:</th>
+                        <td>{{ product.created_at|date:"d.m.Y H:i" }}</td>
+                      </tr>
+                      <tr>
+                        <th class="bg-base-200/80">Son Güncelleme:</th>
+                        <td>{{ product.updated_at|date:"d.m.Y H:i" }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <form method="post" class="mt-6">
+            {% csrf_token %}
+            <div class="flex flex-col sm:flex-row justify-end gap-3">
+              <a href="{% url 'products:product-detail' slug=product.slug %}" class="btn btn-outline btn-md gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                İşlemi İptal Et
+              </a>
+              <button type="submit" class="btn btn-error btn-md gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Kalıcı Olarak Sil
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Info card -->
+    <div class="lg:col-span-4">
+      <div class="card bg-base-100 shadow-xl overflow-hidden sticky top-4 delete-card" id="info-card">
+        <div class="card-body">
+          <h2 class="card-title font-bold flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Silme İşlemi Hakkında
+          </h2>
+          
+          <div class="divider my-1"></div>
+          
+          <div class="space-y-4 text-sm">
+            <div class="p-3 bg-base-200 rounded-lg">
+              <h3 class="font-medium mb-1">Silme İşlemi Etkileri:</h3>
+              <ul class="list-disc list-inside space-y-2">
+                <li>Ürün tamamen veritabanından silinecektir</li>
+                <li>Bu işlem geri alınamaz</li>
+                <li>Ürünün tüm görselleri silinecektir</li>
+                <li>Ürünün tüm stok hareketleri silinecektir</li>
+                <li>Bu ürüne bağlı sipariş kalemleri kategorisiz kalacaktır</li>
+              </ul>
+            </div>
+            
+            <div class="p-3 bg-base-200 rounded-lg">
+              <h3 class="font-medium mb-1">Alternatifleri Değerlendirin:</h3>
+              <ul class="list-disc list-inside space-y-2">
+                <li>Ürünü silmek yerine durumunu "Kullanılamaz" yapmak</li>
+                <li>Stoku sıfırlamak (tamamen çıkmak)</li>
+                <li>Ürünü arşivlemeye almak</li>
+              </ul>
+            </div>
+            
+            <div class="alert alert-info bg-info/20 border border-info">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              <div>
+                <h3 class="font-bold">Tavsiye</h3>
+                <div class="text-xs">Ürün silme işlemi yerine, önce ürünün durumunu "Kullanılamaz" olarak ayarlamayı deneyin.</div>
+              </div>
+            </div>
+            
+            <div class="flex flex-col gap-2">
+              <a href="{% url 'products:product-update' slug=product.slug %}" class="btn btn-outline btn-sm gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+                Düzenle
+              </a>
+              <a href="{% url 'products:product-list' %}" class="btn btn-outline btn-sm gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                </svg>
+                Ürün Listesine Dön
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Animate cards
+    setTimeout(() => {
+      document.getElementById('warning-card').classList.add('show');
+      setTimeout(() => {
+        document.getElementById('info-card').classList.add('show');
+      }, 200);
+    }, 100);
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,266 @@
+<div id="products-table" class="card bg-base-100 shadow-xl overflow-hidden" hx-indicator=".htmx-indicator">
+  <!-- Add custom styles for resizable columns -->
+  <style>
+    /* HTMX indicator styling */
+    .htmx-indicator {
+      display: none;
+    }
+    .htmx-request .htmx-indicator {
+      display: flex;
+      align-items: center;
+    }
+    
+    /* Basic styles for resizable table */
+    .resizable-table {
+      width: 100%;
+      table-layout: fixed;
+    }
+    .resizable-table th {
+      position: relative;
+      overflow: hidden;
+    }
+    .resizable-table th.sortable {
+      cursor: pointer;
+    }
+    .resizable-table th .resizer {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 5px;
+      height: 100%;
+      background-color: transparent;
+      cursor: col-resize;
+      user-select: none;
+      touch-action: none;
+    }
+    .resizable-table th .resizer:hover,
+    .resizable-table th .resizing {
+      background-color: #99a;
+    }
+    /* Sorting indicators */
+    .sortable .sort-icon {
+      margin-left: 4px;
+      display: inline-block;
+    }
+    th.sortable[data-sort-dir="asc"] .sort-icon::after {
+      content: "↑";
+    }
+    th.sortable[data-sort-dir="desc"] .sort-icon::after {
+      content: "↓";
+    }
+    th.sortable:not([data-sort-dir]) .sort-icon::after {
+      content: "↕";
+      opacity: 0.3;
+    }
+  </style>
+  
+  <div class="overflow-x-auto">
+    <table class="table table-zebra w-full resizable-table">
+      <thead>
+        <tr>
+          <th class="sortable" data-sort-field="code" {% if sort_by == 'code' %}data-sort-dir="{{ sort_dir }}"{% endif %}>
+            <a href="{{ sort_urls.code }}" hx-get="{{ sort_urls.code }}" hx-target="#products-table" hx-swap="outerHTML">Kod / Ürün</a>
+            <span class="sort-icon"></span>
+            <div class="resizer" data-column="0"></div>
+          </th>
+          <th class="sortable" data-sort-field="category" {% if sort_by == 'category' %}data-sort-dir="{{ sort_dir }}"{% endif %}>
+            <a href="{{ sort_urls.category }}" hx-get="{{ sort_urls.category }}" hx-target="#products-table" hx-swap="outerHTML">Kategori</a>
+            <span class="sort-icon"></span>
+            <div class="resizer" data-column="1"></div>
+          </th>
+          <th class="sortable" data-sort-field="family" {% if sort_by == 'family' %}data-sort-dir="{{ sort_dir }}"{% endif %}>
+            <a href="{{ sort_urls.family }}" hx-get="{{ sort_urls.family }}" hx-target="#products-table" hx-swap="outerHTML">Ürün Ailesi</a>
+            <span class="sort-icon"></span>
+            <div class="resizer" data-column="2"></div>
+          </th>
+          <th class="sortable" data-sort-field="price" {% if sort_by == 'price' %}data-sort-dir="{{ sort_dir }}"{% endif %}>
+            <a href="{{ sort_urls.price }}" hx-get="{{ sort_urls.price }}" hx-target="#products-table" hx-swap="outerHTML">Fiyat</a>
+            <span class="sort-icon"></span>
+            <div class="resizer" data-column="3"></div>
+          </th>
+          <th class="sortable" data-sort-field="sales_count" {% if sort_by == 'sales_count' %}data-sort-dir="{{ sort_dir }}"{% endif %}>
+            <a href="{{ sort_urls.sales_count }}" hx-get="{{ sort_urls.sales_count }}" hx-target="#products-table" hx-swap="outerHTML">Satış Adeti</a>
+            <span class="sort-icon"></span>
+            <div class="resizer" data-column="4"></div>
+          </th>
+          <th class="sortable" data-sort-field="sales_revenue" {% if sort_by == 'sales_revenue' %}data-sort-dir="{{ sort_dir }}"{% endif %}>
+            <a href="{{ sort_urls.sales_revenue }}" hx-get="{{ sort_urls.sales_revenue }}" hx-target="#products-table" hx-swap="outerHTML">Satış Geliri</a>
+            <span class="sort-icon"></span>
+            <div class="resizer" data-column="5"></div>
+          </th>
+          <th>
+            İşlemler
+            <div class="resizer" data-column="6"></div>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for product in products %}
+        <tr>
+          <td>
+            <div class="font-bold">{{ product.code }}</div>
+            <div>{{ product.name }}</div>
+          </td>
+          <td>{{ product.category|default:"-" }}</td>
+          <td>{{ product.family|default:"-" }}</td>
+          <td>
+            <div>{{ product.price }} $</div>
+            {% if product.discount_price %}
+            <div class="text-sm line-through opacity-60">{{ product.discount_price }} $</div>
+            {% endif %}
+          </td>
+          <td>
+            <div class="font-medium">{{ product.total_sold|default:"0" }}</div>
+          </td>
+          <td>
+            <div class="font-medium">{{ product.total_sales_revenue|floatformat:2|default:"0.00" }} $</div>
+          </td>
+          <td>
+            <div class="flex space-x-2">
+              <a href="{% url 'products:product-detail' slug=product.slug %}" class="btn btn-square btn-sm btn-ghost text-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              </a>
+              
+              <a href="{% url 'products:product-update' slug=product.slug %}" class="btn btn-square btn-sm btn-ghost text-secondary">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+              </a>
+              
+              <a href="{% url 'products:product-delete' slug=product.slug %}" class="btn btn-square btn-sm btn-ghost text-error">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" class="text-center py-8">
+            <div class="flex flex-col items-center justify-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-base-content opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+              <p class="text-base-content opacity-60">Henüz ürün kaydı bulunmamaktadır veya arama kriterleriyle eşleşen ürün yok.</p>
+              <a href="{% url 'products:product-create' %}" class="btn btn-primary btn-sm mt-2">Yeni Ürün Ekle</a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  
+  <!-- JavaScript for resizable columns -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize resizable columns
+      initResizableColumns();
+      
+      // Load saved column widths if any
+      loadColumnWidths();
+    });
+    
+    // Immediately execute for HTMX replaced content
+    initResizableColumns();
+    loadColumnWidths();
+    
+    function initResizableColumns() {
+      const table = document.querySelector('.resizable-table');
+      const resizers = table.querySelectorAll('th .resizer');
+      
+      let currentResizer;
+      
+      resizers.forEach(resizer => {
+        resizer.addEventListener('mousedown', mouseDownHandler);
+        
+        function mouseDownHandler(e) {
+          currentResizer = e.target;
+          const columnIndex = parseInt(currentResizer.getAttribute('data-column'));
+          const th = currentResizer.closest('th');
+          
+          // Get initial width
+          const initialWidth = th.offsetWidth;
+          const startX = e.clientX;
+          
+          // Add the active class
+          currentResizer.classList.add('resizing');
+          
+          // Add event listeners for mousemove and mouseup
+          document.addEventListener('mousemove', mouseMoveHandler);
+          document.addEventListener('mouseup', mouseUpHandler);
+          
+          function mouseMoveHandler(e) {
+            const widthChange = e.clientX - startX;
+            const newWidth = initialWidth + widthChange;
+            
+            // Minimum width constraint
+            if (newWidth >= 50) {
+              th.style.width = `${newWidth}px`;
+            }
+          }
+          
+          function mouseUpHandler() {
+            // Remove the resizing class
+            currentResizer.classList.remove('resizing');
+            
+            // Save column widths
+            saveColumnWidths();
+            
+            // Remove event listeners
+            document.removeEventListener('mousemove', mouseMoveHandler);
+            document.removeEventListener('mouseup', mouseUpHandler);
+          }
+        }
+      });
+    }
+    
+    function saveColumnWidths() {
+      const table = document.querySelector('.resizable-table');
+      const headers = table.querySelectorAll('th');
+      const widths = {};
+      
+      headers.forEach((th, index) => {
+        if (th.style.width) {
+          widths[index] = th.style.width;
+        }
+      });
+      
+      localStorage.setItem('productTableWidths', JSON.stringify(widths));
+    }
+    
+    function loadColumnWidths() {
+      const table = document.querySelector('.resizable-table');
+      const headers = table.querySelectorAll('th');
+      const widths = JSON.parse(localStorage.getItem('productTableWidths') || '{}');
+      
+      Object.keys(widths).forEach(index => {
+        if (headers[index]) {
+          headers[index].style.width = widths[index];
+        }
+      });
+    }
+  </script>
+  
+  {% if is_paginated %}
+  <div class="flex justify-center py-4 border-t border-base-300">
+    <div class="btn-group">
+      {% if page_obj.has_previous %}
+      <a href="?page=1{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.in_stock %}&in_stock={{ request.GET.in_stock }}{% endif %}{% if request.GET.family %}&family={{ request.GET.family }}{% endif %}{% if request.GET.color %}&color={{ request.GET.color }}{% endif %}{% if request.GET.size %}&size={{ request.GET.size }}{% endif %}{% if request.GET.price_min %}&price_min={{ request.GET.price_min }}{% endif %}{% if request.GET.price_max %}&price_max={{ request.GET.price_max }}{% endif %}{% if request.GET.sales_count %}&sales_count={{ request.GET.sales_count }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}{% if request.GET.sort_dir %}&sort_dir={{ request.GET.sort_dir }}{% endif %}" class="btn btn-sm" hx-get="?page=1{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.in_stock %}&in_stock={{ request.GET.in_stock }}{% endif %}{% if request.GET.family %}&family={{ request.GET.family }}{% endif %}{% if request.GET.color %}&color={{ request.GET.color }}{% endif %}{% if request.GET.size %}&size={{ request.GET.size }}{% endif %}{% if request.GET.price_min %}&price_min={{ request.GET.price_min }}{% endif %}{% if request.GET.price_max %}&price_max={{ request.GET.price_max }}{% endif %}{% if request.GET.sales_count %}&sales_count={{ request.GET.sales_count }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}{% if request.GET.sort_dir %}&sort_dir={{ request.GET.sort_dir }}{% endif %}" hx-target="#products-table" hx-swap="outerHTML">«</a>
+      <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.in_stock %}&in_stock={{ request.GET.in_stock }}{% endif %}{% if request.GET.family %}&family={{ request.GET.family }}{% endif %}{% if request.GET.color %}&color={{ request.GET.color }}{% endif %}{% if request.GET.size %}&size={{ request.GET.size }}{% endif %}{% if request.GET.price_min %}&price_min={{ request.GET.price_min }}{% endif %}{% if request.GET.price_max %}&price_max={{ request.GET.price_max }}{% endif %}{% if request.GET.sales_count %}&sales_count={{ request.GET.sales_count }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}{% if request.GET.sort_dir %}&sort_dir={{ request.GET.sort_dir }}{% endif %}" class="btn btn-sm" hx-get="?page={{ page_obj.previous_page_number }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.in_stock %}&in_stock={{ request.GET.in_stock }}{% endif %}{% if request.GET.family %}&family={{ request.GET.family }}{% endif %}{% if request.GET.color %}&color={{ request.GET.color }}{% endif %}{% if request.GET.size %}&size={{ request.GET.size }}{% endif %}{% if request.GET.price_min %}&price_min={{ request.GET.price_min }}{% endif %}{% if request.GET.price_max %}&price_max={{ request.GET.price_max }}{% endif %}{% if request.GET.sales_count %}&sales_count={{ request.GET.sales_count }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}{% if request.GET.sort_dir %}&sort_dir={{ request.GET.sort_dir }}{% endif %}" hx-target="#products-table" hx-swap="outerHTML">‹</a>
+      {% endif %}
+      
+      <button class="btn btn-sm">Sayfa {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</button>
+      
+      {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.in_stock %}&in_stock={{ request.GET.in_stock }}{% endif %}{% if request.GET.family %}&family={{ request.GET.family }}{% endif %}{% if request.GET.color %}&color={{ request.GET.color }}{% endif %}{% if request.GET.size %}&size={{ request.GET.size }}{% endif %}{% if request.GET.price_min %}&price_min={{ request.GET.price_min }}{% endif %}{% if request.GET.price_max %}&price_max={{ request.GET.price_max }}{% endif %}{% if request.GET.sales_count %}&sales_count={{ request.GET.sales_count }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}{% if request.GET.sort_dir %}&sort_dir={{ request.GET.sort_dir }}{% endif %}" class="btn btn-sm" hx-get="?page={{ page_obj.next_page_number }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.in_stock %}&in_stock={{ request.GET.in_stock }}{% endif %}{% if request.GET.family %}&family={{ request.GET.family }}{% endif %}{% if request.GET.color %}&color={{ request.GET.color }}{% endif %}{% if request.GET.size %}&size={{ request.GET.size }}{% endif %}{% if request.GET.price_min %}&price_min={{ request.GET.price_min }}{% endif %}{% if request.GET.price_max %}&price_max={{ request.GET.price_max }}{% endif %}{% if request.GET.sales_count %}&sales_count={{ request.GET.sales_count }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}{% if request.GET.sort_dir %}&sort_dir={{ request.GET.sort_dir }}{% endif %}" hx-target="#products-table" hx-swap="outerHTML">›</a>
+      <a href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.in_stock %}&in_stock={{ request.GET.in_stock }}{% endif %}{% if request.GET.family %}&family={{ request.GET.family }}{% endif %}{% if request.GET.color %}&color={{ request.GET.color }}{% endif %}{% if request.GET.size %}&size={{ request.GET.size }}{% endif %}{% if request.GET.price_min %}&price_min={{ request.GET.price_min }}{% endif %}{% if request.GET.price_max %}&price_max={{ request.GET.price_max }}{% endif %}{% if request.GET.sales_count %}&sales_count={{ request.GET.sales_count }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}{% if request.GET.sort_dir %}&sort_dir={{ request.GET.sort_dir }}{% endif %}" class="btn btn-sm" hx-get="?page={{ page_obj.paginator.num_pages }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.in_stock %}&in_stock={{ request.GET.in_stock }}{% endif %}{% if request.GET.family %}&family={{ request.GET.family }}{% endif %}{% if request.GET.color %}&color={{ request.GET.color }}{% endif %}{% if request.GET.size %}&size={{ request.GET.size }}{% endif %}{% if request.GET.price_min %}&price_min={{ request.GET.price_min }}{% endif %}{% if request.GET.price_max %}&price_max={{ request.GET.price_max }}{% endif %}{% if request.GET.sales_count %}&sales_count={{ request.GET.sales_count }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}{% if request.GET.sort_dir %}&sort_dir={{ request.GET.sort_dir }}{% endif %}" hx-target="#products-table" hx-swap="outerHTML">»</a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>

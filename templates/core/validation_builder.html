@@ -1,0 +1,587 @@
+{% extends "base/base_dashboard.html" %}
+{% load i18n static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .rule-item {
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+        border-radius: 0.5rem;
+        background-color: #f3f4f6;
+        position: relative;
+    }
+    .rule-item.dragging {
+        opacity: 0.5;
+    }
+    .preset-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    .field-group {
+        display: none;
+    }
+    .field-group.active {
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">{{ title }}</h1>
+        <div class="space-x-2">
+            <a href="{% url 'core:validation_rules_list' %}" class="btn btn-ghost">
+                <i class="fas fa-arrow-left mr-2"></i>{% trans "Geri" %}
+            </a>
+            <button onclick="testRules()" class="btn btn-warning">
+                <i class="fas fa-vial mr-2"></i>{% trans "Test Et" %}
+            </button>
+            <button onclick="saveRuleSet()" class="btn btn-primary">
+                <i class="fas fa-save mr-2"></i>{% trans "Kural Setini Kaydet" %}
+            </button>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left Panel: Rule Types and Presets -->
+        <div class="lg:col-span-1">
+            <!-- Rule Types -->
+            <div class="card bg-base-100 shadow-xl mb-4">
+                <div class="card-body">
+                    <h2 class="card-title">{% trans "Kural Tipleri" %}</h2>
+                    <div class="space-y-2 mt-4">
+                        {% for rule_type, rule_name in rule_types %}
+                        <button onclick="addRule('{{ rule_type }}')" 
+                                class="btn btn-sm btn-outline btn-primary w-full">
+                            {{ rule_name }}
+                        </button>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Presets -->
+            <div class="card bg-base-100 shadow-xl">
+                <div class="card-body">
+                    <h2 class="card-title">{% trans "Hazır Şablonlar" %}</h2>
+                    <div class="space-y-2 mt-4">
+                        <div class="preset-card cursor-pointer p-3 rounded-lg hover:bg-gray-100"
+                             onclick="loadPreset('turkish_phone')">
+                            <h3 class="font-semibold">{% trans "Türk Telefon Numarası" %}</h3>
+                            <p class="text-sm text-gray-600">{% trans "5XX XXX XX XX formatı" %}</p>
+                        </div>
+                        <div class="preset-card cursor-pointer p-3 rounded-lg hover:bg-gray-100"
+                             onclick="loadPreset('email_address')">
+                            <h3 class="font-semibold">{% trans "E-posta Adresi" %}</h3>
+                            <p class="text-sm text-gray-600">{% trans "Geçerli e-posta formatı" %}</p>
+                        </div>
+                        <div class="preset-card cursor-pointer p-3 rounded-lg hover:bg-gray-100"
+                             onclick="loadPreset('turkish_id')">
+                            <h3 class="font-semibold">{% trans "TC Kimlik No" %}</h3>
+                            <p class="text-sm text-gray-600">{% trans "11 haneli TC kimlik numarası" %}</p>
+                        </div>
+                        <div class="preset-card cursor-pointer p-3 rounded-lg hover:bg-gray-100"
+                             onclick="loadPreset('price_field')">
+                            <h3 class="font-semibold">{% trans "Fiyat Alanı" %}</h3>
+                            <p class="text-sm text-gray-600">{% trans "Pozitif sayısal değer" %}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Middle Panel: Rule Builder -->
+        <div class="lg:col-span-2">
+            <div class="card bg-base-100 shadow-xl">
+                <div class="card-body">
+                    <h2 class="card-title">{% trans "Kural Oluşturucu" %}</h2>
+                    
+                    <!-- Rule Set Info -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">{% trans "Kural Seti Adı" %}</span>
+                            </label>
+                            <input type="text" id="rule-set-name" 
+                                   class="input input-bordered" 
+                                   placeholder="{% trans 'Örn: Müşteri Doğrulama' %}">
+                        </div>
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">{% trans "Alan" %}</span>
+                            </label>
+                            <div class="join">
+                                <input type="text" id="model-name" 
+                                       class="input input-bordered join-item" 
+                                       placeholder="{% trans 'Model' %}">
+                                <input type="text" id="field-name" 
+                                       class="input input-bordered join-item" 
+                                       placeholder="{% trans 'Alan' %}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rules List -->
+                    <div id="rules-container" class="min-h-[200px] border-2 border-dashed border-gray-300 rounded-lg p-4">
+                        <p class="text-center text-gray-500" id="empty-message">
+                            {% trans "Kural eklemek için sol taraftan seçin veya buraya sürükleyin" %}
+                        </p>
+                    </div>
+
+                    <!-- Rule JSON Output -->
+                    <div class="mt-6">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="font-semibold">{% trans "JSON Çıktısı" %}</h3>
+                            <button onclick="copyJSON()" class="btn btn-sm btn-ghost">
+                                <i class="fas fa-copy mr-1"></i>{% trans "Kopyala" %}
+                            </button>
+                        </div>
+                        <pre id="json-output" class="bg-gray-100 p-4 rounded-lg overflow-auto max-h-64">[]</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Rule Configuration Modal -->
+<dialog id="rule-config-modal" class="modal">
+    <div class="modal-box">
+        <h3 class="font-bold text-lg mb-4">{% trans "Kural Yapılandırması" %}</h3>
+        
+        <form id="rule-config-form">
+            <!-- Common fields -->
+            <div class="form-control mb-4">
+                <label class="label">
+                    <span class="label-text">{% trans "Hata Mesajı" %}</span>
+                </label>
+                <input type="text" id="error-message" 
+                       class="input input-bordered" 
+                       placeholder="{% trans 'Özel hata mesajı (opsiyonel)' %}">
+            </div>
+
+            <!-- Regex fields -->
+            <div class="field-group" data-rule-type="regex">
+                <div class="form-control mb-4">
+                    <label class="label">
+                        <span class="label-text">{% trans "Regex Deseni" %}</span>
+                    </label>
+                    <input type="text" id="pattern" 
+                           class="input input-bordered" 
+                           placeholder="{% trans 'Örn: ^[0-9]+$' %}">
+                </div>
+            </div>
+
+            <!-- Range fields -->
+            <div class="field-group" data-rule-type="range">
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">{% trans "Min Değer" %}</span>
+                        </label>
+                        <input type="number" id="min-value" 
+                               class="input input-bordered" 
+                               step="0.01">
+                    </div>
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">{% trans "Max Değer" %}</span>
+                        </label>
+                        <input type="number" id="max-value" 
+                               class="input input-bordered" 
+                               step="0.01">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Length fields -->
+            <div class="field-group" data-rule-type="length">
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">{% trans "Min Uzunluk" %}</span>
+                        </label>
+                        <input type="number" id="min-length" 
+                               class="input input-bordered" 
+                               min="0">
+                    </div>
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">{% trans "Max Uzunluk" %}</span>
+                        </label>
+                        <input type="number" id="max-length" 
+                               class="input input-bordered" 
+                               min="0">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Choices fields -->
+            <div class="field-group" data-rule-type="choices">
+                <div class="form-control mb-4">
+                    <label class="label">
+                        <span class="label-text">{% trans "Seçenekler" %}</span>
+                    </label>
+                    <textarea id="choices" 
+                              class="textarea textarea-bordered" 
+                              rows="3"
+                              placeholder="{% trans 'Her satıra bir seçenek' %}"></textarea>
+                </div>
+            </div>
+
+            <!-- Date fields -->
+            <div class="field-group" data-rule-type="date">
+                <div class="form-control mb-4">
+                    <label class="label">
+                        <span class="label-text">{% trans "Tarih Formatı" %}</span>
+                    </label>
+                    <input type="text" id="date-format" 
+                           class="input input-bordered" 
+                           placeholder="{% trans 'Örn: %Y-%m-%d' %}"
+                           value="%Y-%m-%d">
+                </div>
+            </div>
+        </form>
+
+        <div class="modal-action">
+            <button onclick="closeModal()" class="btn btn-ghost">{% trans "İptal" %}</button>
+            <button onclick="saveRuleConfig()" class="btn btn-primary">{% trans "Kaydet" %}</button>
+        </div>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+        <button>close</button>
+    </form>
+</dialog>
+
+<!-- Test Modal -->
+<dialog id="test-modal" class="modal">
+    <div class="modal-box max-w-3xl">
+        <h3 class="font-bold text-lg mb-4">{% trans "Doğrulama Testi" %}</h3>
+        
+        <div class="form-control mb-4">
+            <label class="label">
+                <span class="label-text">{% trans "Test Değeri" %}</span>
+            </label>
+            <input type="text" id="test-value" 
+                   class="input input-bordered" 
+                   placeholder="{% trans 'Test edilecek değeri girin' %}">
+        </div>
+
+        <button onclick="runTest()" class="btn btn-primary mb-4">
+            <i class="fas fa-play mr-2"></i>{% trans "Testi Çalıştır" %}
+        </button>
+
+        <div id="test-results" class="space-y-2"></div>
+
+        <div class="modal-action">
+            <button onclick="closeTestModal()" class="btn">{% trans "Kapat" %}</button>
+        </div>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+        <button>close</button>
+    </form>
+</dialog>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const presets = {{ presets|safe }};
+    const ruleTypes = {{ rule_types|safe }};
+    let rules = [];
+    let currentRuleIndex = null;
+    let currentRuleType = null;
+
+    function addRule(ruleType) {
+        currentRuleType = ruleType;
+        currentRuleIndex = rules.length;
+        
+        // Show modal
+        const modal = document.getElementById('rule-config-modal');
+        modal.showModal();
+        
+        // Show/hide relevant fields
+        document.querySelectorAll('.field-group').forEach(group => {
+            group.classList.remove('active');
+        });
+        
+        const ruleGroup = document.querySelector(`[data-rule-type="${ruleType}"]`);
+        if (ruleGroup) {
+            ruleGroup.classList.add('active');
+        }
+    }
+
+    function saveRuleConfig() {
+        const ruleData = {
+            type: currentRuleType,
+            message: document.getElementById('error-message').value
+        };
+
+        // Get rule-specific data
+        switch (currentRuleType) {
+            case 'regex':
+                ruleData.pattern = document.getElementById('pattern').value;
+                break;
+            case 'range':
+                const minVal = document.getElementById('min-value').value;
+                const maxVal = document.getElementById('max-value').value;
+                if (minVal) ruleData.min_value = minVal;
+                if (maxVal) ruleData.max_value = maxVal;
+                break;
+            case 'length':
+                const minLen = document.getElementById('min-length').value;
+                const maxLen = document.getElementById('max-length').value;
+                if (minLen) ruleData.min_length = parseInt(minLen);
+                if (maxLen) ruleData.max_length = parseInt(maxLen);
+                break;
+            case 'choices':
+                const choices = document.getElementById('choices').value
+                    .split('\n')
+                    .filter(c => c.trim())
+                    .map(c => c.trim());
+                if (choices.length) ruleData.choices = choices;
+                break;
+            case 'date':
+                ruleData.format = document.getElementById('date-format').value;
+                break;
+        }
+
+        // Add or update rule
+        if (currentRuleIndex >= rules.length) {
+            rules.push(ruleData);
+        } else {
+            rules[currentRuleIndex] = ruleData;
+        }
+
+        updateRulesDisplay();
+        closeModal();
+    }
+
+    function updateRulesDisplay() {
+        const container = document.getElementById('rules-container');
+        const emptyMessage = document.getElementById('empty-message');
+        
+        if (rules.length === 0) {
+            emptyMessage.style.display = 'block';
+            container.innerHTML = emptyMessage.outerHTML;
+        } else {
+            container.innerHTML = rules.map((rule, index) => `
+                <div class="rule-item" data-index="${index}">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <span class="font-semibold">${getRuleTypeName(rule.type)}</span>
+                            ${rule.message ? `<span class="text-sm text-gray-600 ml-2">${rule.message}</span>` : ''}
+                            <div class="text-sm text-gray-500 mt-1">
+                                ${formatRuleDetails(rule)}
+                            </div>
+                        </div>
+                        <div class="space-x-2">
+                            <button onclick="editRule(${index})" class="btn btn-sm btn-ghost">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="removeRule(${index})" class="btn btn-sm btn-ghost text-error">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        updateJSONOutput();
+    }
+
+    function getRuleTypeName(type) {
+        const ruleType = ruleTypes.find(rt => rt[0] === type);
+        return ruleType ? ruleType[1] : type;
+    }
+
+    function formatRuleDetails(rule) {
+        const details = [];
+        
+        switch (rule.type) {
+            case 'regex':
+                if (rule.pattern) details.push(`Pattern: ${rule.pattern}`);
+                break;
+            case 'range':
+                if (rule.min_value !== undefined) details.push(`Min: ${rule.min_value}`);
+                if (rule.max_value !== undefined) details.push(`Max: ${rule.max_value}`);
+                break;
+            case 'length':
+                if (rule.min_length !== undefined) details.push(`Min uzunluk: ${rule.min_length}`);
+                if (rule.max_length !== undefined) details.push(`Max uzunluk: ${rule.max_length}`);
+                break;
+            case 'choices':
+                if (rule.choices) details.push(`Seçenekler: ${rule.choices.join(', ')}`);
+                break;
+            case 'date':
+                if (rule.format) details.push(`Format: ${rule.format}`);
+                break;
+        }
+        
+        return details.join(' | ');
+    }
+
+    function editRule(index) {
+        currentRuleIndex = index;
+        const rule = rules[index];
+        currentRuleType = rule.type;
+        
+        // Populate form with existing data
+        document.getElementById('error-message').value = rule.message || '';
+        
+        switch (rule.type) {
+            case 'regex':
+                document.getElementById('pattern').value = rule.pattern || '';
+                break;
+            case 'range':
+                document.getElementById('min-value').value = rule.min_value || '';
+                document.getElementById('max-value').value = rule.max_value || '';
+                break;
+            case 'length':
+                document.getElementById('min-length').value = rule.min_length || '';
+                document.getElementById('max-length').value = rule.max_length || '';
+                break;
+            case 'choices':
+                document.getElementById('choices').value = (rule.choices || []).join('\n');
+                break;
+            case 'date':
+                document.getElementById('date-format').value = rule.format || '%Y-%m-%d';
+                break;
+        }
+        
+        // Show modal
+        const modal = document.getElementById('rule-config-modal');
+        modal.showModal();
+        
+        // Show/hide relevant fields
+        document.querySelectorAll('.field-group').forEach(group => {
+            group.classList.remove('active');
+        });
+        
+        const ruleGroup = document.querySelector(`[data-rule-type="${rule.type}"]`);
+        if (ruleGroup) {
+            ruleGroup.classList.add('active');
+        }
+    }
+
+    function removeRule(index) {
+        rules.splice(index, 1);
+        updateRulesDisplay();
+    }
+
+    function loadPreset(presetName) {
+        const preset = presets[presetName];
+        if (preset) {
+            rules = [...preset];
+            updateRulesDisplay();
+        }
+    }
+
+    function updateJSONOutput() {
+        const output = document.getElementById('json-output');
+        output.textContent = JSON.stringify(rules, null, 2);
+    }
+
+    function copyJSON() {
+        const json = JSON.stringify(rules, null, 2);
+        navigator.clipboard.writeText(json).then(() => {
+            // Show success message
+            const button = event.target.closest('button');
+            const originalText = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-check mr-1"></i>Kopyalandı';
+            setTimeout(() => {
+                button.innerHTML = originalText;
+            }, 2000);
+        });
+    }
+
+    function testRules() {
+        const modal = document.getElementById('test-modal');
+        modal.showModal();
+    }
+
+    function runTest() {
+        const testValue = document.getElementById('test-value').value;
+        const resultsContainer = document.getElementById('test-results');
+        
+        resultsContainer.innerHTML = '';
+        
+        // Test each rule
+        fetch('/core/validation/test/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                test_value: testValue,
+                rules: rules
+            })
+        })
+        .then(response => response.json())
+        .then(results => {
+            results.forEach(result => {
+                const div = document.createElement('div');
+                div.className = `alert ${result.status === 'success' ? 'alert-success' : 'alert-error'}`;
+                div.innerHTML = `
+                    <div>
+                        <h4 class="font-semibold">${getRuleTypeName(result.rule.type)}</h4>
+                        <p>${result.message}</p>
+                    </div>
+                `;
+                resultsContainer.appendChild(div);
+            });
+        });
+    }
+
+    function saveRuleSet() {
+        const name = document.getElementById('rule-set-name').value;
+        const modelName = document.getElementById('model-name').value;
+        const fieldName = document.getElementById('field-name').value;
+        
+        if (!name || !modelName || !fieldName) {
+            alert('{% trans "Lütfen tüm alanları doldurun" %}');
+            return;
+        }
+        
+        const data = {
+            name: name,
+            model_name: modelName,
+            field_name: fieldName,
+            rules: rules
+        };
+        
+        fetch('/core/validation/rule-sets/create/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '/core/validation/';
+            }
+        });
+    }
+
+    function closeModal() {
+        document.getElementById('rule-config-modal').close();
+        // Clear form
+        document.getElementById('rule-config-form').reset();
+    }
+
+    function closeTestModal() {
+        document.getElementById('test-modal').close();
+    }
+
+    // Initialize
+    updateRulesDisplay();
+</script>
+{% endblock %}

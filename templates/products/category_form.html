@@ -1,0 +1,281 @@
+{% extends "base/base_dashboard.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+  {% if form.instance.pk %}Kategori Düzenle: {{ form.instance.name }}{% else %}Yeni Kategori Oluştur{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .category-card {
+    transition: all 0.3s ease;
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  
+  .category-card.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  .form-section {
+    border-left: 3px solid transparent;
+    transition: all 0.3s ease;
+    padding-left: 1rem;
+  }
+  
+  .form-section:focus-within {
+    border-left-color: var(--fallback-p, oklch(var(--p)));
+  }
+  
+  .preview {
+    transition: all 0.3s ease;
+  }
+  
+  .preview-card {
+    transform: scale(0.98);
+    transition: all 0.3s ease;
+  }
+  
+  .preview-card:hover {
+    transform: scale(1);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-primary-content">
+        {% if form.instance.pk %}Kategori Düzenle: {{ form.instance.name }}{% else %}Yeni Kategori Oluştur{% endif %}
+      </h1>
+      <p class="text-base-content/70">
+        {% if form.instance.pk %}Mevcut kategori bilgilerini güncelleyin{% else %}Ürünlerinizi organize etmek için yeni bir kategori oluşturun{% endif %}
+      </p>
+    </div>
+    <div class="text-sm breadcrumbs">
+      <ul>
+        <li><a href="{% url 'dashboard:dashboard' %}">VivaCRM</a></li>
+        <li><a href="{% url 'products:product-list' %}">Ürünler</a></li>
+        <li><a href="{% url 'products:category-list' %}">Kategoriler</a></li>
+        <li>{% if form.instance.pk %}{{ form.instance.name }} Düzenle{% else %}Yeni Kategori{% endif %}</li>
+      </ul>
+    </div>
+  </div>
+  
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Main Form Card -->
+    <div class="lg:col-span-2">
+      <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border-t-4 border-primary category-card" id="form-card">
+        <div class="card-body">
+          <h2 class="card-title text-xl font-bold flex items-center text-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+            </svg>
+            Kategori Bilgileri
+          </h2>
+          
+          <form method="post" novalidate id="category-form">
+            {% csrf_token %}
+            
+            <div class="divider"></div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="form-section">
+                <div class="form-control">
+                  <label class="label">
+                    <span class="label-text font-medium">Kategori Adı *</span>
+                    <span class="label-text-alt">Gerekli</span>
+                  </label>
+                  {{ form.name|as_crispy_field }}
+                  <label class="label">
+                    <span class="label-text-alt">Ürünleri sınıflandırmak için tanımlayıcı bir ad kullanın</span>
+                  </label>
+                </div>
+              </div>
+              
+              <div class="form-section">
+                <div class="form-control">
+                  <label class="label">
+                    <span class="label-text font-medium">Üst Kategori</span>
+                    <span class="label-text-alt">Opsiyonel</span>
+                  </label>
+                  {{ form.parent|as_crispy_field }}
+                  <label class="label">
+                    <span class="label-text-alt">Alt kategori oluşturmak için bir üst kategori seçin</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-section mt-4">
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text font-medium">Açıklama</span>
+                  <span class="label-text-alt">Opsiyonel</span>
+                </label>
+                {{ form.description|as_crispy_field }}
+                <label class="label">
+                  <span class="label-text-alt">Bu kategori hakkında ilave bilgi ekleyin</span>
+                </label>
+              </div>
+            </div>
+            
+            <div class="form-control mt-6 p-4 bg-base-200/50 rounded-lg">
+              <label class="cursor-pointer flex items-center space-x-3">
+                {{ form.is_active }}
+                <div>
+                  <span class="label-text font-medium">Aktif</span>
+                  <p class="text-xs text-base-content/70 mt-1">Pasif kategoriler katalogda görünmez ve ürünlere atanamazlar</p>
+                </div>
+              </label>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 mt-6">
+              <a href="{% url 'products:category-list' %}" class="btn btn-outline">İptal</a>
+              <button type="submit" class="btn btn-primary gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                {% if form.instance.pk %}Güncelle{% else %}Oluştur{% endif %}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Info & Preview Card -->
+    <div>
+      <div class="card bg-base-100 shadow-xl overflow-hidden sticky top-4 category-card" id="info-card">
+        <div class="card-body">
+          <h2 class="card-title font-bold flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            Yardım & Önizleme
+          </h2>
+          
+          <div class="space-y-4">
+            {% if form.instance.pk %}
+            <div class="alert alert-warning bg-warning/20 border border-warning">
+              <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+              <div>
+                <h3 class="font-bold">Dikkat!</h3>
+                <div class="text-sm">Kategori adını değiştirmek, bu kategorideki ürünlerin kategorilenmesini etkilemeyecektir. Ancak, bir kategoriyi pasif duruma getirmek, ilgili ürünlerin görünürlüğünü etkileyebilir.</div>
+              </div>
+            </div>
+            
+            {% if form.instance.products.exists %}
+            <div class="alert alert-info bg-info/20 border border-info">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              <div>
+                <h3 class="font-bold">Bilgi</h3>
+                <div class="text-sm">Bu kategoride {{ form.instance.products.count }} ürün bulunmaktadır.</div>
+              </div>
+            </div>
+            {% endif %}
+            {% endif %}
+            
+            <div class="border border-base-300 rounded-lg overflow-hidden">
+              <div class="collapse collapse-arrow">
+                <input type="checkbox" checked /> 
+                <div class="collapse-title font-medium">
+                  Kategori Önizleme
+                </div>
+                <div class="collapse-content bg-base-100">
+                  <div class="preview-card p-3 bg-base-200 rounded-lg">
+                    <div class="preview" id="category-preview">
+                      <div class="flex items-center justify-between p-3 bg-base-100 rounded-lg shadow">
+                        <div>
+                          <h3 class="font-bold" id="preview-name">{% if form.instance.name %}{{ form.instance.name }}{% else %}Kategori Adı{% endif %}</h3>
+                          <p class="text-xs text-base-content/70" id="preview-description">{% if form.instance.description %}{{ form.instance.description|truncatechars:40 }}{% else %}Kategori açıklaması...{% endif %}</p>
+                        </div>
+                        <div class="badge {% if form.instance.pk and form.instance.is_active %}badge-success{% else %}badge-neutral{% endif %}" id="preview-status">
+                          {% if form.instance.pk and form.instance.is_active %}Aktif{% else %}Pasif{% endif %}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="border border-base-300 rounded-lg overflow-hidden">
+              <div class="collapse collapse-arrow">
+                <input type="checkbox" /> 
+                <div class="collapse-title font-medium">
+                  Sık Sorulan Sorular
+                </div>
+                <div class="collapse-content bg-base-100">
+                  <div class="space-y-3 text-sm">
+                    <div>
+                      <h4 class="font-semibold">Üst kategori nedir?</h4>
+                      <p class="text-base-content/70">Bu kategori için bir ebeveyn kategori seçebilirsiniz. Örneğin, "Laptoplar" kategorisi "Bilgisayarlar" üst kategorisinin altında olabilir.</p>
+                    </div>
+                    <div>
+                      <h4 class="font-semibold">Kaç seviyeli hiyerarşi oluşturabilirim?</h4>
+                      <p class="text-base-content/70">Kategoriler en fazla 3 seviye olabilir: Ana kategori, alt kategori ve alt kategorinin alt kategorisi.</p>
+                    </div>
+                    <div>
+                      <h4 class="font-semibold">Pasif kategori nedir?</h4>
+                      <p class="text-base-content/70">Pasif kategoriler müşterilere gösterilmez ve ürün ekleme işlemlerinde seçilemez.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Animate cards
+    setTimeout(() => {
+      document.getElementById('form-card').classList.add('show');
+      setTimeout(() => {
+        document.getElementById('info-card').classList.add('show');
+      }, 200);
+    }, 100);
+    
+    // Live preview
+    const nameInput = document.getElementById('id_name');
+    const descriptionInput = document.getElementById('id_description');
+    const activeCheckbox = document.getElementById('id_is_active');
+    
+    const previewName = document.getElementById('preview-name');
+    const previewDescription = document.getElementById('preview-description');
+    const previewStatus = document.getElementById('preview-status');
+    
+    if (nameInput) {
+      nameInput.addEventListener('input', function() {
+        previewName.textContent = this.value || 'Kategori Adı';
+      });
+    }
+    
+    if (descriptionInput) {
+      descriptionInput.addEventListener('input', function() {
+        const text = this.value || 'Kategori açıklaması...';
+        previewDescription.textContent = text.length > 40 ? text.substring(0, 37) + '...' : text;
+      });
+    }
+    
+    if (activeCheckbox) {
+      activeCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+          previewStatus.textContent = 'Aktif';
+          previewStatus.classList.remove('badge-neutral');
+          previewStatus.classList.add('badge-success');
+        } else {
+          previewStatus.textContent = 'Pasif';
+          previewStatus.classList.remove('badge-success');
+          previewStatus.classList.add('badge-neutral');
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}

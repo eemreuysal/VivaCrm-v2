@@ -1,0 +1,130 @@
+{% extends "base/base_dashboard.html" %}
+{% load static %}
+
+{% block title %}Sipariş İçe Aktar{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dropzone.css' %}">
+<style>
+  /* Drag and drop area */
+  .file-upload-area {
+    position: relative;
+    border: 2px dashed var(--fallback-bc, oklch(var(--bc)/0.3));
+    border-radius: 0.5rem;
+    padding: 3rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    background-color: var(--fallback-b2, oklch(var(--b2)/0.3));
+  }
+  
+  .file-upload-area:hover {
+    border-color: var(--fallback-p, oklch(var(--p)));
+    background-color: var(--fallback-b2, oklch(var(--b2)/0.5));
+  }
+  
+  .file-upload-area.dragging {
+    border-color: var(--fallback-s, oklch(var(--s)));
+    background-color: var(--fallback-s, oklch(var(--s)/0.1));
+  }
+  
+  .file-upload-area input[type="file"] {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  
+  /* File preview */
+  .file-preview {
+    display: none;
+    margin-top: 1rem;
+  }
+  
+  .file-preview.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+  <h1 class="text-3xl font-bold mb-8">Sipariş İçe Aktar</h1>
+  
+  <!-- Import Form -->
+  <div class="card bg-base-100 shadow-xl">
+    <div class="card-body">
+      <h2 class="card-title mb-4">Excel Dosyası Yükle</h2>
+      
+      <form method="post" enctype="multipart/form-data" class="space-y-6" id="importForm">
+        {% csrf_token %}
+        
+        <div class="file-upload-area" id="dropArea">
+          <input type="file" name="file" id="excelFile" accept=".xlsx,.xls" required />
+          <div class="upload-content">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto mb-3 text-base-content/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <p class="text-lg font-medium mb-2">Excel Dosyası Sürükle & Bırak</p>
+            <p class="text-sm text-base-content/60 mb-4">veya dosya seçmek için tıklayın</p>
+            <p class="text-xs text-base-content/60">Desteklenen formatlar: .xlsx, .xls</p>
+          </div>
+          <div class="loading-spinner">
+            <span class="loading loading-spinner loading-lg"></span>
+          </div>
+        </div>
+        
+        <div class="file-preview" id="filePreview">
+          <div class="bg-success/10 p-3 rounded-lg flex items-center w-full">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-success mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div class="flex-1">
+              <p class="font-medium" id="selectedFileName">filename.xlsx</p>
+              <p class="text-sm text-base-content/60" id="selectedFileSize">0 KB</p>
+            </div>
+            <button type="button" class="btn btn-sm btn-ghost" id="removeFile">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        
+        <div class="flex justify-end space-x-4">
+          <a href="{% url 'orders:order-list' %}" class="btn btn-ghost">İptal</a>
+          <button type="submit" class="btn btn-primary" id="submitBtn" disabled>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            İçe Aktar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <!-- Process Steps -->
+  <div class="mt-8">
+    <ul class="steps steps-vertical lg:steps-horizontal w-full">
+      <li class="step step-primary">Dosya Seç</li>
+      <li class="step">Yükle</li>
+      <li class="step">İşle</li>
+      <li class="step">Tamamla</li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/order-import-api.js' %}"></script>
+{% endblock %}

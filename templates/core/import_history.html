@@ -1,0 +1,470 @@
+{% extends "base/base_dashboard.html" %}
+{% load static %}
+{% load currency_tags %}
+
+{% block title %}Import Geçmişi | VivaCRM{% endblock %}
+
+{% block extra_css %}
+<style>
+    .import-card {
+        transition: all 0.2s ease;
+    }
+    .import-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    }
+    .status-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-weight: 500;
+        text-transform: uppercase;
+    }
+    .status-processing {
+        background-color: rgba(59, 130, 246, 0.1);
+        color: rgb(59, 130, 246);
+    }
+    .status-completed {
+        background-color: rgba(34, 197, 94, 0.1);
+        color: rgb(34, 197, 94);
+    }
+    .status-failed {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: rgb(239, 68, 68);
+    }
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 0.5rem;
+        border: 1px solid rgb(229, 231, 235);
+        text-align: center;
+    }
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: rgb(31, 41, 55);
+    }
+    .stat-label {
+        color: rgb(107, 114, 128);
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Başlık -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="fs-4 fw-bold text-dark">
+                    <i class="bi bi-clock-history me-2"></i>Import Geçmişi
+                </h2>
+                <div>
+                    <button type="button" class="btn btn-primary" onclick="showImportGuide()">
+                        <i class="bi bi-question-circle me-1"></i>
+                        Import Rehberi
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- İstatistikler -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number">{{ total_imports }}</div>
+            <div class="stat-label">Toplam Import</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number text-success">{{ successful_imports }}</div>
+            <div class="stat-label">Başarılı</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number text-danger">{{ failed_imports }}</div>
+            <div class="stat-label">Başarısız</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number text-primary">{{ today_imports }}</div>
+            <div class="stat-label">Bugünkü</div>
+        </div>
+    </div>
+
+    <!-- Filtreler -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" action="" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Arama</label>
+                    <input type="text" name="search" class="form-control" 
+                           placeholder="Dosya adı, modül veya kullanıcı..." 
+                           value="{{ search }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Modül</label>
+                    <select name="module" class="form-select">
+                        <option value="">Tümü</option>
+                        {% for mod in modules %}
+                            <option value="{{ mod }}" {% if module == mod %}selected{% endif %}>
+                                {{ mod|capfirst }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Durum</label>
+                    <select name="status" class="form-select">
+                        <option value="">Tümü</option>
+                        <option value="processing" {% if status == 'processing' %}selected{% endif %}>İşleniyor</option>
+                        <option value="completed" {% if status == 'completed' %}selected{% endif %}>Tamamlandı</option>
+                        <option value="failed" {% if status == 'failed' %}selected{% endif %}>Başarısız</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Başlangıç</label>
+                    <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Bitiş</label>
+                    <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+                </div>
+                <div class="col-md-1 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Import Listesi -->
+    <div class="row">
+        {% for import in imports %}
+        <div class="col-lg-6 mb-3">
+            <a href="{% url 'core:import-history-detail' import.pk %}" class="text-decoration-none">
+                <div class="card border-0 shadow-sm import-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h5 class="card-title mb-1">{{ import.file_name }}</h5>
+                                <p class="text-muted mb-0">
+                                    <i class="bi bi-folder me-1"></i>{{ import.module|capfirst }}
+                                    <span class="mx-2">•</span>
+                                    <i class="bi bi-person me-1"></i>{{ import.created_by.get_full_name|default:import.created_by.username }}
+                                </p>
+                            </div>
+                            <span class="status-badge status-{{ import.status }}">
+                                {% if import.status == 'processing' %}İşleniyor
+                                {% elif import.status == 'completed' %}Tamamlandı
+                                {% else %}Başarısız{% endif %}
+                            </span>
+                        </div>
+                        
+                        <div class="row text-center mb-3">
+                            <div class="col">
+                                <div class="fw-bold">{{ import.total_count|default:"0" }}</div>
+                                <small class="text-muted">Toplam</small>
+                            </div>
+                            <div class="col">
+                                <div class="fw-bold text-success">{{ import.success_count|default:"0" }}</div>
+                                <small class="text-muted">Başarılı</small>
+                            </div>
+                            <div class="col">
+                                <div class="fw-bold text-info">0</div>
+                                <small class="text-muted">Güncellenen</small>
+                            </div>
+                            <div class="col">
+                                <div class="fw-bold text-danger">{{ import.error_count|default:"0" }}</div>
+                                <small class="text-muted">Başarısız</small>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="bi bi-clock me-1"></i>{{ import.created_at|date:"d.m.Y H:i" }}
+                            </small>
+                            <div class="btn-group btn-group-sm">
+                                {% if import.file_path %}
+                                <button type="button" class="btn btn-outline-primary" 
+                                        onclick="previewFile({{ import.pk }}); event.preventDefault();">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <a href="{% url 'core:import-download' import.pk %}" 
+                                   class="btn btn-outline-success" 
+                                   onclick="event.stopPropagation();">
+                                    <i class="bi bi-download"></i>
+                                </a>
+                                {% endif %}
+                                {% if import.status == 'completed' %}
+                                <button type="button" class="btn btn-outline-warning" 
+                                        onclick="reloadImport({{ import.pk }}); event.preventDefault();">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info text-center">
+                <i class="bi bi-info-circle me-2"></i>
+                Henüz import geçmişi bulunmuyor.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Sayfalama -->
+    {% if is_paginated %}
+    <div class="d-flex justify-content-center mt-4">
+        <nav>
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                        <i class="bi bi-chevron-double-left"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                        <i class="bi bi-chevron-double-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Önizleme Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Dosya Önizleme</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="previewContent" class="table-responsive">
+                    <div class="text-center p-4">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Yükleniyor...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Import Rehberi Modal -->
+<div class="modal fade" id="guideModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Import Rehberi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>Excel Import İşlemleri</h6>
+                <p>VivaCRM'de aşağıdaki veriler Excel dosyasından import edilebilir:</p>
+                
+                <div class="accordion" id="importGuideAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#productsGuide">
+                                <i class="bi bi-box-seam me-2"></i>Ürünler
+                            </button>
+                        </h2>
+                        <div id="productsGuide" class="accordion-collapse collapse show" data-bs-parent="#importGuideAccordion">
+                            <div class="accordion-body">
+                                <p>Gerekli sütunlar:</p>
+                                <ul>
+                                    <li>sku - Ürün Kodu (zorunlu)</li>
+                                    <li>name - Ürün Adı (zorunlu)</li>
+                                    <li>category - Kategori</li>
+                                    <li>price - Fiyat</li>
+                                    <li>stock - Stok Miktarı</li>
+                                    <li>description - Açıklama</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#stockGuide">
+                                <i class="bi bi-layers me-2"></i>Stok Düzeltme
+                            </button>
+                        </h2>
+                        <div id="stockGuide" class="accordion-collapse collapse" data-bs-parent="#importGuideAccordion">
+                            <div class="accordion-body">
+                                <p>Gerekli sütunlar:</p>
+                                <ul>
+                                    <li>sku - Ürün Kodu (zorunlu)</li>
+                                    <li>adjustment_quantity - Düzeltme Miktarı (zorunlu)</li>
+                                    <li>note - Not</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ordersGuide">
+                                <i class="bi bi-cart me-2"></i>Siparişler
+                            </button>
+                        </h2>
+                        <div id="ordersGuide" class="accordion-collapse collapse" data-bs-parent="#importGuideAccordion">
+                            <div class="accordion-body">
+                                <p>Gerekli sütunlar:</p>
+                                <ul>
+                                    <li>customer_email - Müşteri Email (zorunlu)</li>
+                                    <li>order_number - Sipariş No</li>
+                                    <li>product_sku - Ürün Kodu (zorunlu)</li>
+                                    <li>quantity - Miktar (zorunlu)</li>
+                                    <li>price - Birim Fiyat</li>
+                                    <li>discount - İndirim</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info mt-3">
+                    <i class="bi bi-info-circle me-2"></i>
+                    İmport işlemlerinde Excel dosyasının ilk satırı sütun başlıkları olmalıdır.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function previewFile(importId) {
+    const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+    modal.show();
+    
+    fetch(`/core/import/${importId}/preview/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                document.getElementById('previewContent').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>${data.error}
+                    </div>
+                `;
+                return;
+            }
+            
+            let tableHtml = '<table class="table table-striped table-sm">';
+            tableHtml += '<thead><tr>';
+            
+            // Başlıklar
+            data.columns.forEach(col => {
+                tableHtml += `<th>${col}</th>`;
+            });
+            tableHtml += '</tr></thead><tbody>';
+            
+            // Veriler
+            data.rows.forEach(row => {
+                tableHtml += '<tr>';
+                row.forEach(cell => {
+                    tableHtml += `<td>${cell !== null ? cell : ''}</td>`;
+                });
+                tableHtml += '</tr>';
+            });
+            
+            tableHtml += '</tbody></table>';
+            
+            if (data.total_rows > 20) {
+                tableHtml += `<p class="text-muted text-center">İlk 20 satır gösteriliyor (Toplam: ${data.total_rows})</p>`;
+            }
+            
+            document.getElementById('previewContent').innerHTML = tableHtml;
+        })
+        .catch(error => {
+            document.getElementById('previewContent').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Önizleme yüklenemedi: ${error}
+                </div>
+            `;
+        });
+}
+
+function reloadImport(importId) {
+    if (!confirm('Bu import dosyasını yeniden yüklemek istediğinize emin misiniz?')) {
+        return;
+    }
+    
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `/core/import/${importId}/reload/`;
+    
+    const csrfToken = document.createElement('input');
+    csrfToken.type = 'hidden';
+    csrfToken.name = 'csrfmiddlewaretoken';
+    csrfToken.value = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    form.appendChild(csrfToken);
+    
+    document.body.appendChild(form);
+    form.submit();
+}
+
+function showImportGuide() {
+    const modal = new bootstrap.Modal(document.getElementById('guideModal'));
+    modal.show();
+}
+
+// Sayfa yüklendiğinde istatistikleri güncelle
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/core/import/stats/')
+        .then(response => response.json())
+        .then(data => {
+            // İstatistik grafiklerini güncelle
+            updateImportStats(data);
+        });
+});
+
+function updateImportStats(data) {
+    // Chart.js veya başka bir grafik kütüphanesi ile grafikler oluşturulabilir
+    console.log('Import istatistikleri:', data);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,200 @@
+<!-- templates/components/import_summary.html -->
+{% load i18n %}
+
+<div class="bg-white rounded-xl shadow-lg p-6 space-y-6">
+    <!-- Başlık ve Genel Özet -->
+    <div class="border-b pb-4">
+        <h2 class="text-xl font-bold mb-4">İçe Aktarma Özeti</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-blue-50 p-4 rounded-lg">
+                <div class="text-sm text-blue-600 font-medium">Toplam Satır</div>
+                <div class="text-2xl font-bold text-blue-800">{{ report.summary.total_rows }}</div>
+            </div>
+            
+            <div class="bg-green-50 p-4 rounded-lg">
+                <div class="text-sm text-green-600 font-medium">Başarı Oranı</div>
+                <div class="text-2xl font-bold text-green-800">%{{ report.summary.success_rate|floatformat:1 }}</div>
+            </div>
+            
+            <div class="bg-purple-50 p-4 rounded-lg">
+                <div class="text-sm text-purple-600 font-medium">İşlem Süresi</div>
+                <div class="text-2xl font-bold text-purple-800">{{ report.summary.processing_time|default:"--" }}</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Başarı Dağılımı Grafiği -->
+    <div class="border-b pb-4">
+        <h3 class="text-lg font-semibold mb-3">Başarı Dağılımı</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Pasta Grafik -->
+            <div class="relative h-64">
+                <canvas id="successChart" width="250" height="250"></canvas>
+            </div>
+            
+            <!-- Detaylı Sayılar -->
+            <div class="space-y-3">
+                {% for label, count in report.distributions.success.items %}
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                    <div class="flex items-center">
+                        <div class="w-4 h-4 rounded mr-3" 
+                             style="background-color: {% if label == 'Başarılı' %}#10b981{% elif label == 'Başarısız' %}#ef4444{% elif label == 'Kısmi Başarılı' %}#f59e0b{% else %}#6b7280{% endif %}">
+                        </div>
+                        <span class="font-medium">{{ label }}</span>
+                    </div>
+                    <span class="font-bold">{{ count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- İşlem Dağılımı -->
+    <div class="border-b pb-4">
+        <h3 class="text-lg font-semibold mb-3">İşlem Dağılımı</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-green-50 p-4 rounded-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="text-sm text-green-600 font-medium">Oluşturulan Kayıt</div>
+                        <div class="text-2xl font-bold text-green-800">{{ report.distributions.operations.Oluşturulan }}</div>
+                    </div>
+                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                </div>
+            </div>
+            
+            <div class="bg-blue-50 p-4 rounded-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="text-sm text-blue-600 font-medium">Güncellenen Kayıt</div>
+                        <div class="text-2xl font-bold text-blue-800">{{ report.distributions.operations.Güncellenen }}</div>
+                    </div>
+                    <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Alan Başına Performans -->
+    {% if report.field_performance %}
+    <div class="border-b pb-4">
+        <h3 class="text-lg font-semibold mb-3">Alan Başına Başarı Oranları</h3>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b">
+                        <th class="text-left py-2">Alan</th>
+                        <th class="text-center py-2">Toplam</th>
+                        <th class="text-center py-2">Başarılı</th>
+                        <th class="text-center py-2">Başarısız</th>
+                        <th class="text-right py-2">Başarı Oranı</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for field in report.field_performance %}
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="py-2 font-medium">{{ field.field }}</td>
+                        <td class="text-center py-2">{{ field.total }}</td>
+                        <td class="text-center py-2 text-green-600">{{ field.success }}</td>
+                        <td class="text-center py-2 text-red-600">{{ field.failed }}</td>
+                        <td class="text-right py-2">
+                            <div class="inline-flex items-center">
+                                <span class="font-medium">%{{ field.success_rate|floatformat:1 }}</span>
+                                <div class="w-16 h-2 bg-gray-200 rounded-full ml-2">
+                                    <div class="h-2 bg-green-500 rounded-full" 
+                                         style="width: {{ field.success_rate }}%">
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- En Yaygın Hatalar -->
+    {% if report.errors.most_common %}
+    <div>
+        <h3 class="text-lg font-semibold mb-3">En Yaygın Hatalar</h3>
+        
+        <div class="space-y-2">
+            {% for error, count in report.errors.most_common %}
+            <div class="flex items-center justify-between p-3 bg-red-50 rounded">
+                <span class="text-red-700">{{ error }}</span>
+                <span class="font-bold text-red-800">{{ count }} kez</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Detaylı Sonuçlar Butonu -->
+    <div class="text-center pt-4">
+        <button class="btn btn-primary" 
+                onclick="showDetailedResults({{ import_task.id }})">
+            Detaylı Sonuçları Görüntüle
+        </button>
+    </div>
+</div>
+
+<script>
+// Başarı dağılımı pasta grafiği
+const ctx = document.getElementById('successChart').getContext('2d');
+const successData = {
+    labels: [{% for label in report.distributions.success.keys %}'{{ label }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+    datasets: [{
+        data: [{% for count in report.distributions.success.values %}{{ count }}{% if not forloop.last %},{% endif %}{% endfor %}],
+        backgroundColor: [
+            '#10b981', // Başarılı - yeşil
+            '#ef4444', // Başarısız - kırmızı
+            '#f59e0b', // Kısmi Başarılı - sarı
+            '#6b7280'  // Atlandı - gri
+        ]
+    }]
+};
+
+new Chart(ctx, {
+    type: 'pie',
+    data: successData,
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        let label = context.label || '';
+                        if (label) {
+                            label += ': ';
+                        }
+                        const value = context.formattedValue;
+                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        const percentage = ((context.raw / total) * 100).toFixed(1);
+                        label += value + ' (%' + percentage + ')';
+                        return label;
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Detaylı sonuçları göster
+function showDetailedResults(taskId) {
+    window.location.href = '/core/import-results/' + taskId + '/detailed/';
+}
+</script>

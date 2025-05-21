@@ -1,0 +1,138 @@
+{% extends 'base/base_dashboard.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Import Geçmişi" %} - VivaCRM{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">{% trans "Sipariş Import Geçmişi" %}</h1>
+        <a href="{% url 'orders:order-import' %}" class="btn btn-primary">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+            </svg>
+            {% trans "Yeni Import" %}
+        </a>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="stats shadow">
+            <div class="stat">
+                <div class="stat-title">{% trans "Toplam Import" %}</div>
+                <div class="stat-value">{{ total_imports }}</div>
+            </div>
+        </div>
+        <div class="stats shadow">
+            <div class="stat">
+                <div class="stat-title">{% trans "Başarılı" %}</div>
+                <div class="stat-value text-success">{{ successful_imports }}</div>
+            </div>
+        </div>
+        <div class="stats shadow">
+            <div class="stat">
+                <div class="stat-title">{% trans "Kısmi Başarılı" %}</div>
+                <div class="stat-value text-warning">{{ partial_imports }}</div>
+            </div>
+        </div>
+        <div class="stats shadow">
+            <div class="stat">
+                <div class="stat-title">{% trans "Başarısız" %}</div>
+                <div class="stat-value text-error">{{ failed_imports }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Tasks List -->
+    <div class="card bg-base-100 shadow">
+        <div class="card-body">
+            <div class="overflow-x-auto">
+                <table class="table table-zebra">
+                    <thead>
+                        <tr>
+                            <th>{% trans "Tarih" %}</th>
+                            <th>{% trans "Dosya Adı" %}</th>
+                            <th>{% trans "Durum" %}</th>
+                            <th>{% trans "İşlenen Satır" %}</th>
+                            <th>{% trans "Başarılı" %}</th>
+                            <th>{% trans "Hatalı" %}</th>
+                            <th>{% trans "İşlem Yapan" %}</th>
+                            <th>{% trans "İşlemler" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for import_task in import_tasks %}
+                        <tr>
+                            <td>{{ import_task.created_at|date:"d.m.Y H:i" }}</td>
+                            <td>{{ import_task.file_name }}</td>
+                            <td>
+                                {% if import_task.status == 'completed' %}
+                                    <span class="badge badge-success">{% trans "Tamamlandı" %}</span>
+                                {% elif import_task.status == 'partial' %}
+                                    <span class="badge badge-warning">{% trans "Kısmi Başarılı" %}</span>
+                                {% elif import_task.status == 'failed' %}
+                                    <span class="badge badge-error">{% trans "Başarısız" %}</span>
+                                {% elif import_task.status == 'processing' %}
+                                    <span class="badge badge-info">{% trans "İşleniyor" %}</span>
+                                {% else %}
+                                    <span class="badge">{% trans "Bekliyor" %}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if import_task.summary %}
+                                    {{ import_task.summary.total_rows }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if import_task.summary %}
+                                    <span class="text-success">{{ import_task.summary.successful_rows }}</span>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if import_task.summary %}
+                                    <span class="text-error">{{ import_task.summary.failed_rows }}</span>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>{{ import_task.created_by.get_full_name|default:import_task.created_by.username }}</td>
+                            <td>
+                                <a href="{% url 'orders:import-task-detail' import_task.pk %}" class="btn btn-sm btn-primary">
+                                    {% trans "Detaylar" %}
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4 text-gray-500">
+                                {% trans "Henüz import işlemi yapılmamış." %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="flex justify-center mt-6">
+        <div class="btn-group">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}" class="btn">«</a>
+            {% endif %}
+            <button class="btn btn-active">{{ page_obj.number }}</button>
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="btn">»</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
